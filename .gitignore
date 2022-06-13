@@ -1,0 +1,22 @@
+# Temporary and binary files
+*~
+*.cfg
+!setup.cfg
+__pycache__/*
+.DS_Store
+
+# Project files
+.vscode
+
+# Package files
+*.egg
+*.eggs/
+.installed.cfg
+*.egg-info
+
+# Unittest and coverage
+.pytest_cache/
+
+# Build and docs folder/files
+build/*
+dist/*
