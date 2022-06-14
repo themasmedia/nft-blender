@@ -58,9 +58,10 @@ def install_package(module_name: str) -> bool:
         __LOGGER__.debug(f'Installing Python module: `{module_name}`')
         subprocess.call([sys.executable, '-m', 'pip', 'install', module_location])
 
-    # Update module.
-    __LOGGER__.debug(f'Updating Python module: `{module_name}`')
-    subprocess.call([sys.executable, '-m', 'pip', 'install', module_location, '--upgrade'])
+    # Update module if already installed (force reinstall).
+    else:
+        __LOGGER__.debug(f'Updating Python module: `{module_name}`')
+        subprocess.call([sys.executable, '-m', 'pip', 'install', module_location, '--force-reinstall', '--upgrade'])
 
     __LOGGER__.info(
         '\n\nPlease create the following user environment variable:\n'
