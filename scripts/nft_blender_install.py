@@ -7,9 +7,13 @@ import site
 import subprocess
 import sys
 
+import bpy
+
 
 __LOGGER__ = logging.getLogger(__name__)
 __LOGGER__.setLevel(logging.INFO)
+
+bpy.ops.wm.console_toggle()
 
 
 MODULES = {
