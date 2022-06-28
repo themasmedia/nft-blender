@@ -18,24 +18,32 @@ This module conforms to the requirements of Python packaging, and can be install
 ### Windows
 1. Install Blender:
    - [Microsoft Store](https://apps.microsoft.com/store/detail/blender/9PP3C07GTVRH) 
-     (recommended for users on shared machine)
+     (recommended for users on shared machine)<br/>
+     ![README_1](./docs/gfx/README_1.png)
    - [MSI Installer](https://www.blender.org/download/)
-2. Install Python 3.x:
+2. Install Python 3.x (note: your version may differ from that in the screenshots):
    - [Microsoft Store](https://apps.microsoft.com/store/detail/python-39/9P7QFQMJRFP7)
-     (recommended for users on shared machine)
+     (recommended for users on shared machine)<br/>
+     ![README_2](./docs/gfx/README_2.png)
    - [Application](https://www.python.org/downloads/)
 3. Install nft-blender module in Blender:
-   1. Launch Blender.
-   2. Open the System Console window (Window > Toggle System Console).
-   3. Go to the *Scripting* tab.
-   4. Copy and run the code in `scripts/install.py` from the [NFT Blender repository](https://github.com/Masangri/nft-blender).<br/>
-   5. In the System Console window, copy the Windows path in the last line of the output.
+   1. Launch Blender.<br/>
+      ![README_3_1](./docs/gfx/README_3_1.png)
+   2. Open the System Console window (Window > Toggle System Console).<br/>
+      ![README_3_2](./docs/gfx/README_3_2.png)
+   3. Go to the *Scripting* tab.<br/>
+      ![README_3_3](./docs/gfx/README_3_3.png)
+   4. Open and run the `nft_blender_install.py` script found in `scripts/` directory of the [NFT Blender repository](https://github.com/Masangri/nft-blender).<br/>
+      ![README_3_4](./docs/gfx/README_3_4.png)
+   5. In the System Console window, copy the Windows path in the last line of the output.<br/>
+      ![README_3_5](./docs/gfx/README_3_5.png)
 4. Include User's Python installation directory to list of Blender's `site-packages` locations:
    - Create PYTHONPATH environment variable for the user, if it doesn't yet exist.
-   - Set the value to the Windows path from the System Console window in step 3.5 above.
+   - Set the value to the Windows path from the System Console window in step 3.5 above.<br/>
+     ![README_4](./docs/gfx/README_4.png)
 5. Close Blender and relaunch.
-   - You will now be able to run `import nft_blender` to access scripts.
-   - Note that there is no custom menu add-on yet, and scripts will need to be run from the *Scripting* tab by the user.
+   - You will now be able to run `import nft_blender` to access the full NFT Blender module.
+   - Note that there is no custom menu add-on yet (currently working on it), and scripts will need to be run from the *Scripting* tab by the user.
 
 ## Installation for Python Development
 - Clone from GitHub:<br/>
