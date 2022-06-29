@@ -5,6 +5,7 @@ This module conforms to the requirements of Python packaging, and can be install
 ### External libraries include:
 - [PySide2](https://pypi.org/project/PySide2/)/[shiboken2](https://pypi.org/project/shiboken2/)
 - [PyTest](https://pypi.org/project/pytest/) (dev only)
+- [SQLAlchemy](https://pypi.org/project/SQLAlchemy/)
 - [Web3](https://pypi.org/project/web3/) (eventually...it's on the "roadmap")
 
 <br/>

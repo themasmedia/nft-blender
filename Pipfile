@@ -7,9 +7,10 @@ name = "pypi"
 nft-blender = {editable = true, path = "."}
 pyside2 = "*"
 shiboken2 = "*"
+sqlalchemy = "*"
 
 [dev-packages]
 pytest = "*"
 
 [requires]
-python_version = "3.9"
+python_version = "3.10"
