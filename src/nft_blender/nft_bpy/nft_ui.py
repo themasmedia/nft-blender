@@ -10,14 +10,14 @@ from PySide2 import QtCore, QtWidgets
 
 
 class UI_BlenderProcess(QtCore.QProcess):
-    """"""
+    """TODO"""
 
     def __init__(
         self,
         blend_files: list[str] = [],
         parent: QtWidgets.QApplication = None,
     ):
-        """"""
+        """TODO"""
         super().__init__(parent=parent)
 
         # Set app
@@ -42,7 +42,7 @@ class UI_ChecklistDialog(QtWidgets.QDialog):
         items: list[str] = [],
         parent: QtWidgets.QApplication = None,
     ):
-        """"""
+        """TODO"""
         super().__init__(parent=parent)
 
         self.btn_grp = QtWidgets.QButtonGroup()
@@ -69,11 +69,11 @@ class UI_ChecklistDialog(QtWidgets.QDialog):
         self.setWindowTitle(title)
 
     # def accept(self):
-    #     """"""
+    #     """TODO"""
     #     super().accept()
 
     def get_checked_items(self) -> list:
-        """"""
+        """TODO"""
         checked_items = []
         for btn in self.btn_grp.buttons():
             if btn.isChecked():
@@ -83,7 +83,7 @@ class UI_ChecklistDialog(QtWidgets.QDialog):
 
 
 class UI_TreeModel(QtCore.QAbstractItemModel):
-    """"""
+    """TODO"""
     def __init__(
         self,
         header_columns: list = [],
@@ -102,7 +102,7 @@ class UI_TreeModel(QtCore.QAbstractItemModel):
         self,
         parent=QtCore.QModelIndex(),
     ):
-        """"""
+        """TODO"""
         if not parent.isValid():
             return self._root_item.columnCount()
         return parent.internalPointer().columnCount()
@@ -112,7 +112,7 @@ class UI_TreeModel(QtCore.QAbstractItemModel):
         index: QtCore.QModelIndex = QtCore.QModelIndex(),
         role=QtCore.Qt.DisplayRole,
     ):
-        """"""
+        """TODO"""
         if any((not index.isValid(), role != QtCore.Qt.DisplayRole)):
             return None
         return index.internalPointer().data(index.column())
@@ -121,7 +121,7 @@ class UI_TreeModel(QtCore.QAbstractItemModel):
         self,
         index: QtCore.QModelIndex = QtCore.QModelIndex(),
     ):
-        """"""
+        """TODO"""
         if not index.isValid():
             return QtCore.Qt.NoItemFlags
         return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
@@ -132,7 +132,7 @@ class UI_TreeModel(QtCore.QAbstractItemModel):
         orientation=QtCore.Qt.Orientation,
         role=QtCore.Qt.DisplayRole
     ):
-        """"""
+        """TODO"""
         if all((orientation == QtCore.Qt.Horizontal, role == QtCore.Qt.DisplayRole)):
             return self._root_item.data(section)
         return None
@@ -143,7 +143,7 @@ class UI_TreeModel(QtCore.QAbstractItemModel):
         col: int,
         parent: QtCore.QModelIndex = QtCore.QModelIndex(),
     ):
-        """"""
+        """TODO"""
         if not self.hasIndex(row, col, parent):
             return QtCore.QModelIndex()
 
@@ -161,7 +161,7 @@ class UI_TreeModel(QtCore.QAbstractItemModel):
         self,
         index: QtCore.QModelIndex = QtCore.QModelIndex(),
     ):
-        """"""
+        """TODO"""
         if not index.isValid():
             return QtCore.QModelIndex()
 
@@ -175,7 +175,7 @@ class UI_TreeModel(QtCore.QAbstractItemModel):
         self,
         parent: QtCore.QModelIndex = QtCore.QModelIndex(),
     ) -> int:
-        """"""
+        """TODO"""
         if parent.column() > 0:
             return 0
         elif not parent.isValid():
@@ -189,7 +189,7 @@ class UI_TreeModel(QtCore.QAbstractItemModel):
         data,
         parent=None,
     ):
-        """"""
+        """TODO"""
         parent = parent if parent else self._root_item
         for k, v in sorted(data.items(), key=lambda k: k):
             data_items = ['' for i in range(self._col_count)]
@@ -207,14 +207,14 @@ class UI_TreeModel(QtCore.QAbstractItemModel):
 
 
 class UI_TreeItem(object):
-    """"""
+    """TODO"""
     def __init__(
         self,
         data: list = [],
         display_data_function: typing.Callable | None = None,
         parent: QtWidgets.QApplication | None = None,
     ):
-        """"""
+        """TODO"""
         self._func = display_data_function
         self._item_data = data
         self._parent_item = parent
@@ -224,23 +224,23 @@ class UI_TreeItem(object):
         self,
         tree_item: 'UI_TreeItem',
     ):
-        """"""
+        """TODO"""
         return self._child_items.append(tree_item)
 
     def child(self, row: int,):
-        """"""
+        """TODO"""
         return self._child_items[row]
 
     def childCount(self):
-        """"""
+        """TODO"""
         return len(self._child_items)
 
     def columnCount(self):
-        """"""
+        """TODO"""
         return len(self._item_data)
 
     def data(self, col,):
-        """"""
+        """TODO"""
         if col < self.columnCount():
             if isinstance(self._item_data[col], str):
                 return self._item_data[col]
@@ -250,11 +250,11 @@ class UI_TreeItem(object):
         return None
 
     def parent(self):
-        """"""
+        """TODO"""
         return self._parent_item
 
     def row(self) -> int:
-        """"""
+        """TODO"""
         if self.parent():
             return self.parent()._child_items.index(self)
 
@@ -262,7 +262,7 @@ class UI_TreeItem(object):
 
 
 def ui_get_app() -> QtWidgets.QApplication:
-    """"""
+    """TODO"""
     qapp = QtWidgets.QApplication.instance()
     if not qapp:
         qapp = QtWidgets.QApplication(sys.argv)
@@ -276,7 +276,7 @@ def ui_get_checklist(
     items: list = [],
     parent: QtWidgets.QApplication = None,
 ) -> list:
-    """"""
+    """TODO"""
     _ = ui_get_app()
     checklist_dialog = UI_ChecklistDialog(
         title,
@@ -294,7 +294,7 @@ def ui_get_directory(
     dir_str: str = '',
     parent: QtWidgets.QApplication = None,
 ) -> pathlib.Path | None:
-    """"""
+    """TODO"""
     _ = ui_get_app()
     result = QtWidgets.QFileDialog.getExistingDirectory(
         parent,
@@ -312,7 +312,7 @@ def ui_get_file(
     select_multiple: bool = False,
     parent: QtWidgets.QApplication = None,
 ) -> pathlib.Path | list:
-    """"""
+    """TODO"""
     _ = ui_get_app()
 
     if select_multiple:
@@ -343,7 +343,7 @@ def ui_get_int(
     step: int = 1,
     parent: QtWidgets.QApplication = None,
 ) -> int | None:
-    """"""
+    """TODO"""
     _ = ui_get_app()
     result, success = QtWidgets.QInputDialog.getInt(
         parent,
@@ -366,7 +366,7 @@ def ui_get_item(
     editable: bool = False,
     parent: QtWidgets.QApplication = None,
 ) -> str | None:
-    """"""
+    """TODO"""
     current = items.index(default_item) if default_item in items else 0
 
     _ = ui_get_app()
@@ -388,7 +388,7 @@ def ui_get_text(
     text: str = '',
     parent: QtWidgets.QApplication = None,
 ) -> str | None:
-    """"""
+    """TODO"""
     _ = ui_get_app()
     result, success = QtWidgets.QInputDialog.getText(
         parent,
@@ -406,7 +406,7 @@ def ui_message_box(
     message_box_type: str = 'about',
     parent: QtWidgets.QApplication = None,
 ) -> bool:
-    """"""
+    """TODO"""
     message_box_types = {
         'about': QtWidgets.QMessageBox.about,
         'critical': QtWidgets.QMessageBox.critical,
@@ -430,6 +430,6 @@ def ui_message_box(
 def ui_set_workspace(
     workspace_name: str,
 ):
-    """"""
+    """TODO"""
     workspace = bpy.data.workspaces.get(workspace_name) or bpy.context.window.workspace
     bpy.context.window.workspace = workspace

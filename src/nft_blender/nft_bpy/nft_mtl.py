@@ -58,7 +58,7 @@ PBR_IMG_DATA = {
 #     search_for: str = '',
 #     replace_with: str = '',
 # ):
-#     """"""
+#     """TODO"""
 #     if not mesh_objs:
 #         mesh_objs = (obj for obj in bpy.data.objects if obj.type == 'MESH')
 
@@ -104,7 +104,7 @@ def mtl_search_replace_image_dir_paths(
     replace_with: str = '',
     collection: bpy_types.Collection = None,
 ):
-    """"""
+    """TODO"""
 
     if collection:
         img_nodes, mtl_list = [], []
@@ -145,7 +145,7 @@ def mtl_set_material_data(
     material_name: str = None,
     mesh_objs: list = [],
 ):
-    """"""
+    """TODO"""
     if material_name and mesh_objs:
 
         material = bpy.data.materials.get(material_name)
