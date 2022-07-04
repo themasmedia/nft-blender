@@ -1,7 +1,7 @@
 #!$BLENDER_PATH/python/bin python
 
-import os
 import pathlib
+import tempfile
 
 import bpy
 
@@ -30,9 +30,7 @@ def io_get_current_file_path() -> pathlib.Path:
 
 def io_get_temp_dir() -> pathlib.Path | None:
     """"""
-    temp_dir = os.getenv('TEMP') or os.getenv('TMP') or os.getenv('TMP_DIR')
-
-    return pathlib.Path(temp_dir) if temp_dir is not None else None
+    return pathlib.Path(tempfile.gettempdir())
 
 
 def io_save_as(
