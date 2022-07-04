@@ -9,16 +9,18 @@ import sqlalchemy.ext.declarative
 
 
 class DB_ObjectBase(object):
-    """"""
+    """TODO"""
     def __getitem__(self, field):
+        """TODO"""
         return self.__dict__[field]
 
     def __repr__(self):
-        """"""
+        """TODO"""
         return f'<{self.__class__.__name__} (id: {self.id} in {self.__tablename__})>'
 
     @sqlalchemy.ext.declarative.declared_attr
     def __tablename__(cls):
+        """TODO"""
         return cls.__name__.lower()
 
     id =  sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
@@ -36,7 +38,7 @@ DB_UserProjects = sqlalchemy.Table(
 
 
 class DB_Project(DB_ObjectBase):
-    """"""
+    """TODO"""
     __tablename__ = 'projects'
     code = sqlalchemy.Column(sqlalchemy.String, unique=True)
     name = sqlalchemy.Column(sqlalchemy.String, nullable=False, unique=True)
@@ -51,7 +53,7 @@ class DB_Project(DB_ObjectBase):
 
 
 class DB_User(DB_ObjectBase):
-    """"""
+    """TODO"""
     __tablename__ = 'users'
     name = sqlalchemy.Column(sqlalchemy.String, nullable=False, unique=True)
     projects = sqlalchemy.orm.relationship(
@@ -66,7 +68,7 @@ def db_create_table(
     db_engine: sqlalchemy.engine.base.Engine,
     drop_existing: bool = False
 ):
-    """"""
+    """TODO"""
     if drop_existing:
         DB_ObjectBase.metadata.drop_all(db_engine)
 
@@ -74,12 +76,12 @@ def db_create_table(
 
 
 def db_get_columns(db_row: DB_ObjectBase) -> dict:
-    """"""
+    """TODO"""
     return db_row.__class__.__table__.columns
 
 
 def db_get_engine(db_url: pathlib.Path | str):
-    """"""
+    """TODO"""
     return sqlalchemy.create_engine(db_url, echo=True)
 
 
@@ -100,7 +102,7 @@ def db_upsert(
     column_name_filter: str,
     *db_entries: tuple[DB_ObjectBase],
 ) -> bool | tuple[bool]:
-    """"""
+    """TODO"""
     db_entries_updated = []
 
     with sqlalchemy.orm.Session(db_engine) as db_session:
