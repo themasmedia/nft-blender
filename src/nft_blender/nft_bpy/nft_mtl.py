@@ -2,6 +2,7 @@
 
 import pathlib
 import re
+import typing
 
 import bpy
 import bpy_types
@@ -127,15 +128,15 @@ def mtl_search_replace_image_dir_paths(
     )
 
     for img_node in img_nodes:
-    
+
         repathed_fp = pathlib.Path(img_node.filepath.replace(search_for, replace_with))
         re_match = re_img_data_pattern.match(repathed_fp.as_posix())
-        
+
         if re_match:
-            
+
             img_suffix = re_match.group('img_data_name')
             colorspace_settings = PBR_IMG_DATA.get(img_suffix)['colorspace_settings']
-            
+
             repathed_fp_str = '//' + str(repathed_fp).lstrip('\\')
             img_node.filepath = repathed_fp_str
             img_node.colorspace_settings.name = colorspace_settings
@@ -143,7 +144,7 @@ def mtl_search_replace_image_dir_paths(
 
 def mtl_set_material_data(
     material_name: str = None,
-    mesh_objs: list = [],
+    mesh_objs: typing.Iterable = (),
 ):
     """TODO"""
     if material_name and mesh_objs:

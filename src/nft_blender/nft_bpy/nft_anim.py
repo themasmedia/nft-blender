@@ -5,7 +5,7 @@ import pathlib
 import bpy
 
 
-KEYING_SET_ROOT_PATH = pathlib.Path('') # TODO
+KEYING_SET_ROOT_PATH = pathlib.Path('') #TODO
 
 
 def anim_get_existing_keying_set_names() -> list:
@@ -38,7 +38,7 @@ def anim_get_keying_set_names_for_asset(
         keying_set_names.sort()
 
         return keying_set_names
-    
+
     return []
 
 
@@ -53,10 +53,12 @@ def anim_load_keying_set_for_asset(
 
         return False
 
-    keying_set_file_path = KEYING_SET_ROOT_PATH.joinpath(asset_name, keying_set_name).with_suffix('.py')
+    keying_set_file_path = KEYING_SET_ROOT_PATH.joinpath(
+        asset_name, keying_set_name
+    ).with_suffix('.py')
 
     if keying_set_file_path.is_file():
-        with keying_set_file_path.open('r') as ks_rf:
+        with keying_set_file_path.open('r', encoding='utf-8') as ks_rf:
             exec(ks_rf.read())
         bpy.ops.anim.keying_set_active_set(type=keying_set_name)
 

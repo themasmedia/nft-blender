@@ -1,5 +1,7 @@
 #!$BLENDER_PATH/python/bin python
 
+import typing
+
 import bpy
 
 
@@ -24,14 +26,13 @@ def scn_get_child_layer_collections(
 
 
 def scn_get_selected_objects(
-    type_filter: list = []
+    type_filter: typing.Sequence = (),
 ) -> list:
     """TODO"""
     bpy.ops.object.mode_set(mode='OBJECT')
     sl_objs = bpy.context.selected_objects
 
-    if type_filter:
-        [sl_obj for sl_obj in sl_objs if sl_obj.type in type_filter]
+    sl_objs = [sl_obj for sl_obj in sl_objs if sl_obj.type in type_filter]
 
     return sl_objs
 

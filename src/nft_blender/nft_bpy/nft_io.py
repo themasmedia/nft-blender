@@ -23,6 +23,11 @@ def io_append_file(
     )
 
 
+def io_get_blender_app_path() -> pathlib.Path:
+    """TODO"""
+    return pathlib.Path(bpy.app.binary_path)
+
+
 def io_get_current_file_path() -> pathlib.Path:
     """TODO"""
     return pathlib.Path(bpy.data.filepath)

@@ -4,24 +4,55 @@ import pathlib
 import sys
 import typing
 
-import bpy
-
-from PySide2 import QtCore, QtWidgets
+from PySide2 import QtCore, QtGui, QtUiTools, QtWidgets
 
 
-class UI_BlenderProcess(QtCore.QProcess):
+class UIDialogBase(QtWidgets.QDialog):
+    """TODO"""
+    _UI_FILE_PATH = ''
+
+    def __init__(
+        self,
+        parent: QtWidgets.QApplication = None,
+    ):
+        """TODO"""
+        super().__init__(parent=parent)
+        self._ui_setup()
+        self._connect_widgets()
+
+    def _connect_widgets(self):
+        """TODO"""
+        raise NotImplementedError
+
+    def _ui_setup(self):
+        """TODO"""
+        self._ui = QtUiTools.QUiLoader().load(self._ui_file_path.as_posix())
+        self._layout = QtWidgets.QGridLayout()
+        self._layout.addWidget(self._ui)
+        self.setLayout(self._layout)
+
+    @classmethod
+    @property
+    def _ui_file_path(cls) -> pathlib.Path:
+        """TODO"""
+        ui_file_path = pathlib.Path(cls._UI_FILE_PATH)
+        assert ui_file_path.exists() and ui_file_path.suffix == '.ui'
+        return ui_file_path
+
+
+class UIBlenderProcess(QtCore.QProcess):
     """TODO"""
 
     def __init__(
         self,
-        blend_files: list[str] = [],
+        blender_app_path = pathlib.Path | str,
+        blend_files: typing.Iterable[str] = (),
         parent: QtWidgets.QApplication = None,
     ):
         """TODO"""
         super().__init__(parent=parent)
 
         # Set app
-        blender_app_path = pathlib.Path(bpy.app.binary_path)
         self.setProgram(blender_app_path.as_posix())
 
         # Set arguments
@@ -32,14 +63,14 @@ class UI_BlenderProcess(QtCore.QProcess):
         self.setArguments(args)
 
 
-class UI_ChecklistDialog(QtWidgets.QDialog):
+class UIChecklistDialog(QtWidgets.QDialog):
     """PySide2 Checklist Dialog Widget"""
-    
+
     def __init__(
         self,
         title: str = '',
         text: str = '',
-        items: list[str] = [],
+        items: typing.Iterable[str] = (),
         parent: QtWidgets.QApplication = None,
     ):
         """TODO"""
@@ -68,10 +99,6 @@ class UI_ChecklistDialog(QtWidgets.QDialog):
         self.setLayout(self.layout)
         self.setWindowTitle(title)
 
-    # def accept(self):
-    #     """TODO"""
-    #     super().accept()
-
     def get_checked_items(self) -> list:
         """TODO"""
         checked_items = []
@@ -82,11 +109,148 @@ class UI_ChecklistDialog(QtWidgets.QDialog):
         return checked_items
 
 
-class UI_TreeModel(QtCore.QAbstractItemModel):
+class TableModel(QtCore.QAbstractTableModel):
     """TODO"""
     def __init__(
         self,
-        header_columns: list = [],
+        rows: typing.Sequence = (),
+        header_data: typing.Sequence = (),
+        parent=None,
+        *args,
+    ):
+        """TODO"""
+        super().__init__(parent, *args)
+        self._rows = rows
+        self._header_data = header_data if header_data else [""]*len(rows[0])
+        self._column_count = len(self._header_data)
+        self._row_count = len(self._rows)
+        self._model = QtGui.QStandardItemModel(self)
+
+    def columnCount(self, parent=QtCore.QModelIndex()):
+        """TODO"""
+        return self._column_count
+
+    def data(self, index=QtCore.QModelIndex(), role=QtCore.Qt.DisplayRole):
+        """TODO"""
+        if role in (QtCore.Qt.DisplayRole, QtCore.Qt.EditRole):
+            data = self._rows[index.row()][index.column()]
+        elif role in(QtCore.Qt.ToolTipRole, QtCore.Qt.WhatsThisRole):
+            data = '?????'
+        else:
+            data = None
+        return data
+
+    def dropMimeData(self, mime_data, action=QtCore.Qt.DropAction, row=-1, column=-1, parent=QtCore.QModelIndex()):
+        """TODO"""
+        if mime_data.hasFormat("application/x-qabstractitemmodeldatalist") and parent.isValid():
+            byte_array = QtCore.QByteArray(mime_data.data("application/x-qabstractitemmodeldatalist"))
+            data_stream = QtCore.QDataStream(byte_array)
+            decoded_data = list()
+            data_item = dict()
+            row = data_stream.readInt32()
+            column = data_stream.readInt32()
+            map_items = data_stream.readInt32()
+            while not data_stream.atEnd():
+                for i in range(map_items):
+                    key = data_stream.readInt32()
+                    value = data_stream.readQVariant()
+                    data_item[QtCore.Qt.ItemDataRole(key)] = value
+                decoded_data.append(data_item)
+            txt = decoded_data[0][QtCore.Qt.DisplayRole]
+            original_data = self.data(parent)
+            source_index = self.index(row, column)
+            self.setData(parent, txt)
+            self.setData(source_index, original_data)
+            return True
+        return False
+
+    def flags(self, index):
+        """TODO"""
+        if not index.isValid():
+            return QtCore.Qt.ItemIsEnabled
+        return QtCore.Qt.ItemIsEnabled | \
+               QtCore.Qt.ItemIsSelectable | \
+               QtCore.Qt.ItemIsEditable | \
+               QtCore.Qt.ItemIsDragEnabled | \
+               QtCore.Qt.ItemIsDropEnabled
+
+    def headerData(self, section, orientation=QtCore.Qt.Horizontal, role=QtCore.Qt.DisplayRole):
+        """TODO"""
+        if role == QtCore.Qt.DisplayRole:
+            if orientation == QtCore.Qt.Horizontal:
+                header_data = self._header_data[section]
+            elif orientation == QtCore.Qt.Vertical:
+                header_data = f'Row {section + 1:02d}'
+        elif role == QtCore.Qt.WhatsThisRole:
+            header_data = '?????'
+        else:
+            header_data = None
+        return header_data
+
+    def insertColumns(self, first_column, total_columns=1, index=QtCore.QModelIndex()):
+        """TODO"""
+        lastColumn = first_column + total_columns - 1
+        self.beginInsertColumns(index, first_column, lastColumn)
+        for i, c in enumerate(range(first_column, lastColumn+1)):
+            self._header_data.insert(c, "")
+            for row in self._rows:
+                row.insert(c, "")
+            self._column_count += 1
+        self.endInsertColumns()
+        return True
+
+    def insertRows(self, first_row, total_rows=1, index=QtCore.QModelIndex()):
+        """TODO"""
+        last_row = first_row + total_rows - 1
+        self.beginInsertRows(index, first_row, last_row)
+        for i, r in enumerate(range(first_row, last_row+1)):
+            self._rows.insert(r, ["" for i in range(self._column_count)])
+            self._row_count += 1
+        self.endInsertRows()
+        return True
+
+    def removeColumns(self, first_column, total_columns=1,  index=QtCore.QModelIndex()):
+        """TODO"""
+        lastColumn = first_column + total_columns - 1
+        self.beginRemoveColumns(index, first_column, lastColumn)
+        del self._header_data[first_column : lastColumn + 1]
+        for row in self._rows:
+            del row[first_column : lastColumn + 1]
+        self._column_count -= total_columns
+        self.endRemoveColumns()
+        return True
+
+    def removeRows(self, first_row, total_rows=1, index=QtCore.QModelIndex()):
+        """TODO"""
+        last_row = first_row + total_rows - 1
+        self.beginRemoveRows(index, first_row, last_row)
+        del self._rows[first_row : last_row + 1]
+        self._row_count -= total_rows
+        self.endRemoveRows()
+        return True
+
+    def rowCount(self, parent=QtCore.QModelIndex()):
+        """TODO"""
+        return self._row_count
+
+    def setData(self, index, value, role=QtCore.Qt.EditRole):
+        """TODO"""
+        if any((role != QtCore.Qt.EditRole, not index.isValid(), not value)):
+            return False
+        self._rows[index.row()][index.column()] = value
+        self.dataChanged.emit(index, index)
+        return True
+
+    def supportedDropActions(self):
+        """TODO"""
+        return QtCore.Qt.DropAction | QtCore.Qt.MoveAction | QtCore.Qt.CopyAction
+
+
+class UITreeModel(QtCore.QAbstractItemModel):
+    """TODO"""
+    def __init__(
+        self,
+        header_columns: list | tuple = (),
         display_data_function: typing.Callable | None = None,
         parent: QtWidgets.QApplication | None = None,
     ):
@@ -206,11 +370,11 @@ class UI_TreeModel(QtCore.QAbstractItemModel):
         return True
 
 
-class UI_TreeItem(object):
+class UITreeItem(object):
     """TODO"""
     def __init__(
         self,
-        data: list = [],
+        data: list | tuple = (),
         display_data_function: typing.Callable | None = None,
         parent: QtWidgets.QApplication | None = None,
     ):
@@ -273,12 +437,12 @@ def ui_get_app() -> QtWidgets.QApplication:
 def ui_get_checklist(
     title: str = '',
     text: str = '',
-    items: list = [],
+    items: typing.Sequence = (),
     parent: QtWidgets.QApplication = None,
 ) -> list:
     """TODO"""
     _ = ui_get_app()
-    checklist_dialog = UI_ChecklistDialog(
+    checklist_dialog = UIChecklistDialog(
         title,
         text,
         items,
@@ -361,7 +525,7 @@ def ui_get_int(
 def ui_get_item(
     title: str = '',
     label: str = '',
-    items: list = [],
+    items: typing.Sequence = (),
     default_item: str = '',
     editable: bool = False,
     parent: QtWidgets.QApplication = None,
@@ -400,6 +564,18 @@ def ui_get_text(
     return result if success else None
 
 
+def ui_launch_dialog(
+    cls: typing.Type[QtWidgets.QDialog] | typing.Type[QtWidgets.QMainWindow],
+    parent: QtWidgets.QApplication = None,
+):
+    """TODO"""
+    _ = ui_get_app()
+    ui_dialog = cls(parent)
+    ui_dialog.exec_()
+
+    return ui_dialog
+
+
 def ui_message_box(
     title: str = '',
     text: str = '',
@@ -425,11 +601,3 @@ def ui_message_box(
             QtWidgets.QMessageBox.StandardButton.Yes,
         )
     )
-
-
-def ui_set_workspace(
-    workspace_name: str,
-):
-    """TODO"""
-    workspace = bpy.data.workspaces.get(workspace_name) or bpy.context.window.workspace
-    bpy.context.window.workspace = workspace
