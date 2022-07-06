@@ -3,7 +3,7 @@
 A growing set of useful tools for Blender that utilizes the full scope of Python 3 beyond just what ships with Blender, by ***Mas***.<br/>
 This module conforms to the requirements of Python packaging, and can be installed **in Blender**, free of dependency issues & user complexity.<br/>
 ### External libraries include:
-- [PySide2](https://pypi.org/project/PySide2/)/[shiboken2](https://pypi.org/project/shiboken2/)
+- [PySide6](https://pypi.org/project/PySide6/)/[shiboken6](https://pypi.org/project/shiboken6/)
 - [PyTest](https://pypi.org/project/pytest/) (dev only)
 - [SQLAlchemy](https://pypi.org/project/SQLAlchemy/)
 - [Web3](https://pypi.org/project/web3/) (eventually...it's on the "roadmap")

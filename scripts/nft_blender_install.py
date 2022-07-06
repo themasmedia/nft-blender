@@ -8,14 +8,10 @@ import site
 import subprocess
 import sys
 
-import bpy
-
 
 __LOGGER__ = logging.getLogger(__name__)
 __LOGGER__.addHandler(logging.StreamHandler(sys.stdout))
 __LOGGER__.setLevel(logging.INFO)
-
-# bpy.ops.wm.console_toggle()
 
 
 MODULES = {
@@ -24,13 +20,13 @@ MODULES = {
         'specifier': 'git+https://github.com/Masangri/nft-blender.git@main#egg=nft-blender',
     },
     # Dependencies (installed automatically with `nft-blender` module):
-    'PySide2': {
+    'PySide6': {
         'reinstall': False,
-        'specifier': 'PySide2',
+        'specifier': 'PySide6',
     },
-    'shiboken2': {
+    'SQLAlchemy': {
         'reinstall': False,
-        'specifier': 'shiboken2',
+        'specifier': 'SQLAlchemy',
     },
 }
 
@@ -47,7 +43,7 @@ def _get_user_site() -> pathlib.Path:
 
 
 def install_package(module_name: str) -> bool:
-    """"""
+    """TODO"""
     os.system('cls')
 
     # Retrieve module name and location
@@ -56,7 +52,8 @@ def install_package(module_name: str) -> bool:
 
     # Abort if module info isn't found.
     if not module_specifier:
-        __LOGGER__.warning(f'`{module_name}` is not a valid option. Aborting!')
+        logger_msg = f'`{module_name}` is not a valid option. Aborting!'
+        __LOGGER__.warning(logger_msg)
         return False
 
     # Upgrade `pip` if necessary.
@@ -64,10 +61,12 @@ def install_package(module_name: str) -> bool:
     subprocess.call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pip'])
 
     # Access to Blender's internal site packages might be restricted on Windows.
-    # Install package to user's Python site-packages directory instead (same version of Python 3.x recommended).
+    # Install package to user's Python site-packages directory instead
+    # (same version of Python 3.x as Blender installation is recommended).
     user_site = _get_user_site()
     if str(user_site) not in site.getsitepackages():
-        __LOGGER__.debug('Adding user\'s `site-packages` directory as potential installation location.')
+        logger_msg = 'Adding user\'s `site-packages` directory as potential installation location.'
+        __LOGGER__.debug(logger_msg)
         site.addsitedir(str(user_site))
 
     installed_module_names = [mod.name for mod in pkgutil.iter_modules()]
@@ -75,31 +74,33 @@ def install_package(module_name: str) -> bool:
 
     # Install module and dependencies from GitHub repository (branch: `main`), if not already.
     if module_name not in installed_module_names:
-        __LOGGER__.debug(f'Installing Python module: `{module_name}`')
+        logger_msg = f'Installing Python module: `{module_name}`'
+        __LOGGER__.debug(logger_msg)
 
     # Update module and dependencies.
     else:
-        __LOGGER__.debug(f'Updating Python module: `{module_name}`')
+        logger_msg = f'Updating Python module: `{module_name}`'
+        __LOGGER__.debug(logger_msg)
         if module_data.get('reinstall'):
             subprocess_args.append('--force-reinstall')
         subprocess_args.append('--upgrade')
 
     subprocess.call(subprocess_args)
 
-    __LOGGER__.info(
-        '\n\nPlease create the following user environment variable:\n'
-        f'PYTHONPATH="{str(user_site)}"\n'
-    )
+    logger_msg = '\n\nPlease create the following user environment variable:\n' \
+                 f'PYTHONPATH="{str(user_site)}"\n'
+    __LOGGER__.info(logger_msg)
 
     return True
 
 
 def uninstall_package(module_name: str) -> bool:
-    """"""
+    """TODO"""
     # Uninstall module and dependencies, if they are installed.
     installed_module_names = [mod.name for mod in pkgutil.iter_modules()]
     if module_name in installed_module_names:
-        __LOGGER__.debug(f'Uninstalling Python module: `{module_name}`')
+        logger_msg = f'Uninstalling Python module: `{module_name}`'
+        __LOGGER__.debug(logger_msg)
         subprocess.call([sys.executable, '-m', 'pip', 'uninstall', '-y', module_name])
 
         return True

@@ -5,8 +5,7 @@ name = "pypi"
 
 [packages]
 nft-blender = {editable = true, path = "."}
-pyside2 = "*"
-shiboken2 = "*"
+pyside6 = "*"
 sqlalchemy = "*"
 
 [dev-packages]

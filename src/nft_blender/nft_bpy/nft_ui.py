@@ -4,7 +4,7 @@ import pathlib
 import sys
 import typing
 
-from PySide2 import QtCore, QtGui, QtUiTools, QtWidgets
+from PySide6 import QtCore, QtGui, QtUiTools, QtWidgets
 
 
 class UIDialogBase(QtWidgets.QDialog):
@@ -109,7 +109,7 @@ class UIChecklistDialog(QtWidgets.QDialog):
         return checked_items
 
 
-class TableModel(QtCore.QAbstractTableModel):
+class UITableModel(QtCore.QAbstractTableModel):
     """TODO"""
     def __init__(
         self,
@@ -250,7 +250,7 @@ class UITreeModel(QtCore.QAbstractItemModel):
     """TODO"""
     def __init__(
         self,
-        header_columns: list | tuple = (),
+        header_columns: list[str] | tuple[str] = (),
         display_data_function: typing.Callable | None = None,
         parent: QtWidgets.QApplication | None = None,
     ):
@@ -260,7 +260,7 @@ class UITreeModel(QtCore.QAbstractItemModel):
         super().__init__(parent)
         self._col_count = len(header_columns)
         self._func = display_data_function
-        self._root_item = UI_TreeItem(header_columns)
+        self._root_item = UITreeItem(header_columns)
 
     def columnCount(
         self,
@@ -350,7 +350,7 @@ class UITreeModel(QtCore.QAbstractItemModel):
 
     def setModelData(
         self,
-        data,
+        data: dict,
         parent=None,
     ):
         """TODO"""
@@ -359,13 +359,13 @@ class UITreeModel(QtCore.QAbstractItemModel):
             data_items = ['' for i in range(self._col_count)]
             data_items[0] = k
             if isinstance(v, dict):
-                tree_item = UI_TreeItem(data_items, parent)
+                tree_item = UITreeItem(data_items, parent)
                 parent.appendChildItem(tree_item)
                 self.setModelData(v, tree_item)
             else:
                 if len(data_items) > 1:
                     data_items[-1] = v
-                tree_item = UI_TreeItem(data_items, parent, self._func)
+                tree_item = UITreeItem(data_items, parent, self._func)
                 parent.appendChildItem(tree_item)
         return True
 
@@ -386,7 +386,7 @@ class UITreeItem(object):
 
     def appendChildItem(
         self,
-        tree_item: 'UI_TreeItem',
+        tree_item: 'UITreeItem',
     ):
         """TODO"""
         return self._child_items.append(tree_item)
