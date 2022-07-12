@@ -5,11 +5,13 @@ import sys
 import typing
 
 from PySide6 import QtCore, QtGui, QtUiTools, QtWidgets
+# from __feature__ import snake_case, true_property
 
 
 class UIDialogBase(QtWidgets.QDialog):
     """TODO"""
-    _UI_FILE_PATH = ''
+    _UI_FILE_NAME = ''
+    _UI_WINDOW_TITLE = ''
 
     def __init__(
         self,
@@ -17,27 +19,37 @@ class UIDialogBase(QtWidgets.QDialog):
     ):
         """TODO"""
         super().__init__(parent=parent)
-        self._ui_setup()
-        self._connect_widgets()
+        self._set_up_ui()
+        self._set_up_connections()
 
-    def _connect_widgets(self):
+    def _set_up_connections(self):
         """TODO"""
         raise NotImplementedError
 
-    def _ui_setup(self):
+    def _set_up_ui(self):
         """TODO"""
         self._ui = QtUiTools.QUiLoader().load(self._ui_file_path.as_posix())
         self._layout = QtWidgets.QGridLayout()
         self._layout.addWidget(self._ui)
         self.setLayout(self._layout)
 
+        self.setWindowTitle(self._ui_window_title)
+
     @classmethod
     @property
     def _ui_file_path(cls) -> pathlib.Path:
         """TODO"""
-        ui_file_path = pathlib.Path(cls._UI_FILE_PATH)
+        ui_dir_path = pathlib.Path(__file__).parent.parent
+        ui_file_path = ui_dir_path.joinpath('ui', cls._UI_FILE_NAME)
         assert ui_file_path.exists() and ui_file_path.suffix == '.ui'
         return ui_file_path
+
+    @classmethod
+    @property
+    def _ui_window_title(cls) -> str:
+        """TODO"""
+        assert len(cls._UI_WINDOW_TITLE) > 0
+        return cls._UI_WINDOW_TITLE
 
 
 class UIBlenderProcess(QtCore.QProcess):
@@ -83,11 +95,11 @@ class UIChecklistDialog(QtWidgets.QDialog):
         self.layout.addRow(QtWidgets.QLabel(text))
 
         for item in items:
-            cb = QtWidgets.QCheckBox()
-            cb._item = item
-            self.layout.addRow(item, cb)
-            self.btn_grp.addButton(cb)
-            cb.setChecked(True)
+            chbox = QtWidgets.QCheckBox()
+            chbox.setProperty('item', item)
+            self.layout.addRow(item, chbox)
+            self.btn_grp.addButton(chbox)
+            chbox.setChecked(True)
 
         self.btn_box = QtWidgets.QDialogButtonBox(
             QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel
@@ -104,7 +116,7 @@ class UIChecklistDialog(QtWidgets.QDialog):
         checked_items = []
         for btn in self.btn_grp.buttons():
             if btn.isChecked():
-                checked_items.append(btn._item)
+                checked_items.append(btn.property('item'))
 
         return checked_items
 
@@ -115,22 +127,25 @@ class UITableModel(QtCore.QAbstractTableModel):
         self,
         rows: typing.Sequence = (),
         header_data: typing.Sequence = (),
-        parent=None,
-        *args,
+        parent: QtCore.QObject = None,
     ):
         """TODO"""
-        super().__init__(parent, *args)
+        super().__init__(parent)
         self._rows = rows
         self._header_data = header_data if header_data else [""]*len(rows[0])
         self._column_count = len(self._header_data)
         self._row_count = len(self._rows)
         self._model = QtGui.QStandardItemModel(self)
 
-    def columnCount(self, parent=QtCore.QModelIndex()):
+    def columnCount(self):
         """TODO"""
         return self._column_count
 
-    def data(self, index=QtCore.QModelIndex(), role=QtCore.Qt.DisplayRole):
+    def data(
+        self,
+        index: QtCore.QModelIndex = QtCore.QModelIndex(),
+        role: int = QtCore.Qt.DisplayRole,
+    ):
         """TODO"""
         if role in (QtCore.Qt.DisplayRole, QtCore.Qt.EditRole):
             data = self._rows[index.row()][index.column()]
@@ -138,33 +153,46 @@ class UITableModel(QtCore.QAbstractTableModel):
             data = '?????'
         else:
             data = None
+
         return data
 
-    def dropMimeData(self, mime_data, action=QtCore.Qt.DropAction, row=-1, column=-1, parent=QtCore.QModelIndex()):
+    def dropMimeData(
+        self,
+        mime_data: QtCore.QMimeData,
+        action: int = QtCore.Qt.DropAction(),
+        row: int = -1,
+        column: int = -1,
+        parent: QtCore.QModelIndex = QtCore.QModelIndex(),
+    ):
         """TODO"""
-        if mime_data.hasFormat("application/x-qabstractitemmodeldatalist") and parent.isValid():
-            byte_array = QtCore.QByteArray(mime_data.data("application/x-qabstractitemmodeldatalist"))
-            data_stream = QtCore.QDataStream(byte_array)
-            decoded_data = list()
-            data_item = dict()
-            row = data_stream.readInt32()
-            column = data_stream.readInt32()
-            map_items = data_stream.readInt32()
-            while not data_stream.atEnd():
-                for i in range(map_items):
-                    key = data_stream.readInt32()
-                    value = data_stream.readQVariant()
-                    data_item[QtCore.Qt.ItemDataRole(key)] = value
-                decoded_data.append(data_item)
-            txt = decoded_data[0][QtCore.Qt.DisplayRole]
-            original_data = self.data(parent)
-            source_index = self.index(row, column)
-            self.setData(parent, txt)
-            self.setData(source_index, original_data)
-            return True
+        if action != QtCore.Qt.DropAction.IgnoreAction:
+            mime_data_format = 'application/x-qabstractitemmodeldatalist'
+            if mime_data.hasFormat(mime_data_format) and parent.isValid():
+                byte_array = QtCore.QByteArray(mime_data.data(mime_data_format))
+                data_stream = QtCore.QDataStream(byte_array)
+                decoded_data = list()
+                data_item = dict()
+                row = data_stream.readInt32()
+                column = data_stream.readInt32()
+                map_items = data_stream.readInt32()
+                while not data_stream.atEnd():
+                    for _ in range(map_items):
+                        key = data_stream.readInt32()
+                        value = data_stream.readQVariant()
+                        data_item[QtCore.Qt.ItemDataRole(key)] = value
+                    decoded_data.append(data_item)
+                txt = decoded_data[0][QtCore.Qt.DisplayRole]
+                original_data = self.data(parent)
+                source_index = self.index(row, column)
+                self.setData(parent, txt)
+                self.setData(source_index, original_data)
+                return True
         return False
 
-    def flags(self, index):
+    def flags(
+        self,
+        index: QtCore.QModelIndex,
+    ):
         """TODO"""
         if not index.isValid():
             return QtCore.Qt.ItemIsEnabled
@@ -174,7 +202,12 @@ class UITableModel(QtCore.QAbstractTableModel):
                QtCore.Qt.ItemIsDragEnabled | \
                QtCore.Qt.ItemIsDropEnabled
 
-    def headerData(self, section, orientation=QtCore.Qt.Horizontal, role=QtCore.Qt.DisplayRole):
+    def headerData(
+        self,
+        section: int,
+        orientation: QtCore.Qt.Orientation = QtCore.Qt.Horizontal,
+        role: int = QtCore.Qt.DisplayRole,
+    ):
         """TODO"""
         if role == QtCore.Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
@@ -187,40 +220,63 @@ class UITableModel(QtCore.QAbstractTableModel):
             header_data = None
         return header_data
 
-    def insertColumns(self, first_column, total_columns=1, index=QtCore.QModelIndex()):
+    def insertColumns(
+        self,
+        first_column: int,
+        total_columns: int = 1,
+        index: QtCore.QModelIndex = QtCore.QModelIndex(),
+    ) -> bool:
         """TODO"""
-        lastColumn = first_column + total_columns - 1
-        self.beginInsertColumns(index, first_column, lastColumn)
-        for i, c in enumerate(range(first_column, lastColumn+1)):
-            self._header_data.insert(c, "")
+        last_column = first_column + total_columns - 1
+        self.beginInsertColumns(index, first_column, last_column)
+
+        for col in range(first_column, last_column + 1):
+            self._header_data.insert(col, '')
             for row in self._rows:
-                row.insert(c, "")
+                row.insert(col, '')
             self._column_count += 1
+
         self.endInsertColumns()
+
         return True
 
-    def insertRows(self, first_row, total_rows=1, index=QtCore.QModelIndex()):
+    def insertRows(
+        self,
+        first_row: int,
+        total_rows: int = 1,
+        index: QtCore.QModelIndex = QtCore.QModelIndex(),
+    ):
         """TODO"""
         last_row = first_row + total_rows - 1
         self.beginInsertRows(index, first_row, last_row)
-        for i, r in enumerate(range(first_row, last_row+1)):
-            self._rows.insert(r, ["" for i in range(self._column_count)])
+        for row in range(first_row, last_row + 1):
+            self._rows.insert(row, [''] * self._column_count)
             self._row_count += 1
         self.endInsertRows()
         return True
 
-    def removeColumns(self, first_column, total_columns=1,  index=QtCore.QModelIndex()):
+    def removeColumns(
+        self,
+        first_column: int,
+        total_columns:int = 1,
+        index: QtCore.QModelIndex = QtCore.QModelIndex(),
+    ):
         """TODO"""
-        lastColumn = first_column + total_columns - 1
-        self.beginRemoveColumns(index, first_column, lastColumn)
-        del self._header_data[first_column : lastColumn + 1]
+        last_column = first_column + total_columns - 1
+        self.beginRemoveColumns(index, first_column, last_column)
+        del self._header_data[first_column : last_column + 1]
         for row in self._rows:
-            del row[first_column : lastColumn + 1]
+            del row[first_column : last_column + 1]
         self._column_count -= total_columns
         self.endRemoveColumns()
         return True
 
-    def removeRows(self, first_row, total_rows=1, index=QtCore.QModelIndex()):
+    def removeRows(
+        self,
+        first_row: int,
+        total_rows: int = 1,
+        index: QtCore.QModelIndex = QtCore.QModelIndex(),
+    ):
         """TODO"""
         last_row = first_row + total_rows - 1
         self.beginRemoveRows(index, first_row, last_row)
@@ -229,11 +285,16 @@ class UITableModel(QtCore.QAbstractTableModel):
         self.endRemoveRows()
         return True
 
-    def rowCount(self, parent=QtCore.QModelIndex()):
+    def rowCount(self):
         """TODO"""
         return self._row_count
 
-    def setData(self, index, value, role=QtCore.Qt.EditRole):
+    def setData(
+        self,
+        index: QtCore.QModelIndex = QtCore.QModelIndex(),
+        value: object | type[None] = None,
+        role: int = QtCore.Qt.EditRole,
+    ):
         """TODO"""
         if any((role != QtCore.Qt.EditRole, not index.isValid(), not value)):
             return False
@@ -246,12 +307,70 @@ class UITableModel(QtCore.QAbstractTableModel):
         return QtCore.Qt.DropAction | QtCore.Qt.MoveAction | QtCore.Qt.CopyAction
 
 
-class UITreeModel(QtCore.QAbstractItemModel):
+class UITreeModelItem(list):
     """TODO"""
     def __init__(
         self,
-        header_columns: list[str] | tuple[str] = (),
-        display_data_function: typing.Callable | None = None,
+        data: typing.Sequence,
+        parent: typing.Sequence | None = None,
+    ):
+        """TODO"""
+        super().__init__(data)
+        self._children = []
+        self._parent = parent
+
+    def appendChildItem(
+        self,
+        tree_item: 'UITreeModelItem',
+    ):
+        """TODO"""
+        return self._children.append(tree_item)
+
+    def child(
+        self,
+        row: int,
+    ):
+        """TODO"""
+        try:
+            return self._children[row]
+        except IndexError:
+            return None
+
+    def children(self):
+        """TODO"""
+        return self._children
+
+    def childCount(self):
+        """TODO"""
+        return len(self._children)
+
+    def columnCount(self):
+        """TODO"""
+        return len(self)
+
+    def data(
+        self,
+        col: int,
+    ):
+        """TODO"""
+        return str(self[col]) if col < self.columnCount() else None
+
+    def parent(self):
+        """TODO"""
+        return self._parent
+
+    def row(self) -> int:
+        """TODO"""
+        return self.parent().children().index(self) if self.parent() else 0
+
+
+class UITreeModel(QtCore.QAbstractItemModel):
+    """TODO"""
+    MODEL_ITEM_TYPE = UITreeModelItem
+
+    def __init__(
+        self,
+        header_columns: list[str] | tuple[str] = ('',),
         parent: QtWidgets.QApplication | None = None,
     ):
         """
@@ -259,8 +378,8 @@ class UITreeModel(QtCore.QAbstractItemModel):
         """
         super().__init__(parent)
         self._col_count = len(header_columns)
-        self._func = display_data_function
-        self._root_item = UITreeItem(header_columns)
+        self._root_item = self.MODEL_ITEM_TYPE(header_columns)
+
 
     def columnCount(
         self,
@@ -274,12 +393,13 @@ class UITreeModel(QtCore.QAbstractItemModel):
     def data(
         self,
         index: QtCore.QModelIndex = QtCore.QModelIndex(),
-        role=QtCore.Qt.DisplayRole,
+        role: int = QtCore.Qt.DisplayRole,
     ):
         """TODO"""
-        if any((not index.isValid(), role != QtCore.Qt.DisplayRole)):
-            return None
-        return index.internalPointer().data(index.column())
+        if index.isValid() and (role == QtCore.Qt.DisplayRole):
+            return index.internalPointer().data(index.column())
+
+        return None
 
     def flags(
         self,
@@ -288,17 +408,19 @@ class UITreeModel(QtCore.QAbstractItemModel):
         """TODO"""
         if not index.isValid():
             return QtCore.Qt.NoItemFlags
+
         return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
 
     def headerData(
         self,
-        section,
+        section: int,
         orientation=QtCore.Qt.Orientation,
-        role=QtCore.Qt.DisplayRole
+        role: int = QtCore.Qt.DisplayRole,
     ):
         """TODO"""
         if all((orientation == QtCore.Qt.Horizontal, role == QtCore.Qt.DisplayRole)):
             return self._root_item.data(section)
+
         return None
 
     def index(
@@ -306,7 +428,7 @@ class UITreeModel(QtCore.QAbstractItemModel):
         row: int,
         col: int,
         parent: QtCore.QModelIndex = QtCore.QModelIndex(),
-    ):
+    ) -> QtCore.QModelIndex:
         """TODO"""
         if not self.hasIndex(row, col, parent):
             return QtCore.QModelIndex()
@@ -319,12 +441,13 @@ class UITreeModel(QtCore.QAbstractItemModel):
         child_item = parent_item.child(row)
         if child_item:
             return self.createIndex(row, col, child_item)
+
         return QtCore.QModelIndex()
 
     def parent(
         self,
         index: QtCore.QModelIndex = QtCore.QModelIndex(),
-    ):
+    ) -> QtCore.QModelIndex:
         """TODO"""
         if not index.isValid():
             return QtCore.QModelIndex()
@@ -333,6 +456,7 @@ class UITreeModel(QtCore.QAbstractItemModel):
         parent_item = child_item.parent()
         if parent_item == self._root_item:
             return QtCore.QModelIndex()
+
         return self.createIndex(parent_item.row(), 0, parent_item)
 
     def rowCount(
@@ -350,88 +474,30 @@ class UITreeModel(QtCore.QAbstractItemModel):
 
     def setModelData(
         self,
-        data: dict,
-        parent=None,
+        data: typing.Iterable,
+        parent: 'UITreeModelItem' = None,
     ):
         """TODO"""
         parent = parent if parent else self._root_item
-        for k, v in sorted(data.items(), key=lambda k: k):
-            data_items = ['' for i in range(self._col_count)]
-            data_items[0] = k
-            if isinstance(v, dict):
-                tree_item = UITreeItem(data_items, parent)
+
+        if isinstance(data, typing.Mapping):
+            for key, val in sorted(data.items()):
+                data_items = [None] * self._col_count
+                data_items[0] = key
+                tree_item = self.MODEL_ITEM_TYPE(data_items, parent)
                 parent.appendChildItem(tree_item)
-                self.setModelData(v, tree_item)
-            else:
-                if len(data_items) > 1:
-                    data_items[-1] = v
-                tree_item = UITreeItem(data_items, parent, self._func)
-                parent.appendChildItem(tree_item)
-        return True
+                self.setModelData(val, tree_item)
 
-
-class UITreeItem(object):
-    """TODO"""
-    def __init__(
-        self,
-        data: list | tuple = (),
-        display_data_function: typing.Callable | None = None,
-        parent: QtWidgets.QApplication | None = None,
-    ):
-        """TODO"""
-        self._func = display_data_function
-        self._item_data = data
-        self._parent_item = parent
-        self._child_items = list()
-
-    def appendChildItem(
-        self,
-        tree_item: 'UITreeItem',
-    ):
-        """TODO"""
-        return self._child_items.append(tree_item)
-
-    def child(self, row: int,):
-        """TODO"""
-        return self._child_items[row]
-
-    def childCount(self):
-        """TODO"""
-        return len(self._child_items)
-
-    def columnCount(self):
-        """TODO"""
-        return len(self._item_data)
-
-    def data(self, col,):
-        """TODO"""
-        if col < self.columnCount():
-            if isinstance(self._item_data[col], str):
-                return self._item_data[col]
-            elif self._func:
-                return self._func(self._item_data[col])
-
-        return None
-
-    def parent(self):
-        """TODO"""
-        return self._parent_item
-
-    def row(self) -> int:
-        """TODO"""
-        if self.parent():
-            return self.parent()._child_items.index(self)
-
-        return 0
+        elif isinstance(data, typing.Sequence):
+            tree_item = self.MODEL_ITEM_TYPE(data, parent)
+            parent.appendChildItem(tree_item)
 
 
 def ui_get_app() -> QtWidgets.QApplication:
     """TODO"""
-    qapp = QtWidgets.QApplication.instance()
-    if not qapp:
-        qapp = QtWidgets.QApplication(sys.argv)
-
-    return qapp
+    return \
+        QtWidgets.QApplication.instance() if QtWidgets.QApplication.instance() \
+        else QtWidgets.QApplication(sys.argv)
 
 
 def ui_get_checklist(

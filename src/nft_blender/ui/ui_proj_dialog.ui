@@ -75,36 +75,14 @@
          </property>
          <layout class="QGridLayout" name="gridLayout_2">
           <item row="1" column="2">
-           <widget class="QLineEdit" name="proj_create_lnedit1"/>
-          </item>
-          <item row="0" column="2">
-           <widget class="QLabel" name="proj_create_label1">
-            <property name="frameShape">
-             <enum>QFrame::WinPanel</enum>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="2">
-           <widget class="QLineEdit" name="proj_create_lnedit2"/>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLabel" name="proj_create_label3">
-            <property name="text">
-             <string>Project Code:</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
+           <widget class="QLineEdit" name="proj_create_name_lnedit">
+            <property name="maxLength">
+             <number>-1</number>
             </property>
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QLabel" name="proj_create_label2">
+           <widget class="QLabel" name="proj_create_name_label">
             <property name="text">
              <string>Project Name:</string>
             </property>
@@ -113,11 +91,33 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="QPushButton" name="proj_create_pshbtn">
-            <property name="text">
-             <string>Set Project
-Directory</string>
+          <item row="4" column="1" colspan="2">
+           <widget class="QFrame" name="proj_create_btn_frame">
+            <layout class="QHBoxLayout" name="horizontalLayout">
+             <item>
+              <widget class="QPushButton" name="proj_create_btn_clear_pshbtn">
+               <property name="text">
+                <string>Clear</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="proj_create_btn_create_pshbtn">
+               <property name="text">
+                <string>Create</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QLineEdit" name="proj_create_code_lnedit">
+            <property name="inputMask">
+             <string/>
+            </property>
+            <property name="maxLength">
+             <number>-1</number>
             </property>
            </widget>
           </item>
@@ -137,22 +137,34 @@ Directory</string>
             </layout>
            </widget>
           </item>
-          <item row="4" column="1" colspan="2">
-           <widget class="QDialogButtonBox" name="proj_create_btnbox">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
+          <item row="0" column="2">
+           <widget class="QLabel" name="proj_create_dir_label">
+            <property name="frameShape">
+             <enum>QFrame::WinPanel</enum>
             </property>
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+            <property name="text">
+             <string/>
             </property>
-            <property name="standardButtons">
-             <set>QDialogButtonBox::Reset|QDialogButtonBox::Save</set>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
             </property>
-            <property name="centerButtons">
-             <bool>true</bool>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLabel" name="proj_create_code_label">
+            <property name="text">
+             <string>Project Code:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QPushButton" name="proj_create_dir_pshbtn">
+            <property name="text">
+             <string>Set Project
+Directory</string>
             </property>
            </widget>
           </item>
@@ -179,9 +191,24 @@ Directory</string>
          <property name="editTriggers">
           <set>QAbstractItemView::NoEditTriggers</set>
          </property>
-         <property name="selectionBehavior">
-          <enum>QAbstractItemView::SelectItems</enum>
+         <property name="alternatingRowColors">
+          <bool>true</bool>
          </property>
+         <property name="selectionBehavior">
+          <enum>QAbstractItemView::SelectRows</enum>
+         </property>
+         <property name="animated">
+          <bool>true</bool>
+         </property>
+         <property name="headerHidden">
+          <bool>true</bool>
+         </property>
+         <property name="expandsOnDoubleClick">
+          <bool>false</bool>
+         </property>
+         <attribute name="headerVisible">
+          <bool>false</bool>
+         </attribute>
         </widget>
        </item>
       </layout>
@@ -207,38 +234,5 @@ Directory</string>
   </layout>
  </widget>
  <resources/>
- <connections>
-  <connection>
-   <sender>proj_create_btnbox</sender>
-   <signal>rejected()</signal>
-   <receiver>UI_proj_dialog</receiver>
-   <slot>reject()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>286</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>proj_create_btnbox</sender>
-   <signal>accepted()</signal>
-   <receiver>UI_proj_dialog</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>157</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>
