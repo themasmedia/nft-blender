@@ -1,0 +1,51 @@
+{
+  "databases": {
+    "SQLite": {
+          "name": "nft_blender",
+          "path": null
+    }
+  },
+  "pipelines": {
+    "Default Pipeline": {
+      "assets": {
+        "CHAR": {
+          "published": {},
+          "versions": {}
+        },
+        "LGHT": {
+          "published": {},
+          "versions": {}
+        },
+        "PROP": {
+          "published": {},
+          "versions": {}
+        }
+      },
+      "data": {
+        "KSET": {}
+      },
+      "edit": {},
+      "models": {
+        "FBX": {}
+      },
+      "scenes": {
+        "ANIM": {
+          "published": {},
+          "versions": {}
+        },
+        "LAYT": {
+          "published": {},
+          "versions": {}
+        },
+        "RNDR": {
+          "published": {},
+          "versions": {}
+        }
+      },
+      "textures": {
+        "HDRI": {},
+        "UV": {}
+      }
+    }
+  }
+}
