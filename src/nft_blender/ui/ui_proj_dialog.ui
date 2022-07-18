@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>372</width>
-    <height>572</height>
+    <width>472</width>
+    <height>586</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -23,27 +23,178 @@
    <string>Dialog</string>
   </property>
   <property name="modal">
-   <bool>true</bool>
+   <bool>false</bool>
   </property>
   <layout class="QFormLayout" name="formLayout_2">
    <item row="2" column="0" colspan="2">
     <widget class="QToolBox" name="proj_toolbox">
      <property name="minimumSize">
       <size>
-       <width>350</width>
-       <height>500</height>
+       <width>450</width>
+       <height>550</height>
       </size>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
+     <widget class="QWidget" name="proj_db_widget">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>450</width>
+        <height>457</height>
+       </rect>
+      </property>
+      <attribute name="label">
+       <string>Database</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_5">
+       <item row="1" column="0" colspan="2">
+        <widget class="QLabel" name="proj_db_dbms_label">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Database Management System:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="11" column="0" colspan="3">
+        <spacer name="proj_db_vspacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="1" column="2">
+        <widget class="QComboBox" name="proj_db_dbms_combox">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QPushButton" name="proj_db_connect_pshbtn">
+         <property name="text">
+          <string>Connect to
+Database</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0" colspan="3">
+        <widget class="QGroupBox" name="proj_db_url_grpbox">
+         <property name="title">
+          <string>Database URL:</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_6">
+          <item row="0" column="0" colspan="2">
+           <widget class="QLineEdit" name="proj_db_url_lnedit">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>30</height>
+             </size>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QRadioButton" name="proj_db_url_custom_radbtn">
+            <property name="text">
+             <string>Set Custom</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QRadioButton" name="proj_db_url_default_radbtn">
+            <property name="text">
+             <string>Use Default</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLabel" name="proj_db_status_label">
+         <property name="text">
+          <string>Connection
+Status:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="proj_db_user_label">
+         <property name="text">
+          <string>Current User:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <widget class="QLineEdit" name="proj_db_user_lnedit">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2">
+        <widget class="QLineEdit" name="proj_db_status_lnedit">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
      <widget class="QWidget" name="proj_create_widget">
       <property name="geometry">
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>350</width>
-        <height>438</height>
+        <width>429</width>
+        <height>565</height>
        </rect>
       </property>
       <attribute name="label">
@@ -95,14 +246,14 @@
            <widget class="QFrame" name="proj_create_btn_frame">
             <layout class="QHBoxLayout" name="horizontalLayout">
              <item>
-              <widget class="QPushButton" name="proj_create_btn_clear_pshbtn">
+              <widget class="QPushButton" name="proj_create_reset_pshbtn">
                <property name="text">
-                <string>Clear</string>
+                <string>Reset</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="proj_create_btn_create_pshbtn">
+              <widget class="QPushButton" name="proj_create_create_pshbtn">
                <property name="text">
                 <string>Create</string>
                </property>
@@ -122,16 +273,80 @@
            </widget>
           </item>
           <item row="3" column="1" colspan="2">
-           <widget class="QGroupBox" name="proj_create_gbox">
+           <widget class="QGroupBox" name="proj_create_pipe_gbox">
             <property name="title">
              <string>Pipeline</string>
             </property>
-            <layout class="QVBoxLayout" name="verticalLayout_2">
-             <item>
-              <widget class="QTableView" name="proj_create_tbview">
-               <attribute name="horizontalHeaderVisible">
+            <layout class="QGridLayout" name="gridLayout_3">
+             <item row="2" column="3">
+              <widget class="QPushButton" name="proj_create_pipe_add_child_pshbtn">
+               <property name="text">
+                <string>Add Child Item</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="2" colspan="3">
+              <widget class="QGroupBox" name="proj_create_tmplt_grpbox">
+               <property name="title">
+                <string>Generate from Template</string>
+               </property>
+               <layout class="QHBoxLayout" name="horizontalLayout_2">
+                <item>
+                 <widget class="QComboBox" name="proj_create_tmplt_combox"/>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="proj_create_tmplt_pshbtn">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Load Template</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <widget class="QPushButton" name="proj_create_pipe_add_item_pshbtn">
+               <property name="text">
+                <string>Add Item</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2" colspan="3">
+              <widget class="QTreeView" name="proj_create_pipe_trview">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>200</height>
+                </size>
+               </property>
+               <property name="selectionBehavior">
+                <enum>QAbstractItemView::SelectItems</enum>
+               </property>
+               <property name="sortingEnabled">
+                <bool>true</bool>
+               </property>
+               <property name="animated">
+                <bool>true</bool>
+               </property>
+               <property name="expandsOnDoubleClick">
+                <bool>false</bool>
+               </property>
+               <attribute name="headerVisible">
                 <bool>false</bool>
                </attribute>
+              </widget>
+             </item>
+             <item row="2" column="4">
+              <widget class="QPushButton" name="proj_create_pipe_del_item_pshbtn">
+               <property name="text">
+                <string>Delete Item</string>
+               </property>
               </widget>
              </item>
             </layout>
@@ -178,15 +393,31 @@ Directory</string>
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>350</width>
-        <height>438</height>
+        <width>450</width>
+        <height>457</height>
        </rect>
       </property>
       <attribute name="label">
        <string>Navigate Project</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout">
-       <item>
+      <layout class="QGridLayout" name="gridLayout_4">
+       <item row="0" column="0">
+        <widget class="QLabel" name="proj_nav_label">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Project:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QComboBox" name="proj_nav_combox"/>
+       </item>
+       <item row="2" column="0" colspan="2">
         <widget class="QTreeView" name="proj_nav_trview">
          <property name="editTriggers">
           <set>QAbstractItemView::NoEditTriggers</set>
@@ -196,6 +427,9 @@ Directory</string>
          </property>
          <property name="selectionBehavior">
           <enum>QAbstractItemView::SelectRows</enum>
+         </property>
+         <property name="sortingEnabled">
+          <bool>true</bool>
          </property>
          <property name="animated">
           <bool>true</bool>
@@ -214,22 +448,6 @@ Directory</string>
       </layout>
      </widget>
     </widget>
-   </item>
-   <item row="1" column="0">
-    <widget class="QLabel" name="proj_top_label">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>Project:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="1">
-    <widget class="QComboBox" name="proj_top_combox"/>
    </item>
   </layout>
  </widget>
