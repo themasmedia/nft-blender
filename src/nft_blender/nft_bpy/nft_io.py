@@ -1,5 +1,7 @@
 #!$BLENDER_PATH/python/bin python
 
+import getpass
+import json
 import pathlib
 import tempfile
 
@@ -35,7 +37,20 @@ def io_get_current_file_path() -> pathlib.Path:
 
 def io_get_temp_dir() -> pathlib.Path | None:
     """TODO"""
-    return pathlib.Path(tempfile.gettempdir())
+    return pathlib.Path(tempfile.gettempdir()).resolve()
+
+
+def io_get_user() -> str:
+    """TODO"""
+    return getpass.getuser()
+
+
+def io_load_json_file(file_path: pathlib.Path | str) -> dict:
+    """TODO"""
+    with pathlib.Path(file_path).open('r', encoding='UTF-8') as readfile:
+        json_data = json.load(readfile)
+
+    return json_data
 
 
 def io_save_as(
