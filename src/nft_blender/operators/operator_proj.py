@@ -13,6 +13,7 @@ from nft_blender.nft_bpy import nft_io, nft_ui
 from nft_blender.nft_db import nft_sql
 
 import importlib
+
 importlib.reload(nft_io)
 importlib.reload(nft_sql)
 importlib.reload(nft_ui)
@@ -140,7 +141,7 @@ class UIDialogProj(nft_ui.UIDialogBase):
     def query_db_proj_data(
             self,
             project_name: str = '',
-        ) -> nft_sql.DB_Project:
+        ) -> nft_sql.DBProject:
         """TODO - currently for testing UI only. Use db query"""
 
         if project_name in PROJ_NAME_LIST:
@@ -149,7 +150,7 @@ class UIDialogProj(nft_ui.UIDialogBase):
             project_path = pathlib.Path('D:/Projects/NFT Droplets/NFTears').resolve().as_posix()
             project_pipeline = PROJ_DEFAULT_PIPELINE
 
-            db_project = nft_sql.DB_Project(
+            db_project = nft_sql.DBProject(
                 code=project_code,
                 name=project_name,
                 path=project_path,
@@ -157,7 +158,7 @@ class UIDialogProj(nft_ui.UIDialogBase):
             )
 
         else:
-            db_project = nft_sql.DB_Project(
+            db_project = nft_sql.DBProject(
                 code='',
                 name='',
                 path=pathlib.Path(),
@@ -166,17 +167,46 @@ class UIDialogProj(nft_ui.UIDialogBase):
 
         return db_project
 
+    def set_db_connection(
+        self,
+        db_url: str = '',
+        force_reset: bool = False,
+        force_update: bool = True,
+    ) -> bool:
+        """TODO"""
+        if force_reset or self._db_engine is None:
+            self._db_engine = nft_sql.db_get_engine(db_url)
+            # Assign DB engine to instance variable
+
+        db_connected = nft_sql.db_test_connection(self._db_engine)
+
+        if db_connected and force_update:
+            # Create default FB metadata table(s)
+            nft_sql.db_create_table(self._db_engine)
+
+            # Create DBUser entry in DB if necessary.
+            proj_db_update_user(
+                db_engine=self._db_engine,
+                name=self._ui.proj_db_user_lnedit.text(),
+            )
+
+        return db_connected
+
     def ui_update(self, *args):
         """TODO"""
         if self.sender() == self._ui.proj_toolbox:
 
-            if self._ui.proj_toolbox.widget(args[0]) == self._ui.proj_db_widget:
+            proj_widget = self._ui.proj_toolbox.widget(args[0])
+
+            if proj_widget == self._ui.proj_db_widget:
                 self.ui_update_proj_db()
 
-            elif self._ui.proj_toolbox.widget(args[0]) == self._ui.proj_create_widget:
+            elif proj_widget == self._ui.proj_create_widget:
+                proj_widget.setEnabled(self.set_db_connection(force_update=False))
                 self.ui_update_proj_create()
 
-            elif self._ui.proj_toolbox.widget(args[0]) == self._ui.proj_nav_widget:
+            elif proj_widget == self._ui.proj_nav_widget:
+                proj_widget.setEnabled(self.set_db_connection(force_update=False))
                 self.ui_update_proj_nav()
 
         else:
@@ -202,26 +232,47 @@ class UIDialogProj(nft_ui.UIDialogBase):
         elif self.sender() == self._ui.proj_create_btngrp:
 
             if args[0] == self._ui.proj_create_create_pshbtn:
-                project_name = self._ui.proj_create_name_lnedit.text()
                 project_code = self._ui.proj_create_code_lnedit.text()
+                project_name = self._ui.proj_create_name_lnedit.text()
                 project_path = pathlib.Path(self._ui.proj_create_dir_label.text()).as_posix()
                 project_pipeline = self._ui.proj_create_pipe_trview.model().modelData()
 
-                print(project_name, project_code, project_path, project_pipeline)
+                if not nft_ui.ui_message_box(
+                    title='Create/Update Project',
+                    text=f'Create/update DBProject entry with:\n' \
+                        f'project code: "{project_code}" &' \
+                        f'project name: "{project_name}"?',
+                    message_box_type='question',
+                    parent=self,
+                ):
+                    return
 
-                # db_project = nft_sql.DB_Project(
+                # Create/update DBProject entry in DB.
+                # proj_db_update_project(
+                #     db_engine=self._db_engine,
                 #     code=project_code,
                 #     name=project_name,
                 #     path=project_path,
                 #     pipeline=project_pipeline,
                 # )
 
-            elif args[0] == self._ui.proj_create_reset_pshbtn:
-                self._ui.proj_create_dir_label.clear()
-                self._ui.proj_create_code_lnedit.clear()
-                self._ui.proj_create_name_lnedit.clear()
-                self._ui.proj_create_pipe_trmodl.clear()
-                self._ui.proj_create_pipe_trview.setHeaderHidden(True)
+                # Create/update the project directory structure.
+                if nft_ui.ui_message_box(
+                    title='Create/Update Directory Structure?',
+                    text=f'Project directory structure will be created in {project_path}.\n' \
+                         'No folders or files will be overwritten or removed in the process.',
+                    message_box_type='question',
+                    parent=self,
+                ):
+                    proj_paths = proj_io_pipeline_to_paths(project_path, project_pipeline)
+                    for proj_path in proj_paths:
+                        print(proj_path)
+
+            self._ui.proj_create_dir_label.clear()
+            self._ui.proj_create_code_lnedit.clear()
+            self._ui.proj_create_name_lnedit.clear()
+            self._ui.proj_create_pipe_trmodl.clear()
+            self._ui.proj_create_pipe_trview.setHeaderHidden(True)
 
         elif self.sender() == self._ui.proj_create_pipe_btngrp:
 
@@ -247,7 +298,7 @@ class UIDialogProj(nft_ui.UIDialogBase):
             self._ui.proj_create_pipe_trview.setHeaderHidden(False)
 
 
-    def ui_update_proj_db(self, *args):
+    def ui_update_proj_db(self):
         """TODO"""
         if self.sender() in (self._ui.proj_db_btngrp, self._ui.proj_db_dbms_combox):
 
@@ -270,23 +321,12 @@ class UIDialogProj(nft_ui.UIDialogBase):
                     self._ui.proj_db_url_lnedit.setText(db_default_url)
 
         elif self.sender() == self._ui.proj_db_connect_pshbtn:
-            db_url = self._ui.proj_db_url_lnedit.text()
-            db_engine = nft_sql.db_get_engine(db_url)
-            db_connected = nft_sql.db_test_connection(db_engine)
 
-            if db_connected:
-                # Create default FB metadata table(s)
-                nft_sql.db_create_table(db_engine)
-                # Assign DB engine to instance variable
-                self._db_engine = db_engine
+            if self.set_db_connection(self._ui.proj_db_url_lnedit.text()):
                 lbl_css = 'color: white; background-color: green'
                 lbl_txt = 'Connected'
 
-                #TODO create user in db
-                proj_db_create_user(self._db_engine)
-
             else:
-                self._db_engine = None
                 lbl_css = 'color: white; background-color: red'
                 lbl_txt = 'Not Connected'
 
@@ -400,38 +440,65 @@ class UITreeModelProjNav(nft_ui.UITreeModel):
             parent_item.insertChildren([tree_item])
 
 
-def proj_db_create_user(
-    db_engine: sqlalchemy.engine.base.Engine
+def proj_db_update_project(
+    db_engine: sqlalchemy.engine.base.Engine,
+    code: str,
+    name: str,
+    path: pathlib.Path | str,
+    pipeline: dict,
 ):
-    """"""
-    db_user = nft_sql.DB_User(
-        name=getpass.getuser(),
+    """TODO"""
+    column_name_filter = 'code'
+    db_entry = nft_sql.DBProject(
+        code=code,
+        name=name,
+        path=pathlib.Path(path).resolve().as_posix(),
+        pipeline=pipeline,
     )
-    nft_sql.db_upsert(
+
+    db_entry_results = nft_sql.db_upsert(
         db_engine=db_engine,
-        column_name_filter='name',
-        db_entries=db_user,
+        db_entries=[db_entry],
+        column_name_filter=column_name_filter,
     )
 
+    return db_entry_results[0]
 
-def proj_launch_dialog():
+
+def proj_db_update_user(
+    db_engine: sqlalchemy.engine.base.Engine,
+    name: str,
+):
+    """TODO"""
+    db_user = nft_sql.DBUser(name=name)
+    db_results = nft_sql.db_upsert(
+        db_engine=db_engine,
+        db_entries=[db_user],
+        column_name_filter='name',
+    )
+
+    return db_results[0]
+
+
+def proj_io_pipeline_to_paths(
+    root_dir_path: pathlib.Path | str,
+    project_pipeline: dict,
+) -> list[pathlib.Path]:
+    """TODO"""
+    root_dir_path = pathlib.Path(root_dir_path)
+    project_dir_paths = [root_dir_path]
+
+    for key, val in project_pipeline.items():
+        sub_dir_path = root_dir_path.joinpath(key)
+        # project_dir_paths.append(sub_dir_path)
+        project_dir_paths.extend(proj_io_pipeline_to_paths(sub_dir_path, val))
+
+    return project_dir_paths
+
+
+
+def proj_ui_launch_dialog():
     """TODO"""
     os.system('cls')
 
     nft_ui.ui_launch_dialog(UIDialogProj)
-
-
-def proj_run():
-    """TODO"""
-    project_name = 'NFT_Project'
-    project_code = 'NFT'
-    project_path = pathlib.Path().resolve().as_posix()
-    project_pipeline = PROJ_DEFAULT_PIPELINE
-
-    db_url = nft_sql.db_get_url('nft_blender', nft_io.io_get_temp_dir())
-    db_engine = nft_sql.db_get_engine(db_url)
-    nft_sql.db_create_table(db_engine)
-
-
-
-    nft_sql.db_upsert(db_engine, 'name', db_project, db_user)

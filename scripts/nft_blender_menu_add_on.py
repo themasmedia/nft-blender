@@ -18,13 +18,14 @@ from nft_blender.operators import operator_asset, operator_proj, operator_rndr
 
 
 # import importlib
+
 # for module in (operator_asset, operator_proj, operator_rndr):
 #     importlib.reload(module)
 
 
 class NFTBlenderOperatorPROJ01(bpy.types.Operator):
     """TODO"""
-    bl_idname = 'nft.proj_launch_ui'
+    bl_idname = 'nft.proj_ui_launch_dialog'
     bl_label = 'NFT Project Manager'
 
     def invoke(
@@ -33,7 +34,7 @@ class NFTBlenderOperatorPROJ01(bpy.types.Operator):
         event: bpy.types.Event,
     ):
         """Invoke method override."""
-        operator_proj.proj_launch_dialog()
+        operator_proj.proj_ui_launch_dialog()
 
         return {'FINISHED'}
 
@@ -74,7 +75,7 @@ class NFTBlenderMenu(bpy.types.Menu):
     ):
         """Draw method override."""
         layout = self.layout
-        layout.operator('nft.proj_launch_ui')
+        layout.operator('nft.proj_ui_launch_dialog')
         layout.menu('NFTBlenderSubmenuPREPROD')
         layout.menu('NFTBlenderSubmenuPROD')
 
