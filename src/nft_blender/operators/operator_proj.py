@@ -30,50 +30,6 @@ PROJ_DEFAULT_DB = {
     }
 }
 
-PROJ_DEFAULT_PIPELINE = {
-    'assets': {
-        'CHAR': {
-            'published': {},
-            'versions': {},
-        },
-        'LGHT': {
-            'published': {},
-            'versions': {},
-        },
-        'PROP': {
-            'published': {},
-            'versions': {},
-        },
-    },
-    'data': {
-        'KSET': {},
-    },
-    'edit': {},
-    'models': {
-        'FBX': {},
-    },
-    'scenes': {
-        'ANIM': {
-            'published': {},
-            'versions': {},
-        },
-        'LAYT': {
-            'published': {},
-            'versions': {},
-        },
-        'RNDR': {
-            'published': {},
-            'versions': {},
-        },
-    },
-    'textures': {
-        'HDRI': {},
-        'UV': {},
-    },
-}
-
-PROJ_NAME_LIST = ['NFT_Project']
-
 
 class UIDialogProj(nft_ui.UIDialogBase):
     """TODO"""
@@ -84,10 +40,10 @@ class UIDialogProj(nft_ui.UIDialogBase):
         """TODO"""
         self._db_engine = None
 
-        super().__init__(parent)
+        super().__init__(modality=False, parent=parent)
 
 
-    def _set_up_connections(self):
+    def _set_up(self):
         """TODO"""
 
         # Create additional QObjects
@@ -128,8 +84,11 @@ class UIDialogProj(nft_ui.UIDialogBase):
 
         self._ui.proj_db_btngrp.buttonClicked[QtWidgets.QAbstractButton] \
             .connect(self.ui_update_proj_db)
-        self._ui.proj_db_dbms_combox.currentIndexChanged[int].connect(self.ui_update_proj_db)
         self._ui.proj_db_connect_pshbtn.clicked.connect(self.ui_update_proj_db)
+        self._ui.proj_db_dbms_combox.currentIndexChanged[int].connect(self.ui_update_proj_db)
+        self._ui.proj_db_del_pshbtn.clicked.connect(self.ui_update_proj_db)
+        self._ui.proj_db_del_rows_combox.currentIndexChanged[int].connect(self.ui_update_proj_db)
+        self._ui.proj_db_del_table_combox.currentIndexChanged[int].connect(self.ui_update_proj_db)
 
         self._ui.proj_nav_combox.currentIndexChanged[int].connect(self.ui_update_proj_nav)
         self._ui.proj_nav_trview.activated[QtCore.QModelIndex].connect(self.ui_update_proj_nav)
@@ -142,28 +101,32 @@ class UIDialogProj(nft_ui.UIDialogBase):
             self,
             project_name: str = '',
         ) -> nft_sql.DBProject:
-        """TODO - currently for testing UI only. Use db query"""
+        """TODO"""
+        db_project = nft_sql.DBProject(
+            code='',
+            name='',
+            path=pathlib.Path(),
+            pipeline={},
+        )
 
-        if project_name in PROJ_NAME_LIST:
-            project_name = 'NFT_Project'
-            project_code = 'NFT'
-            project_path = pathlib.Path('D:/Projects/NFT Droplets/NFTears').resolve().as_posix()
-            project_pipeline = PROJ_DEFAULT_PIPELINE
+        if self.set_db_connection():
 
-            db_project = nft_sql.DBProject(
-                code=project_code,
-                name=project_name,
-                path=project_path,
-                pipeline=project_pipeline,
+            db_col_name = 'name'
+            db_projects = nft_sql.db_query_basic(
+                self._db_engine,
+                nft_sql.DBProject,
+                limit=1,
+                columns=(db_col_name,),
+                filters=((db_col_name, project_name),)
             )
 
-        else:
-            db_project = nft_sql.DBProject(
-                code='',
-                name='',
-                path=pathlib.Path(),
-                pipeline={},
-            )
+            if db_projects:
+                db_project = nft_sql.DBProject(
+                    code=db_projects[0].code,
+                    name=db_projects[0].name,
+                    path=pathlib.Path(db_projects[0].path).resolve().as_posix(),
+                    pipeline=db_projects[0].pipeline,
+                )
 
         return db_project
 
@@ -234,13 +197,14 @@ class UIDialogProj(nft_ui.UIDialogBase):
             if args[0] == self._ui.proj_create_create_pshbtn:
                 project_code = self._ui.proj_create_code_lnedit.text()
                 project_name = self._ui.proj_create_name_lnedit.text()
-                project_path = pathlib.Path(self._ui.proj_create_dir_label.text()).as_posix()
+                project_root_path = pathlib.Path(self._ui.proj_create_dir_label.text())
+                project_path = project_root_path.joinpath(project_name).as_posix()
                 project_pipeline = self._ui.proj_create_pipe_trview.model().modelData()
 
                 if not nft_ui.ui_message_box(
                     title='Create/Update Project',
                     text=f'Create/update DBProject entry with:\n' \
-                        f'project code: "{project_code}" &' \
+                        f'project code: "{project_code}", ' \
                         f'project name: "{project_name}"?',
                     message_box_type='question',
                     parent=self,
@@ -248,25 +212,31 @@ class UIDialogProj(nft_ui.UIDialogBase):
                     return
 
                 # Create/update DBProject entry in DB.
-                # proj_db_update_project(
-                #     db_engine=self._db_engine,
-                #     code=project_code,
-                #     name=project_name,
-                #     path=project_path,
-                #     pipeline=project_pipeline,
-                # )
+                proj_db_update_project(
+                    db_engine=self._db_engine,
+                    code=project_code,
+                    name=project_name,
+                    path=project_path,
+                    pipeline=project_pipeline,
+                )
 
                 # Create/update the project directory structure.
                 if nft_ui.ui_message_box(
                     title='Create/Update Directory Structure?',
-                    text=f'Project directory structure will be created in {project_path}.\n' \
+                    text=f'Project directory structure will be created at {project_path}.\n' \
                          'No folders or files will be overwritten or removed in the process.',
                     message_box_type='question',
                     parent=self,
                 ):
                     proj_paths = proj_io_pipeline_to_paths(project_path, project_pipeline)
-                    for proj_path in proj_paths:
-                        print(proj_path)
+                    nft_io.io_make_dirs(*proj_paths)
+                    nft_ui.ui_message_box(
+                        title='Folders Created/Updated',
+                        text=f'Project directory structure created/updated in {project_path}.',
+                        message_box_type='information',
+                        parent=self,
+                    )
+                    QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(project_path))
 
             self._ui.proj_create_dir_label.clear()
             self._ui.proj_create_code_lnedit.clear()
@@ -298,7 +268,7 @@ class UIDialogProj(nft_ui.UIDialogBase):
             self._ui.proj_create_pipe_trview.setHeaderHidden(False)
 
 
-    def ui_update_proj_db(self):
+    def ui_update_proj_db(self, *args):
         """TODO"""
         if self.sender() in (self._ui.proj_db_btngrp, self._ui.proj_db_dbms_combox):
 
@@ -326,6 +296,13 @@ class UIDialogProj(nft_ui.UIDialogBase):
                 lbl_css = 'color: white; background-color: green'
                 lbl_txt = 'Connected'
 
+                # Populate with DB Model Classes.
+                self._ui.proj_db_del_table_combox.clear()
+                self._ui.proj_db_del_table_combox.addItem('', None)
+
+                for db_model in nft_sql.DBModels:
+                    self._ui.proj_db_del_table_combox.addItem(db_model.__tablename__, db_model)
+
             else:
                 lbl_css = 'color: white; background-color: red'
                 lbl_txt = 'Not Connected'
@@ -333,6 +310,42 @@ class UIDialogProj(nft_ui.UIDialogBase):
             self._ui.proj_db_status_lnedit.setStyleSheet(lbl_css)
             self._ui.proj_db_status_lnedit.setText(lbl_txt)
 
+        elif self.sender() == self._ui.proj_db_del_pshbtn:
+            db_cls = self._ui.proj_db_del_table_combox.currentData()
+            db_row = self._ui.proj_db_del_rows_combox.currentData()
+
+            if nft_ui.ui_message_box(
+                title='Confirm Deletion',
+                text=f'This will delete {db_cls.name}: {db_row.name} from the database. Continue?',
+                message_box_type='question',
+                parent=self,
+            ):
+                proj_db_delete_row(
+                    db_engine=self._db_engine,
+                    db_cls=db_cls,
+                    db_row_id=db_row.id,
+                )
+                db_row_index = self._ui.proj_db_del_rows_combox.currentIndex()
+                self._ui.proj_db_del_rows_combox.removeItem(db_row_index)
+                self._ui.proj_db_del_table_combox.setCurrentIndex(0)
+
+        elif self.sender() == self._ui.proj_db_del_table_combox:
+            # Populate with rows for the DB Model.
+            db_cls = self._ui.proj_db_del_table_combox.currentData()
+            self._ui.proj_db_del_rows_combox.clear()
+            self._ui.proj_db_del_rows_combox.addItem('', None)
+
+            if db_cls is not None:
+                for db_row in nft_sql.db_query_basic(self._db_engine, db_cls):
+                    self._ui.proj_db_del_rows_combox.addItem(db_row.name, db_row)
+
+        elif self.sender() == self._ui.proj_db_del_rows_combox:
+            self._ui.proj_db_del_pshbtn.setEnabled(args[0] > 0)
+
+        elif self.sender() == self._ui.proj_toolbox:
+            self._ui.proj_db_del_table_combox.setCurrentIndex(0)
+
+        self._ui.proj_db_del_grpbox.setEnabled(self.set_db_connection(force_update=False))
 
     def ui_update_proj_nav(self, *args):
         """TODO"""
@@ -355,13 +368,17 @@ class UIDialogProj(nft_ui.UIDialogBase):
             QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(last_col_data))
 
         elif self.sender() == self._ui.proj_toolbox:
-            proj_name_list = ['']
-            if nft_sql.db_test_connection(self._db_engine):
-                #TODO Query project names and extend list
-                proj_name_list.extend(PROJ_NAME_LIST)
-            self._ui.proj_nav_combox.clear()
-            self._ui.proj_nav_combox.addItems(proj_name_list)
+            proj_names = ['']
+            current_proj_name = self._ui.proj_nav_combox.currentText()
 
+            if nft_sql.db_test_connection(self._db_engine):
+                proj_entries = nft_sql.db_query_basic(self._db_engine, nft_sql.DBProject)
+                proj_names.extend((proj_entry.name for proj_entry in proj_entries))
+
+            self._ui.proj_nav_combox.clear()
+            self._ui.proj_nav_combox.addItems(proj_names)
+            proj_name_index = self._ui.proj_nav_combox.findText(current_proj_name)
+            self._ui.proj_nav_combox.setCurrentIndex(proj_name_index)
 
     def ui_init(self):
         """TODO"""
@@ -440,13 +457,22 @@ class UITreeModelProjNav(nft_ui.UITreeModel):
             parent_item.insertChildren([tree_item])
 
 
+def proj_db_delete_row(
+    db_engine: sqlalchemy.engine.base.Engine,
+    db_cls: nft_sql.sqlalchemy.Table,
+    db_row_id: int,
+):
+    """TODO"""
+    nft_sql.db_delete_rows(db_engine, db_cls, (('id', db_row_id),))
+
+
 def proj_db_update_project(
     db_engine: sqlalchemy.engine.base.Engine,
     code: str,
     name: str,
     path: pathlib.Path | str,
     pipeline: dict,
-):
+) -> bool:
     """TODO"""
     column_name_filter = 'code'
     db_entry = nft_sql.DBProject(

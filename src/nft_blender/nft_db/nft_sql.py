@@ -10,6 +10,7 @@ import sqlalchemy.exc
 import sqlalchemy.ext.declarative
 import sqlalchemy.orm
 import sqlalchemy.orm.exc
+import sqlalchemy.util._collections
 
 
 __LOGGER__ = logging.getLogger(__name__)
@@ -73,9 +74,7 @@ class DBUser(DBObjectBase):
     )
 
 
-def db_get_columns(db_row: DBObjectBase) -> dict:
-    """TODO"""
-    return db_row.__class__.__table__.columns
+DBModels = (DBProject, DBUser)
 
 
 def db_create_table(
@@ -89,6 +88,26 @@ def db_create_table(
     DBObjectBase.metadata.create_all(db_engine)
 
 
+def db_delete_rows(
+    db_engine: sqlalchemy.engine.base.Engine,
+    db_cls: DBObjectBase | sqlalchemy.Table,
+    filters: typing.Iterable[tuple[str, object]] = (),
+):
+    """TODO"""
+    db_table = sqlalchemy.Table if isinstance(db_cls, sqlalchemy.Table) else db_cls.__table__
+    db_del = sqlalchemy.delete(db_table)
+    for col_attr_name, col_val in filters:
+        col_attr = db_table.columns[col_attr_name]
+        db_del = db_del.where(col_attr == col_val)
+
+    db_engine.execute(db_del)
+
+
+def db_get_columns(db_row: DBObjectBase) -> dict:
+    """TODO"""
+    return db_row.__class__.__table__.columns
+
+
 def db_get_engine(
     db_url: pathlib.Path | str,
 ) -> sqlalchemy.engine.base.Engine | None:
@@ -97,6 +116,16 @@ def db_get_engine(
         return sqlalchemy.create_engine(db_url, echo=True)
     except sqlalchemy.exc.ArgumentError:
         return None
+
+
+def db_get_metadata(
+    db_engine: sqlalchemy.engine.base.Engine,
+) -> sqlalchemy.util._collections.FacadeDict:
+    """TODO"""
+    db_metadata = sqlalchemy.MetaData(bind=db_engine)
+    db_metadata.reflect()
+
+    return db_metadata
 
 
 def db_get_url(
@@ -113,6 +142,35 @@ def db_get_url(
         db_url = f'sqlite:///{db_file_path.as_posix()}'
 
     return db_url
+
+
+def db_query_basic(
+    db_engine: sqlalchemy.engine.base.Engine,
+    db_cls: DBObjectBase,
+    limit: int = -1,
+    columns: typing.Sequence = (),
+    filters: typing.Iterable[tuple[str, object]] = (),
+) -> list:
+    """TODO"""
+    results = []
+
+    with sqlalchemy.orm.Session(db_engine) as db_session:
+        db_query = db_session.query(db_cls)
+        db_query.options(sqlalchemy.orm.load_only(columns))
+
+        for col_attr_name, col_val in filters:
+            col_attr = db_cls.__table__.columns[col_attr_name]
+            db_query = db_query.filter(col_attr == col_val)
+
+        if db_query.first() is not None:
+            if limit < 0:
+                results.extend(db_query.all())
+            elif limit == 1:
+                results.append(db_query.one())
+            else:
+                results.extend(db_query.limit(limit))
+
+    return results
 
 
 def db_test_connection(
