@@ -66,6 +66,71 @@
          </property>
         </widget>
        </item>
+       <item row="3" column="2">
+        <widget class="QLineEdit" name="proj_db_status_lnedit">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QComboBox" name="proj_db_dbms_combox">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="proj_db_user_label">
+         <property name="text">
+          <string>Current User:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QPushButton" name="proj_db_connect_pshbtn">
+         <property name="text">
+          <string>Connect to
+Database</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLabel" name="proj_db_status_label">
+         <property name="text">
+          <string>Connection
+Status:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <widget class="QLineEdit" name="proj_db_user_lnedit">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
        <item row="11" column="0" colspan="3">
         <spacer name="proj_db_vspacer">
          <property name="orientation">
@@ -78,24 +143,6 @@
           </size>
          </property>
         </spacer>
-       </item>
-       <item row="1" column="2">
-        <widget class="QComboBox" name="proj_db_dbms_combox">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QPushButton" name="proj_db_connect_pshbtn">
-         <property name="text">
-          <string>Connect to
-Database</string>
-         </property>
-        </widget>
        </item>
        <item row="2" column="0" colspan="3">
         <widget class="QGroupBox" name="proj_db_url_grpbox">
@@ -139,51 +186,26 @@ Database</string>
          </layout>
         </widget>
        </item>
-       <item row="3" column="1">
-        <widget class="QLabel" name="proj_db_status_label">
-         <property name="text">
-          <string>Connection
-Status:</string>
+       <item row="12" column="0" colspan="3">
+        <widget class="QGroupBox" name="proj_db_del_grpbox">
+         <property name="title">
+          <string>Delete Row:</string>
          </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0" colspan="2">
-        <widget class="QLabel" name="proj_db_user_label">
-         <property name="text">
-          <string>Current User:</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="2">
-        <widget class="QLineEdit" name="proj_db_user_lnedit">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="2">
-        <widget class="QLineEdit" name="proj_db_status_lnedit">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <widget class="QComboBox" name="proj_db_del_table_combox"/>
+          </item>
+          <item>
+           <widget class="QComboBox" name="proj_db_del_rows_combox"/>
+          </item>
+          <item>
+           <widget class="QPushButton" name="proj_db_del_pshbtn">
+            <property name="text">
+             <string>Delete</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
       </layout>

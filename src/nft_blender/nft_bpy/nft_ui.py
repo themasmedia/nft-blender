@@ -15,23 +15,27 @@ class UIDialogBase(QtWidgets.QDialog):
 
     def __init__(
         self,
+        modality: bool = True,
         parent: QtWidgets.QApplication = None,
     ):
         """TODO"""
         super().__init__(parent=parent)
-        self._set_up_ui()
-        self._set_up_connections()
+        self._set_up_ui(modality)
+        self._set_up()
 
-    def _set_up_connections(self):
+    def _set_up(self):
         """TODO"""
         raise NotImplementedError
 
-    def _set_up_ui(self):
+    def _set_up_ui(self, modality=True):
         """TODO"""
         self._ui = QtUiTools.QUiLoader().load(self._ui_file_path.as_posix())
         self._layout = QtWidgets.QGridLayout()
         self._layout.addWidget(self._ui)
         self.setLayout(self._layout)
+
+        self.setModal(modality)
+        self._ui.setModal(modality)
 
         self.setWindowTitle(self._ui_window_title)
 
