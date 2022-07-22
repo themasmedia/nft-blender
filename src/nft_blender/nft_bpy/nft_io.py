@@ -4,6 +4,7 @@ import getpass
 import json
 import pathlib
 import tempfile
+import typing
 
 import bpy
 
@@ -51,6 +52,12 @@ def io_load_json_file(file_path: pathlib.Path | str) -> dict:
         json_data = json.load(readfile)
 
     return json_data
+
+
+def io_make_dirs(*dir_paths: typing.Iterable[pathlib.Path | str]):
+    """TODO"""
+    for dir_path in dir_paths:
+        pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
 
 
 def io_save_as(
