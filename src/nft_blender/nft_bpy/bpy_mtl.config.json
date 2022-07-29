@@ -1,0 +1,46 @@
+{
+  "pbr": {
+    "Albedo": {
+      "colorspace_settings": "sRGB"
+    },
+    "Alpha": {
+      "colorspace_settings": "Non-Color"
+    },
+    "AmbientOcclusion": {
+      "colorspace_settings": "Non-Color"
+    },
+    "BaseColor": {
+      "colorspace_settings": "sRGB"
+    },
+    "Diffuse": {
+      "colorspace_settings": "sRGB"
+    },
+    "Displace": {
+      "colorspace_settings": "Non-Color"
+    },
+    "Emission": {
+      "colorspace_settings": "sRGB"
+    },
+    "Glossiness": {
+      "colorspace_settings": "Non-Color"
+    },
+    "Height": {
+      "colorspace_settings": "Non-Color"
+    },
+    "Metallic": {
+      "colorspace_settings": "Non-Color"
+    },
+    "Metalness": {
+      "colorspace_settings": "Non-Color"
+    },
+    "Normal": {
+      "colorspace_settings": "Non-Color"
+    },
+    "Roughness": {
+      "colorspace_settings": "Non-Color"
+    },
+    "Subsurface": {
+      "colorspace_settings": "sRGB"
+    }
+  }
+}

@@ -1,17 +1,13 @@
 #!$BLENDER_PATH/python/bin python
 
 """
-init.py: Load the nft-blender Python module.
+NFT Blender - A growing set of tools for Blender that utilize the full scope of Python 3
 
-import pathlib
-import site
+.. code-block:: python
 
+    # Import NFT Blender
+    from nft_blender import nft_bpy, nft_db, nft_ops, nft_qt
 
-user_site = pathlib.Path(site.getusersitepackages())
-if str(user_site) not in site.getsitepackages():
-    site.addsitedir(str(user_site))
-
-import nft_blender
 """
 
 __author__      = 'masangri.eth'
@@ -20,5 +16,5 @@ __credits__     = ['Mas']
 __email__       = "masangri.art@gmail.com"
 __license__     = "MIT"
 __maintainer__  = "Mas"
-__status__      = "Beta"
+__status__      = "Alpha"
 __version__     = "0.0.1"

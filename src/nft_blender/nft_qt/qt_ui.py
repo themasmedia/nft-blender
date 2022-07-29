@@ -1,5 +1,10 @@
 #!$BLENDER_PATH/python/bin python
 
+"""
+NFT Blender - QT - UI
+
+"""
+
 import pathlib
 import sys
 import typing
@@ -9,26 +14,28 @@ from PySide6 import QtCore, QtGui, QtUiTools, QtWidgets
 
 
 class UIDialogBase(QtWidgets.QDialog):
-    """TODO"""
+    """
+    Abstract base class for Dialog Box UI generated from a Qt Designer .ui file.
+    Class must be extended with class variables set.
+    """
+    #: Name of the .ui file (String)
     _UI_FILE_NAME = ''
+    #: Name of the window (String)
     _UI_WINDOW_TITLE = ''
 
     def __init__(
         self,
         modality: bool = True,
         parent: QtWidgets.QApplication = None,
-    ):
-        """TODO"""
+    ) -> None:
+        """
+        Constructor method.
+
+        :param modality: If True, the widget will be modal (default: True).
+        :param parent: Parent object (Application, UI Widget, etc.).
+        """
         super().__init__(parent=parent)
-        self._set_up_ui(modality)
-        self._set_up()
 
-    def _set_up(self):
-        """TODO"""
-        raise NotImplementedError
-
-    def _set_up_ui(self, modality=True):
-        """TODO"""
         self._ui = QtUiTools.QUiLoader().load(self._ui_file_path.as_posix())
         self._layout = QtWidgets.QGridLayout()
         self._layout.addWidget(self._ui)
@@ -39,48 +46,45 @@ class UIDialogBase(QtWidgets.QDialog):
 
         self.setWindowTitle(self._ui_window_title)
 
+        self._set_up_ui()
+
+    def _set_up_ui(self) -> None:
+        """
+        Abstract method for additional UI set-up. Must be defined in the derived class.
+        """
+        raise NotImplementedError
+
     @classmethod
     @property
     def _ui_file_path(cls) -> pathlib.Path:
-        """TODO"""
-        ui_dir_path = pathlib.Path(__file__).parent.parent
-        ui_file_path = ui_dir_path.joinpath('ui', cls._UI_FILE_NAME)
+        """
+        Verifies and returns the UI file path as a Path object.
+
+        :returns: A Path object.
+        """
+        ui_dir_path = pathlib.Path(__file__).parent
+        ui_file_path = ui_dir_path.joinpath(cls._UI_FILE_NAME)
         assert ui_file_path.exists() and ui_file_path.suffix == '.ui'
+
         return ui_file_path
 
     @classmethod
     @property
     def _ui_window_title(cls) -> str:
-        """TODO"""
+        """
+        Verifies and returns the title for the Dialog Box UI.
+
+        :returns: The window title.
+        """
         assert len(cls._UI_WINDOW_TITLE) > 0
+
         return cls._UI_WINDOW_TITLE
 
 
-class UIBlenderProcess(QtCore.QProcess):
-    """TODO"""
-
-    def __init__(
-        self,
-        blender_app_path = pathlib.Path | str,
-        blend_files: typing.Iterable[str] = (),
-        parent: QtWidgets.QApplication = None,
-    ):
-        """TODO"""
-        super().__init__(parent=parent)
-
-        # Set app
-        self.setProgram(blender_app_path.as_posix())
-
-        # Set arguments
-        args = ['-b']
-        for blend_file in blend_files:
-            args.append(blend_file)
-            args.append('-a')
-        self.setArguments(args)
-
-
 class UIChecklistDialog(QtWidgets.QDialog):
-    """PySide2 Checklist Dialog Widget"""
+    """
+    Simple Dialog Box UI with a list of checkable options.
+    """
 
     def __init__(
         self,
@@ -88,8 +92,15 @@ class UIChecklistDialog(QtWidgets.QDialog):
         text: str = '',
         items: typing.Iterable[str] = (),
         parent: QtWidgets.QApplication = None,
-    ):
-        """TODO"""
+    ) -> None:
+        """
+        Constructor method.
+
+        :param title: Title of the Dialog Box UI.
+        :param text: User instructions.
+        :param items: List of items for the user to check (non-exclusive).
+        :param parent: Parent object (Application, UI Widget, etc.).
+        """
         super().__init__(parent=parent)
 
         self.btn_grp = QtWidgets.QButtonGroup()
@@ -116,7 +127,11 @@ class UIChecklistDialog(QtWidgets.QDialog):
         self.setWindowTitle(title)
 
     def get_checked_items(self) -> list:
-        """TODO"""
+        """
+        Gets the property values of all checked items..
+
+        :returns: A list of checked item values.
+        """
         checked_items = []
         for btn in self.btn_grp.buttons():
             if btn.isChecked():
@@ -126,23 +141,31 @@ class UIChecklistDialog(QtWidgets.QDialog):
 
 
 # class UITableModel(QtCore.QAbstractTableModel):
-#     """TODO"""
+#     """
+#     Table model class.
+#     """
 #     def __init__(
 #         self,
 #         rows: typing.Sequence = (),
-#         header_data: typing.Sequence = (),
+#         header_columns: typing.Sequence = (),
 #         parent: QtCore.QObject = None,
 #     ):
-#         """TODO"""
+#         """
+#         Constructor method.
+
+#         :param rows: List of rows.
+#         :param header_columns: List of column names.
+#         :param parent: Parent object (Application, UI Widget, etc.).
+#         """
 #         super().__init__(parent)
 #         self._rows = rows
-#         self._header_data = header_data if header_data else [""]*len(rows[0])
+#         self._header_data = header_columns if header_columns else [""]*len(rows[0])
 #         self._column_count = len(self._header_data)
 #         self._row_count = len(self._rows)
 #         self._model = QtGui.QStandardItemModel(self)
 
 #     def columnCount(self):
-#         """TODO"""
+#         """"""
 #         return self._column_count
 
 #     def data(
@@ -150,7 +173,7 @@ class UIChecklistDialog(QtWidgets.QDialog):
 #         index: QtCore.QModelIndex = QtCore.QModelIndex(),
 #         role: int = QtCore.Qt.DisplayRole,
 #     ):
-#         """TODO"""
+#         """"""
 #         if role in (QtCore.Qt.DisplayRole, QtCore.Qt.EditRole):
 #             data = self._rows[index.row()][index.column()]
 #         elif role in(QtCore.Qt.ToolTipRole, QtCore.Qt.WhatsThisRole):
@@ -168,7 +191,7 @@ class UIChecklistDialog(QtWidgets.QDialog):
 #         column: int = -1,
 #         parent: QtCore.QModelIndex = QtCore.QModelIndex(),
 #     ):
-#         """TODO"""
+#         """"""
 #         if action != QtCore.Qt.DropAction.IgnoreAction:
 #             mime_data_format = 'application/x-qabstractitemmodeldatalist'
 #             if mime_data.hasFormat(mime_data_format) and parent.isValid():
@@ -197,7 +220,7 @@ class UIChecklistDialog(QtWidgets.QDialog):
 #         self,
 #         index: QtCore.QModelIndex,
 #     ):
-#         """TODO"""
+#         """"""
 #         if not index.isValid():
 #             return QtCore.Qt.ItemIsEnabled
 #         return QtCore.Qt.ItemIsEnabled | \
@@ -212,7 +235,7 @@ class UIChecklistDialog(QtWidgets.QDialog):
 #         orientation: QtCore.Qt.Orientation = QtCore.Qt.Horizontal,
 #         role: int = QtCore.Qt.DisplayRole,
 #     ):
-#         """TODO"""
+#         """"""
 #         if role == QtCore.Qt.DisplayRole:
 #             if orientation == QtCore.Qt.Horizontal:
 #                 header_data = self._header_data[section]
@@ -230,7 +253,7 @@ class UIChecklistDialog(QtWidgets.QDialog):
 #         total_columns: int = 1,
 #         index: QtCore.QModelIndex = QtCore.QModelIndex(),
 #     ) -> bool:
-#         """TODO"""
+#         """"""
 #         last_column = first_column + total_columns - 1
 #         self.beginInsertColumns(index, first_column, last_column)
 
@@ -250,7 +273,7 @@ class UIChecklistDialog(QtWidgets.QDialog):
 #         total_rows: int = 1,
 #         index: QtCore.QModelIndex = QtCore.QModelIndex(),
 #     ):
-#         """TODO"""
+#         """"""
 #         last_row = first_row + total_rows - 1
 #         self.beginInsertRows(index, first_row, last_row)
 #         for row in range(first_row, last_row + 1):
@@ -265,7 +288,7 @@ class UIChecklistDialog(QtWidgets.QDialog):
 #         total_columns:int = 1,
 #         index: QtCore.QModelIndex = QtCore.QModelIndex(),
 #     ):
-#         """TODO"""
+#         """"""
 #         last_column = first_column + total_columns - 1
 #         self.beginRemoveColumns(index, first_column, last_column)
 #         del self._header_data[first_column : last_column + 1]
@@ -281,7 +304,7 @@ class UIChecklistDialog(QtWidgets.QDialog):
 #         total_rows: int = 1,
 #         index: QtCore.QModelIndex = QtCore.QModelIndex(),
 #     ):
-#         """TODO"""
+#         """"""
 #         last_row = first_row + total_rows - 1
 #         self.beginRemoveRows(index, first_row, last_row)
 #         del self._rows[first_row : last_row + 1]
@@ -290,22 +313,29 @@ class UIChecklistDialog(QtWidgets.QDialog):
 #         return True
 
 #     def rowCount(self):
-#         """TODO"""
+#         """"""
 #         return self._row_count
 
 #     def supportedDropActions(self):
-#         """TODO"""
+#         """"""
 #         return QtCore.Qt.DropAction | QtCore.Qt.MoveAction | QtCore.Qt.CopyAction
 
 
 class UITreeModelItem(list):
-    """TODO"""
+    """
+    Tree model item class for objects in tree model objects.
+    """
     def __init__(
         self,
         data: typing.Sequence,
-        parent: typing.Sequence | None = None,
-    ):
-        """TODO"""
+        parent: typing.Sequence | typing.Type[None] = None,
+    ) -> None:
+        """
+        Constructor method.
+
+        :param data: List of column values.
+        :param parent: Parent object (Application, UI Widget, etc.).
+        """
         super().__init__(data)
         self._children = []
         self._parent = parent
@@ -314,7 +344,12 @@ class UITreeModelItem(list):
         self,
         row: int,
     ) -> 'UITreeModelItem':
-        """TODO"""
+        """
+        TODO
+
+        :param TODO:
+        :returns: TODO
+        """
         try:
             return self._children[row]
 
@@ -322,22 +357,42 @@ class UITreeModelItem(list):
             return None
 
     def children(self) -> list:
-        """TODO"""
+        """
+        TODO
+
+        :param TODO:
+        :returns: TODO
+        """
         return self._children
 
     def childCount(self) -> int:
-        """TODO"""
+        """
+        TODO
+
+        :param TODO:
+        :returns: TODO
+        """
         return len(self._children)
 
     def columnCount(self) -> int:
-        """TODO"""
+        """
+        TODO
+
+        :param TODO:
+        :returns: TODO
+        """
         return len(self)
 
     def data(
         self,
         col: int,
     ) -> object:
-        """TODO"""
+        """
+        TODO
+
+        :param TODO:
+        :returns: TODO
+        """
         return self[col] if col < self.columnCount() else None
 
     def insertChildren(
@@ -346,7 +401,12 @@ class UITreeModelItem(list):
         pos: int = -1,
         sort: bool = True,
     ):
-        """TODO"""
+        """
+        TODO
+
+        :param TODO:
+        :returns: TODO
+        """
         if pos > len(self._children):
             return False
 
@@ -362,7 +422,12 @@ class UITreeModelItem(list):
         return True
 
     def parent(self) -> 'UITreeModelItem':
-        """TODO"""
+        """
+        TODO
+
+        :param TODO:
+        :returns: TODO
+        """
         return self._parent
 
     def removeChildren(self, start_pos, count=1):
@@ -375,7 +440,12 @@ class UITreeModelItem(list):
         return True
 
     def row(self) -> int:
-        """TODO"""
+        """
+        TODO
+
+        :param TODO:
+        :returns: TODO
+        """
         return self.parent().children().index(self) if self.parent() else 0
 
     def setData(
@@ -383,7 +453,12 @@ class UITreeModelItem(list):
         col: int,
         value: object,
     ) -> bool:
-        """TODO"""
+        """
+        TODO
+
+        :param TODO:
+        :returns: TODO
+        """
         if 0 <= col < len(self):
             self[col] = value
             return True
@@ -392,23 +467,34 @@ class UITreeModelItem(list):
 
 
 class UITreeModel(QtCore.QAbstractItemModel):
-    """TODO"""
+    """
+    Tree model class.
+    """
+    #: Tree Model Item class to be used for all child objects.
     MODEL_ITEM_TYPE = UITreeModelItem
 
     def __init__(
         self,
         header_columns: list[str] | tuple[str] = ('',),
-        parent: QtWidgets.QApplication | None = None,
+        parent: QtWidgets.QApplication | typing.Type[None] = None,
     ):
         """
-        self.setModelData(data_dict, self._root_item)
+        Constructor method.
+
+        :param header_columns: List of column names.
+        :param parent: Parent object (Application, UI Widget, etc.).
         """
         super().__init__(parent)
         self._root_item = self.MODEL_ITEM_TYPE(header_columns)
         self.headerDataChanged.emit(QtCore.Qt.Horizontal, 0, self.columnCount() - 1)
 
     def clear(self):
-        """TODO"""
+        """
+        TODO
+
+        :param TODO:
+        :returns: TODO
+        """
         self.removeRows(0, self.rowCount())
         self.setModelData()
 
@@ -416,7 +502,12 @@ class UITreeModel(QtCore.QAbstractItemModel):
         self,
         parent=QtCore.QModelIndex(),
     ):
-        """TODO"""
+        """
+        TODO
+
+        :param TODO:
+        :returns: TODO
+        """
         return self.getItem(parent).columnCount()
 
     def data(
@@ -424,7 +515,12 @@ class UITreeModel(QtCore.QAbstractItemModel):
         index: QtCore.QModelIndex = QtCore.QModelIndex(),
         role: int = QtCore.Qt.DisplayRole,
     ):
-        """TODO"""
+        """
+        TODO
+
+        :param TODO:
+        :returns: TODO
+        """
         if index.isValid() and (role == QtCore.Qt.DisplayRole):
             return index.internalPointer().data(index.column())
 
@@ -434,7 +530,12 @@ class UITreeModel(QtCore.QAbstractItemModel):
         self,
         index: QtCore.QModelIndex = QtCore.QModelIndex(),
     ):
-        """TODO"""
+        """
+        TODO
+
+        :param TODO:
+        :returns: TODO
+        """
         if not index.isValid():
             return QtCore.Qt.NoItemFlags
 
@@ -444,7 +545,12 @@ class UITreeModel(QtCore.QAbstractItemModel):
         self,
         index: QtCore.QModelIndex = QtCore.QModelIndex(),
     ):
-        """TODO"""
+        """
+        TODO
+
+        :param TODO:
+        :returns: TODO
+        """
         if index.isValid():
             if index.internalPointer():
                 return index.internalPointer()
@@ -457,7 +563,12 @@ class UITreeModel(QtCore.QAbstractItemModel):
         orientation=QtCore.Qt.Orientation,
         role: int = QtCore.Qt.DisplayRole,
     ):
-        """TODO"""
+        """
+        TODO
+
+        :param TODO:
+        :returns: TODO
+        """
         if all((orientation == QtCore.Qt.Horizontal, role == QtCore.Qt.DisplayRole)):
             return self._root_item.data(section)
 
@@ -469,7 +580,12 @@ class UITreeModel(QtCore.QAbstractItemModel):
         col: int,
         parent: QtCore.QModelIndex = QtCore.QModelIndex(),
     ) -> QtCore.QModelIndex:
-        """TODO"""
+        """
+        TODO
+
+        :param TODO:
+        :returns: TODO
+        """
         if not self.hasIndex(row, col, parent):
             return QtCore.QModelIndex()
 
@@ -487,7 +603,12 @@ class UITreeModel(QtCore.QAbstractItemModel):
         rows: typing.Iterable = (),
         parent: QtCore.QModelIndex = QtCore.QModelIndex(),
     ):
-        """TODO"""
+        """
+        TODO
+
+        :param TODO:
+        :returns: TODO
+        """
         rows = list(rows)
         if not rows:
             return False
@@ -512,7 +633,12 @@ class UITreeModel(QtCore.QAbstractItemModel):
         col: int = 0,
         parent: QtCore.QModelIndex = QtCore.QModelIndex(),
     ) -> dict:
-        """TODO"""
+        """
+        TODO
+
+        :param TODO:
+        :returns: TODO
+        """
         model_item_data = {}
 
         for row in range(self.rowCount(parent)):
@@ -526,7 +652,12 @@ class UITreeModel(QtCore.QAbstractItemModel):
         self,
         index: QtCore.QModelIndex = QtCore.QModelIndex(),
     ) -> QtCore.QModelIndex:
-        """TODO"""
+        """
+        TODO
+
+        :param TODO:
+        :returns: TODO
+        """
         if not index.isValid():
             return QtCore.QModelIndex()
 
@@ -543,7 +674,12 @@ class UITreeModel(QtCore.QAbstractItemModel):
         total_rows: int = 1,
         parent: QtCore.QModelIndex = QtCore.QModelIndex(),
     ):
-        """TODO"""
+        """
+        TODO
+
+        :param TODO:
+        :returns: TODO
+        """
         last_row = first_row + total_rows - 1
         if not parent.isValid():
             parent_item = self._root_item
@@ -560,7 +696,12 @@ class UITreeModel(QtCore.QAbstractItemModel):
         self,
         parent: QtCore.QModelIndex = QtCore.QModelIndex(),
     ) -> int:
-        """TODO"""
+        """
+        TODO
+
+        :param TODO:
+        :returns: TODO
+        """
         if parent.column() > 0:
             return 0
 
@@ -573,7 +714,12 @@ class UITreeModel(QtCore.QAbstractItemModel):
         data: typing.Iterable = (),
         parent_item: 'UITreeModelItem' = None,
     ):
-        """TODO"""
+        """
+        TODO self.setModelData(data_dict, self._root_item)
+
+        :param TODO:
+        :returns: TODO
+        """
         parent_item = parent_item if parent_item else self._root_item
         if parent_item == self._root_item:
             self.beginResetModel()
@@ -595,7 +741,12 @@ class UITreeModel(QtCore.QAbstractItemModel):
 
 
 def ui_get_app() -> QtWidgets.QApplication:
-    """TODO"""
+    """
+    Gets the Application instance for the current application environment,
+    or creates a new instance if none exist.
+
+    :returns: The Application instance.
+    """
     return \
         QtWidgets.QApplication.instance() if QtWidgets.QApplication.instance() \
         else QtWidgets.QApplication(sys.argv)
@@ -607,7 +758,15 @@ def ui_get_checklist(
     items: typing.Sequence = (),
     parent: QtWidgets.QApplication = None,
 ) -> list:
-    """TODO"""
+    """
+    Prompts the user with an Checklist Dialog UI with a list of items to choose from.
+
+    :param title: Title of the Checklist Dialog UI.
+    :param text: User instructions.
+    :param items: List of items to choose from.
+    :param parent: Parent object (Application, UI Widget, etc.).
+    :returns: A list of items that were checked by the user.
+    """
     _ = ui_get_app()
     checklist_dialog = UIChecklistDialog(
         title,
@@ -624,8 +783,15 @@ def ui_get_directory(
     caption: str = '',
     dir_str: str = '',
     parent: QtWidgets.QApplication = None,
-) -> pathlib.Path | None:
-    """TODO"""
+) -> pathlib.Path | typing.Type[None]:
+    """
+    Prompts the user with a File Dialog UI to select a folder.
+
+    :param caption: Title of the File Dialog UI.
+    :param dir_str: Directory in which the File Dialog UI will begin.
+    :param parent: Parent object (Application, UI Widget, etc.).
+    :returns: The directory Path, if one was selected.
+    """
     _ = ui_get_app()
     result = QtWidgets.QFileDialog.getExistingDirectory(
         parent,
@@ -643,7 +809,16 @@ def ui_get_file(
     select_multiple: bool = False,
     parent: QtWidgets.QApplication = None,
 ) -> pathlib.Path | list:
-    """TODO"""
+    """
+    Prompts the user to select a file(s).
+
+    :param caption: Title of the File Dialog UI.
+    :param dir_str: Directory in which the File Dialog UI will begin.
+    :param filter_str: File type filter.
+    :param select_multiple: If True, multiple file(s) can be selected (default: False).
+    :param parent: Parent object (Application, UI Widget, etc.).
+    :returns: The directory Path, if one was selected.
+    """
     _ = ui_get_app()
 
     if select_multiple:
@@ -673,8 +848,19 @@ def ui_get_int(
     max_value: int = 9999,
     step: int = 1,
     parent: QtWidgets.QApplication = None,
-) -> int | None:
-    """TODO"""
+) -> int | typing.Type[None]:
+    """
+    Prompts the user with an Input Dialog UI to select an integer.
+
+    :param title: Title of the Input Dialog UI.
+    :param label: User instructions.
+    :param value: Default integer value.
+    :param min_value: Lowest permitted integer.
+    :param max_value: Highest permitted integer.
+    :param step: Increment value for the integer Spin Box.
+    :param parent: Parent object (Application, UI Widget, etc.).
+    :returns: The integer selected by the user.
+    """
     _ = ui_get_app()
     result, success = QtWidgets.QInputDialog.getInt(
         parent,
@@ -696,8 +882,18 @@ def ui_get_item(
     default_item: str = '',
     editable: bool = False,
     parent: QtWidgets.QApplication = None,
-) -> str | None:
-    """TODO"""
+) -> str | typing.Type[None]:
+    """
+    Prompts the user with an Input Dialog UI with a dropdown list of items to choose from.
+
+    :param title: Title of the Input Dialog UI.
+    :param label: User instructions.
+    :param items: List of items to choose from.
+    :param default_item: Initially selected item.
+    :param editable: If True, items can be editted by the user (default: False).
+    :param parent: Parent object (Application, UI Widget, etc.).
+    :returns: The selected item.
+    """
     current = items.index(default_item) if default_item in items else 0
 
     _ = ui_get_app()
@@ -718,8 +914,16 @@ def ui_get_text(
     label: str = '',
     text: str = '',
     parent: QtWidgets.QApplication = None,
-) -> str | None:
-    """TODO"""
+) -> str | typing.Type[None]:
+    """
+    Prompts the user with an Input Dialog UI to input text.
+
+    :param title: Title of the Input Dialog UI.
+    :param label: User instructions.
+    :param text: Default text.
+    :param parent: Parent object (Application, UI Widget, etc.).
+    :returns: The text input by the user.
+    """
     _ = ui_get_app()
     result, success = QtWidgets.QInputDialog.getText(
         parent,
@@ -734,8 +938,14 @@ def ui_get_text(
 def ui_launch_dialog(
     cls: typing.Type[QtWidgets.QDialog] | typing.Type[QtWidgets.QMainWindow],
     parent: QtWidgets.QApplication = None,
-):
-    """TODO"""
+) -> QtWidgets.QDialog:
+    """
+    Helper function for launching a Dialog Box or Main Window UI instance.
+
+    :param cls: Class of the widget to create an instance of.
+    :param parent: Parent object (Application, UI Widget, etc.).
+    :returns: The UI widget instance.
+    """
     _ = ui_get_app()
     ui_dialog = cls(parent)
     ui_dialog.exec_()
@@ -749,7 +959,16 @@ def ui_message_box(
     message_box_type: str = 'about',
     parent: QtWidgets.QApplication = None,
 ) -> bool:
-    """TODO"""
+    """
+    Prompts the user with a simple Message Box UI.
+
+    :param title: Title of the Message Box UI.
+    :param text: A message for the user.
+    :param message_box_type: The name of the Message Box type.
+        Options: ['about', 'critical', 'information', 'question', 'warning']
+    :param parent: Parent object (Application, UI Widget, etc.).
+    :returns: True if the user exited the UI with an accepted status; otherwise False.
+    """
     message_box_types = {
         'about': QtWidgets.QMessageBox.about,
         'critical': QtWidgets.QMessageBox.critical,

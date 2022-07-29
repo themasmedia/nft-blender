@@ -6,6 +6,7 @@ __pycache__/*
 .DS_Store
 
 # Project files
+.pylintrc
 .vscode
 
 # Package files

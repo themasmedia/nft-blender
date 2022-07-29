@@ -1,5 +1,10 @@
 #!$BLENDER_PATH/python/bin python
 
+"""
+NFT Blender - DB - SQL
+
+"""
+
 import logging
 import pathlib
 import sys
@@ -19,26 +24,42 @@ __LOGGER__.setLevel(logging.INFO)
 
 
 class DBObjectBase(object):
-    """TODO"""
-    def __getitem__(self, field):
-        """TODO"""
+    """
+    The base class for SQLAlchemy database entries/rows.
+    """
+    #: Primary key identifier property (Integer)
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
+
+    def __getitem__(self, field: str) -> object:
+        """
+        Returns the value for a given field using a dictionary key interface.
+
+        :param field: Name of the property field (i.e. "id")
+        """
         return self.__dict__[field]
 
-    def __repr__(self):
-        """TODO"""
+    def __repr__(self) -> str:
+        """
+        Returns a human-readable representation of the object.
+        """
         return f'<{self.__class__.__name__} (id: {self.id} in {self.__tablename__})>'
 
+    @classmethod
     @sqlalchemy.ext.declarative.declared_attr
-    def __tablename__(cls):
-        """TODO"""
+    def __tablename__(cls) -> str:
+        """
+        Returns the table name of the entry as a SQLAlchemy declared attribute.
+        """
         return cls.__name__.lower()
 
-    id =  sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
 
+# Declare the DBObjectBase class as the base class for all DB entries.
+DBObjectBase = sqlalchemy.ext.declarative.declarative_base(
+    cls=DBObjectBase, name=DBObjectBase.__name__
+)
 
-DBObjectBase = sqlalchemy.ext.declarative.declarative_base(cls=DBObjectBase)
-
-
+# Association table between projects and users.
+# TODO Not yet functional.
 DBUserProjects = sqlalchemy.Table(
     'user_projects',
     DBObjectBase.metadata,
@@ -48,30 +69,41 @@ DBUserProjects = sqlalchemy.Table(
 
 
 class DBProject(DBObjectBase):
-    """TODO"""
+    """
+    The database entry class for projects.
+    """
     __tablename__ = 'projects'
+    #: Unique project code property (String)
     code = sqlalchemy.Column(sqlalchemy.String, unique=True)
+    #: Unique project name property (String)
     name = sqlalchemy.Column(sqlalchemy.String, nullable=False, unique=True)
+    #: Project disk location path property (String)
     path = sqlalchemy.Column(sqlalchemy.String)
+    #: Project disk location path property (JSON)
     pipeline = sqlalchemy.Column(sqlalchemy.JSON)
-    users = sqlalchemy.orm.relationship(
-        'DBUser',
-        order_by='DBUser.id',
-        secondary=DBUserProjects,
-        back_populates='projects',
-    )
+    #: Users relationship property (DBUser)
+    # users = sqlalchemy.orm.relationship(
+    #     'DBUser',
+    #     order_by='DBUser.id',
+    #     secondary=DBUserProjects,
+    #     back_populates='projects',
+    # )
 
 
 class DBUser(DBObjectBase):
-    """TODO"""
+    """
+    The database entry class for users.
+    """
     __tablename__ = 'users'
+    #: Unique user name property (String)
     name = sqlalchemy.Column(sqlalchemy.String, nullable=False, unique=True)
-    projects = sqlalchemy.orm.relationship(
-        'DBProject',
-        order_by='DBProject.id',
-        secondary=DBUserProjects,
-        back_populates='users',
-    )
+    #: Users relationship property (DBProject)
+    # projects = sqlalchemy.orm.relationship(
+    #     'DBProject',
+    #     order_by='DBProject.id',
+    #     secondary=DBUserProjects,
+    #     back_populates='users',
+    # )
 
 
 DBModels = (DBProject, DBUser)
@@ -80,8 +112,16 @@ DBModels = (DBProject, DBUser)
 def db_create_table(
     db_engine: sqlalchemy.engine.base.Engine,
     drop_existing: bool = False,
-):
-    """TODO"""
+) -> None:
+    """
+    Check for existence of Tables with Engine metadata, and create them if necessary.
+    https://docs.sqlalchemy.org/en/14/core/metadata.html#creating-and-dropping-database-tables
+
+    :param db_engine: The connected Engine.
+    :param drop_existing: If True,
+        drop the table(s) in the engine metadata to reset schema
+        before creating Tables (default: False).
+    """
     if drop_existing:
         DBObjectBase.metadata.drop_all(db_engine)
 
@@ -92,8 +132,14 @@ def db_delete_rows(
     db_engine: sqlalchemy.engine.base.Engine,
     db_cls: DBObjectBase | sqlalchemy.Table,
     filters: typing.Iterable[tuple[str, object]] = (),
-):
-    """TODO"""
+) -> None:
+    """
+    Deletes the specified Row(s) that match the query filter(s).
+
+    :param db_engine: The connected Engine.
+    :param db_cls: The entry (or entry's Table) class of the Rows to delete.
+    :param filters: The attribute name(s) and value(s) used to query for Rows to delete.
+    """
     db_table = sqlalchemy.Table if isinstance(db_cls, sqlalchemy.Table) else db_cls.__table__
     db_del = sqlalchemy.delete(db_table)
     for col_attr_name, col_val in filters:
@@ -104,14 +150,24 @@ def db_delete_rows(
 
 
 def db_get_columns(db_row: DBObjectBase) -> dict:
-    """TODO"""
+    """
+    Gets all Columns for a given row in a Table.
+
+    :param db_row: The row object to query columns on.
+    :returns: The column names and values for the row.
+    """
     return db_row.__class__.__table__.columns
 
 
 def db_get_engine(
     db_url: pathlib.Path | str,
 ) -> sqlalchemy.engine.base.Engine | None:
-    """TODO"""
+    """
+    Creates a SQLAlchemy Engine for the given DB url (connects automatically, if able).
+
+    :param db_url: The DBMS-formatted database url.
+    :returns: The Engine for the database.
+    """
     try:
         return sqlalchemy.create_engine(db_url, echo=True)
     except sqlalchemy.exc.ArgumentError:
@@ -121,7 +177,12 @@ def db_get_engine(
 def db_get_metadata(
     db_engine: sqlalchemy.engine.base.Engine,
 ) -> sqlalchemy.util._collections.FacadeDict:
-    """TODO"""
+    """
+    Get the table metadata for all available Table entries in a database.
+
+    :param db_engine: The connected Engine.
+    :returns: Metadata for the Engine.
+    """
     db_metadata = sqlalchemy.MetaData(bind=db_engine)
     db_metadata.reflect()
 
@@ -130,28 +191,42 @@ def db_get_metadata(
 
 def db_get_url(
     db_name: str,
-    root_dir_path: pathlib.Path | str,
+    db_root_path: str,
     dbms_name: str = 'SQLite',
 ) -> str:
-    """SQLite only"""
-    root_dir_path = pathlib.Path(root_dir_path)
-    db_file_path = root_dir_path.joinpath(db_name).with_suffix('.db')
-    db_url = ''
+    """
+    Generates the DBMS-formatted database url for the given path.
+    Only SQLite is supported at this time (uses user's local disk as database location).
 
+    :param db_root_path: Path string to format.
+    :returns: the DBMS-formatted database url.
+    """
     if dbms_name == 'SQLite':
-        db_url = f'sqlite:///{db_file_path.as_posix()}'
+        db_root_path = pathlib.Path(db_root_path)
+        db_file_path = db_root_path.joinpath(db_name).with_suffix('.db')
 
-    return db_url
+        return f'sqlite:///{db_file_path.as_posix()}'
+
+    return ''
 
 
 def db_query_basic(
     db_engine: sqlalchemy.engine.base.Engine,
     db_cls: DBObjectBase,
     limit: int = -1,
-    columns: typing.Sequence = (),
+    columns: typing.Sequence[sqlalchemy.Column] = (),
     filters: typing.Iterable[tuple[str, object]] = (),
 ) -> list:
-    """TODO"""
+    """
+    Queries Table(s) for Rows that match the given arguments.
+
+    :param db_engine: The connected Engine.
+    :param db_cls: Entry class for Rows to query.
+    :param limit: Total number of results to return.
+    :param columns: Load only the specified Column(s) for matching Row(s).
+    :param filters: The attribute name(s) and value(s) used to query for Rows to delete.
+    :returns: List of matching Rows.
+    """
     results = []
 
     with sqlalchemy.orm.Session(db_engine) as db_session:
@@ -176,7 +251,12 @@ def db_query_basic(
 def db_test_connection(
     db_engine: sqlalchemy.engine.base.Engine = None
 ) -> bool:
-    """TODO"""
+    """
+    Tests if the Engine is connected.
+
+    :param db_engine: The connected Engine.
+    :returns: Status of the connection.
+    """
     try:
         assert isinstance(db_engine, sqlalchemy.engine.base.Engine)
         db_engine.connect()
@@ -195,8 +275,14 @@ def db_upsert(
     db_engine: sqlalchemy.engine.base.Engine,
     db_entries: typing.Iterable[DBObjectBase] = (),
     column_name_filter: str = None,
-) -> bool | tuple[bool]:
-    """TODO"""
+) -> tuple[bool]:
+    """
+    Upserts the given entries as Rows (Rows are updated if they exist or created if they don't).
+    If a filter is given, existing Rows that match values in the entr(ies) will be updated.
+
+    :param db_engine: The connected Engine.
+    :returns: Success results for each upsert operation for each Row (ordered by entries given).
+    """
     db_entries_updated = []
 
     with sqlalchemy.orm.Session(db_engine) as db_session:

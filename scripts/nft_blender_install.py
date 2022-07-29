@@ -1,5 +1,9 @@
 #!$BLENDER_PATH/python/bin python
 
+"""NFT Blender - Installation
+
+"""
+
 import logging
 import os
 import pathlib

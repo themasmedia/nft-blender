@@ -5,7 +5,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 #
 # Make documentation:
-# cd cods && make clean && make html
+# cd docs && make clean && make html && cd ..
 
 # -- Path setup --------------------------------------------------------------
 
@@ -17,8 +17,9 @@ import sys
 
 
 # add sourcecode to path.
-nft_blender_path = pathlib.Path('../src/nft_blender').resolve()
-sys.path.insert(0, nft_blender_path.as_posix())
+src_root_path = pathlib.Path('../src/').resolve()
+for submod in ('nft_blender', 'nft_blender/nft_bpy', 'nft_blender/nft_db', 'nft_blender/nft_ops'):
+    sys.path.insert(0, src_root_path.joinpath(submod).as_posix())
 
 # -- Project information -----------------------------------------------------
 
@@ -32,10 +33,15 @@ release = '0.0.1'
 
 # -- General configuration ---------------------------------------------------
 
+autodoc_mock_imports = ['bpy', 'PySide6']
+
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc']
+extensions = ['sphinx.ext.autodoc', 'sphinx_autodoc_typehints']
+
+# Override html default "contents.rst" to use Sphinx's default "index.rst".
+master_doc = 'index'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

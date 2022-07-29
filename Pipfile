@@ -9,8 +9,10 @@ pyside6 = "*"
 sqlalchemy = "*"
 
 [dev-packages]
+pylint = "*"
 pytest = "*"
 sphinx = "*"
+sphinx-autodoc-typehints = "*"
 sphinx-rtd-theme = "*"
 
 [requires]
