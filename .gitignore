@@ -18,5 +18,6 @@ __pycache__/*
 .pytest_cache/
 
 # Build and docs folder/files
+*/_build/*
 build/*
 dist/*

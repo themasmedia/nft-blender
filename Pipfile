@@ -10,6 +10,8 @@ sqlalchemy = "*"
 
 [dev-packages]
 pytest = "*"
+sphinx = "*"
+sphinx-rtd-theme = "*"
 
 [requires]
 python_version = "3.10"
