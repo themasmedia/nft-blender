@@ -6,10 +6,14 @@
 Documentation for NFT Blender (alpha version)
 =============================================
 
+.. image:: gfx/RTD_Overview_1.gif
+    :align: center
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
+   overview
    autodoc
 
 Indices and tables

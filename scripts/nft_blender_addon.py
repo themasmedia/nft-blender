@@ -2,7 +2,7 @@
 
 """NFT Blender - Add-On
 
-Add-on Object can be accessed with ctx_get_addon() function in nft_blender.nft_bpy.bpy_ctx.
+Add-on Object can be accessed within Blender via nft_blender.nft_bpy.bpy_ctx.ctx_get_addon().
 """
 
 bl_info = {
@@ -16,21 +16,25 @@ bl_info = {
     'version': (0, 0, 1),
 }
 
+import os
+
 import bpy
 
 from nft_blender.nft_ops import ops_asst, ops_proj, ops_rndr
 
 
-import importlib
+# import importlib
 
-for module in (ops_asst, ops_proj, ops_rndr):
-    importlib.reload(module)
+# for module in (ops_asst, ops_proj, ops_rndr):
+#     importlib.reload(module)
 
 
 # PREFERENCES
 
 class NFTAddonPrefs(bpy.types.AddonPreferences):
-    """"""
+    """
+    Persistent properties available for the duration of the Blender session via add-on preferences.
+    """
     bl_idname = __name__
 
     db_connected: bpy.props.BoolProperty(
@@ -70,9 +74,11 @@ class NFTAddonPrefs(bpy.types.AddonPreferences):
 # OPERATORS
 
 class NFTOperatorPROJ01(bpy.types.Operator):
-    """TODO"""
+    """
+    Operator for nft_ops.ops_proj.proj_launch_dialog_ui().
+    """
     bl_idname = 'nft.proj_launch_dialog_ui'
-    bl_label = 'NFT Project Manager'
+    bl_label = 'Launch NFT Project Manager'
 
     def invoke(
         self,
@@ -86,7 +92,9 @@ class NFTOperatorPROJ01(bpy.types.Operator):
 
 
 class NFTOperatorPRE01(bpy.types.Operator):
-    """TODO"""
+    """
+    Operator for nft_ops.ops_asst.asst_set_material_data().
+    """
     bl_idname = 'nft.asst_set_material_data'
     bl_label = 'Set Material Data for Selected Meshes'
 
@@ -102,9 +110,11 @@ class NFTOperatorPRE01(bpy.types.Operator):
 
 
 class NFTOperatorPOST01(bpy.types.Operator):
-    """TODO"""
+    """
+    Operator for nft_ops.ops_rndr.rndr_batch_render().
+    """
     bl_idname = 'nft.rndr_batch_render'
-    bl_label = 'NFT Project Manager'
+    bl_label = 'Select and Render Blender File(s) Locally.'
 
     def invoke(
         self,
@@ -119,8 +129,10 @@ class NFTOperatorPOST01(bpy.types.Operator):
 
 # MENUS
 
-class NFTSubmenuPRE(bpy.types.Menu):
-    """TODO"""
+class NFT_MT_SubmenuPRE(bpy.types.Menu):
+    """
+    Pre-production sub-menu.
+    """
     bl_label = 'Pre-Production'
 
     def draw(
@@ -132,8 +144,10 @@ class NFTSubmenuPRE(bpy.types.Menu):
         layout.operator('nft.asst_set_material_data')
 
 
-class NFTSubmenuPROD(bpy.types.Menu):
-    """TODO"""
+class NFT_MT_SubmenuPROD(bpy.types.Menu):
+    """
+    Production sub-menu.
+    """
     bl_label = 'Production'
 
     def draw(
@@ -141,12 +155,12 @@ class NFTSubmenuPROD(bpy.types.Menu):
         context: bpy.types.Context,
     ):
         """Draw method override."""
-    #     layout = self.layout
-    #     layout.operator(f'nft.')
 
 
-class NFTSubmenuPOST(bpy.types.Menu):
-    """TODO"""
+class NFT_MT_SubmenuPOST(bpy.types.Menu):
+    """
+    Post-production sub-menu.
+    """
     bl_label = 'Post-Production'
 
     def draw(
@@ -158,8 +172,10 @@ class NFTSubmenuPOST(bpy.types.Menu):
         layout.operator('nft.rndr_batch_render')
 
 
-class NFTMenu(bpy.types.Menu):
-    """TODO"""
+class NFT_MT_Menu(bpy.types.Menu):
+    """
+    NFT Blender Menu.
+    """
     bl_label = 'NFT Blender'
 
     def draw(
@@ -169,16 +185,16 @@ class NFTMenu(bpy.types.Menu):
         """Draw method override."""
         layout = self.layout
         layout.operator('nft.proj_launch_dialog_ui')
-        layout.menu('NFTSubmenuPRE')
-        layout.menu('NFTSubmenuPROD')
-        layout.menu('NFTSubmenuPOST')
+        layout.menu('NFT_MT_SubmenuPRE')
+        layout.menu('NFT_MT_SubmenuPROD')
+        layout.menu('NFT_MT_SubmenuPOST')
 
     def menu_draw(
         self,
         context: bpy.types.Context,
     ):
         """Menu draw method override."""
-        self.layout.menu('NFTMenu')
+        self.layout.menu('NFT_MT_Menu')
 
 
 classes = (
@@ -186,24 +202,30 @@ classes = (
     NFTOperatorPROJ01,
     NFTOperatorPRE01,
     NFTOperatorPOST01,
-    NFTSubmenuPRE,
-    NFTSubmenuPROD,
-    NFTSubmenuPOST,
-    NFTMenu,
+    NFT_MT_SubmenuPRE,
+    NFT_MT_SubmenuPROD,
+    NFT_MT_SubmenuPOST,
+    NFT_MT_Menu,
 )
 
 
 # REGISTER ADD-ON
 
 def register():
-    """Register all NFT Blender menu and operator classes."""
+    """
+    Register all NFT Blender menu and operator classes.
+    """
+    os.system('cls')
     for cls in classes:
         bpy.utils.register_class(cls)
-    bpy.types.TOPBAR_MT_editor_menus.append(NFTMenu.menu_draw)
+    bpy.types.TOPBAR_MT_editor_menus.append(NFT_MT_Menu.menu_draw)
 
 
 def unregister():
-    """Unregister all NFT Blender menu and operator classes."""
-    bpy.types.TOPBAR_MT_editor_menus.remove(NFTMenu.menu_draw)
+    """
+    Unregister all NFT Blender menu and operator classes.
+    """
+    os.system('cls')
+    bpy.types.TOPBAR_MT_editor_menus.remove(NFT_MT_Menu.menu_draw)
     for cls in classes:
         bpy.utils.unregister_class(cls)

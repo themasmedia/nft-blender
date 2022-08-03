@@ -33,12 +33,13 @@ release = '0.0.1'
 
 # -- General configuration ---------------------------------------------------
 
-autodoc_mock_imports = ['bpy', 'PySide6']
+autodoc_mock_imports = ['bpy', 'PySide6', 'sqlalchemy']
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx_autodoc_typehints']
+# extensions = ['sphinx.ext.autodoc', 'sphinx_autodoc_typehints']
+extensions = ['sphinx.ext.autodoc']
 
 # Override html default "contents.rst" to use Sphinx's default "index.rst".
 master_doc = 'index'

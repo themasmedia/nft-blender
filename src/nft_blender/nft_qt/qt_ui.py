@@ -26,7 +26,7 @@ class UIDialogBase(QtWidgets.QDialog):
     def __init__(
         self,
         modality: bool = True,
-        parent: QtWidgets.QApplication = None,
+        parent: QtCore.QObject = None,
     ) -> None:
         """
         Constructor method.
@@ -91,7 +91,7 @@ class UIChecklistDialog(QtWidgets.QDialog):
         title: str = '',
         text: str = '',
         items: typing.Iterable[str] = (),
-        parent: QtWidgets.QApplication = None,
+        parent: QtCore.QObject = None,
     ) -> None:
         """
         Constructor method.
@@ -323,12 +323,12 @@ class UIChecklistDialog(QtWidgets.QDialog):
 
 class UITreeModelItem(list):
     """
-    Tree model item class for objects in tree model objects.
+    Tree Model Item class for objects in tree model objects.
     """
     def __init__(
         self,
         data: typing.Sequence,
-        parent: typing.Sequence | typing.Type[None] = None,
+        parent: QtCore.QObject = None,
     ) -> None:
         """
         Constructor method.
@@ -397,7 +397,7 @@ class UITreeModelItem(list):
 
     def insertChildren(
         self,
-        tree_items: list['UITreeModelItem'],
+        tree_items: typing.Sequence['UITreeModelItem'],
         pos: int = -1,
         sort: bool = True,
     ):
@@ -468,15 +468,15 @@ class UITreeModelItem(list):
 
 class UITreeModel(QtCore.QAbstractItemModel):
     """
-    Tree model class.
+    Tree Model class.
     """
     #: Tree Model Item class to be used for all child objects.
     MODEL_ITEM_TYPE = UITreeModelItem
 
     def __init__(
         self,
-        header_columns: list[str] | tuple[str] = ('',),
-        parent: QtWidgets.QApplication | typing.Type[None] = None,
+        header_columns: typing.Iterable[str] = ('',),
+        parent: QtCore.QObject = None,
     ):
         """
         Constructor method.
@@ -756,7 +756,7 @@ def ui_get_checklist(
     title: str = '',
     text: str = '',
     items: typing.Sequence = (),
-    parent: QtWidgets.QApplication = None,
+    parent: QtCore.QObject = None,
 ) -> list:
     """
     Prompts the user with an Checklist Dialog UI with a list of items to choose from.
@@ -782,8 +782,8 @@ def ui_get_checklist(
 def ui_get_directory(
     caption: str = '',
     dir_str: str = '',
-    parent: QtWidgets.QApplication = None,
-) -> pathlib.Path | typing.Type[None]:
+    parent: QtCore.QObject = None,
+) -> pathlib.Path:
     """
     Prompts the user with a File Dialog UI to select a folder.
 
@@ -807,8 +807,8 @@ def ui_get_file(
     dir_str: str = '',
     filter_str: str = 'All Files (*.*)',
     select_multiple: bool = False,
-    parent: QtWidgets.QApplication = None,
-) -> pathlib.Path | list:
+    parent: QtCore.QObject = None,
+) -> typing.Union[pathlib.Path, list]:
     """
     Prompts the user to select a file(s).
 
@@ -847,8 +847,8 @@ def ui_get_int(
     min_value: int = 0,
     max_value: int = 9999,
     step: int = 1,
-    parent: QtWidgets.QApplication = None,
-) -> int | typing.Type[None]:
+    parent: QtCore.QObject = None,
+) -> int:
     """
     Prompts the user with an Input Dialog UI to select an integer.
 
@@ -881,8 +881,8 @@ def ui_get_item(
     items: typing.Sequence = (),
     default_item: str = '',
     editable: bool = False,
-    parent: QtWidgets.QApplication = None,
-) -> str | typing.Type[None]:
+    parent: QtCore.QObject = None,
+) -> str:
     """
     Prompts the user with an Input Dialog UI with a dropdown list of items to choose from.
 
@@ -913,8 +913,8 @@ def ui_get_text(
     title: str = '',
     label: str = '',
     text: str = '',
-    parent: QtWidgets.QApplication = None,
-) -> str | typing.Type[None]:
+    parent: QtCore.QObject = None,
+) -> str:
     """
     Prompts the user with an Input Dialog UI to input text.
 
@@ -932,12 +932,12 @@ def ui_get_text(
         text=text,
     )
 
-    return result if success else None
+    return result if success else ''
 
 
 def ui_launch_dialog(
-    cls: typing.Type[QtWidgets.QDialog] | typing.Type[QtWidgets.QMainWindow],
-    parent: QtWidgets.QApplication = None,
+    cls: typing.Union[QtWidgets.QDialog, QtWidgets.QMainWindow],
+    parent: QtCore.QObject = None,
 ) -> QtWidgets.QDialog:
     """
     Helper function for launching a Dialog Box or Main Window UI instance.
@@ -957,7 +957,7 @@ def ui_message_box(
     title: str = '',
     text: str = '',
     message_box_type: str = 'about',
-    parent: QtWidgets.QApplication = None,
+    parent: QtCore.QObject = None,
 ) -> bool:
     """
     Prompts the user with a simple Message Box UI.

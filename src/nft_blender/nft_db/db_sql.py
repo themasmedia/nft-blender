@@ -130,8 +130,8 @@ def db_create_table(
 
 def db_delete_rows(
     db_engine: sqlalchemy.engine.base.Engine,
-    db_cls: DBObjectBase | sqlalchemy.Table,
-    filters: typing.Iterable[tuple[str, object]] = (),
+    db_cls: typing.Union[DBObjectBase,sqlalchemy.Table],
+    filters: typing.Iterable[typing.Sequence] = (),
 ) -> None:
     """
     Deletes the specified Row(s) that match the query filter(s).
@@ -139,6 +139,7 @@ def db_delete_rows(
     :param db_engine: The connected Engine.
     :param db_cls: The entry (or entry's Table) class of the Rows to delete.
     :param filters: The attribute name(s) and value(s) used to query for Rows to delete.
+        Each filter is submitted as a tuple: (str, object)
     """
     db_table = sqlalchemy.Table if isinstance(db_cls, sqlalchemy.Table) else db_cls.__table__
     db_del = sqlalchemy.delete(db_table)
@@ -160,8 +161,8 @@ def db_get_columns(db_row: DBObjectBase) -> dict:
 
 
 def db_get_engine(
-    db_url: pathlib.Path | str,
-) -> sqlalchemy.engine.base.Engine | None:
+    db_url: typing.Union[pathlib.Path, str],
+) -> typing.Union[sqlalchemy.engine.base.Engine, None]:
     """
     Creates a SQLAlchemy Engine for the given DB url (connects automatically, if able).
 
@@ -215,7 +216,7 @@ def db_query_basic(
     db_cls: DBObjectBase,
     limit: int = -1,
     columns: typing.Sequence[sqlalchemy.Column] = (),
-    filters: typing.Iterable[tuple[str, object]] = (),
+    filters: typing.Iterable[typing.Sequence] = (),
 ) -> list:
     """
     Queries Table(s) for Rows that match the given arguments.

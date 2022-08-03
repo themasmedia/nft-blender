@@ -13,9 +13,11 @@ from nft_blender.nft_bpy import bpy_mtl
 from nft_blender.nft_bpy import bpy_scn
 from nft_blender.nft_qt import qt_ui
 
-import importlib
+# import importlib
 
-importlib.reload(bpy_mtl)
+# importlib.reload(bpy_mtl)
+# importlib.reload(bpy_scn)
+# importlib.reload(qt_ui)
 
 
 def asst_set_material_data(mesh_objs: typing.Iterable = ()) -> bool:

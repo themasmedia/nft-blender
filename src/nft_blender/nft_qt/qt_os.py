@@ -8,7 +8,7 @@ NFT Blender - QT - OS
 import pathlib
 import typing
 
-from PySide6 import QtCore, QtWidgets
+from PySide6 import QtCore
 # from __feature__ import snake_case, true_property
 
 
@@ -19,9 +19,9 @@ class OSBlenderProcess(QtCore.QProcess):
 
     def __init__(
         self,
-        blender_app_path = pathlib.Path | str,
+        blender_app_path = typing.Union[pathlib.Path, str],
         blend_files: typing.Iterable[str] = (),
-        parent: QtWidgets.QApplication = None,
+        parent: QtCore.QObject = None,
     ) -> None:
         """
         Constructor method

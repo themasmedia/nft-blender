@@ -12,7 +12,7 @@ This module conforms to the requirements of Python packaging, and can be install
 
 
 > This package is not yet meant for mainstream usage and delivered *as-is*.<br/>
-  Several scripts are specilized for custom in-house pipeline(s), but will eventually be made more .<br/>
+  Several scripts are specilized for custom in-house pipeline(s) (may eventually be made more customizable).<br/>
   If you have ideas and/or run into issues with the module, please contact me! 😎
 
 
@@ -20,9 +20,6 @@ This module conforms to the requirements of Python packaging, and can be install
 Documentation generated with readthedocs & Sphinx is deployed on GitHub Pages for this project automatically for every update.*<br/>
 To view the latest documentation for using **NFT Blender**, please visit:<br/>
 👉 [masangri.github.io/nft-blender](https://masangri.github.io/nft-blender/) 👈
-
-*all credit for CD/CI readthedocs/Sphinx deployment using GitHub actions on GitHub Pages goes to
-[Michael Altfield](https://tech.michaelaltfield.net/2020/07/18/sphinx-rtd-github-pages-1)
 
 
 ## Installation

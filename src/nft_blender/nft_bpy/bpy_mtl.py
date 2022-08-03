@@ -75,7 +75,7 @@ def mtl_search_replace_image_dir_paths(
 
 
 def mtl_set_material_data(
-    mtl_name: str = None,
+    mtl_name: str = '',
     mesh_objs: typing.Iterable = (),
 ) -> bool:
     """

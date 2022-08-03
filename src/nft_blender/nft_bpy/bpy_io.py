@@ -14,7 +14,7 @@ import bpy
 
 
 def io_append_file(
-    blend_file_path: pathlib.Path | str,
+    blend_file_path: typing.Union[pathlib.Path, str],
     inner_path: str,
     object_name: str,
     autoselect: bool = False,
@@ -56,7 +56,7 @@ def io_get_current_file_path() -> pathlib.Path:
     return pathlib.Path(bpy.data.filepath)
 
 
-def io_get_temp_dir() -> pathlib.Path | None:
+def io_get_temp_dir() -> typing.Union[pathlib.Path, None]:
     """
     Gets the systems default path for temporary files and folders.
 
@@ -74,7 +74,7 @@ def io_get_user() -> str:
     return getpass.getuser()
 
 
-def io_make_dirs(*dir_paths: typing.Iterable[pathlib.Path | str]) -> None:
+def io_make_dirs(*dir_paths: typing.Iterable[typing.Union[pathlib.Path, str]]) -> None:
     r"""
     Creates directories for all directory paths given.
 
@@ -85,7 +85,7 @@ def io_make_dirs(*dir_paths: typing.Iterable[pathlib.Path | str]) -> None:
 
 
 def io_save_as(
-    file_path: pathlib.Path | str,
+    file_path: typing.Union[pathlib.Path, str],
     check_existing: bool = False,
 ) -> None:
     """

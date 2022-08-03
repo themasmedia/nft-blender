@@ -1,6 +1,6 @@
 .. _autodoc:
 
-NFT Blender
+NFT Blender 
 ===========
  
 .. automodule:: nft_blender
@@ -72,12 +72,12 @@ NFT Blender - OPS (Blender Operators)
   :members:
   :undoc-members:
 
-.. OPS - Asset
-.. ~~~~~~~~~~~
+OPS - Asset
+~~~~~~~~~~~
 
-.. .. automodule:: nft_ops.ops_asset
-..   :members:
-..   :undoc-members:
+.. automodule:: nft_ops.ops_asst
+  :members:
+  :undoc-members:
 
 OPS - Project
 ~~~~~~~~~~~~~
@@ -86,12 +86,12 @@ OPS - Project
   :members:
   :undoc-members:
 
-.. OPS - Render
-.. ~~~~~~~~~~~~
+OPS - Render
+~~~~~~~~~~~~
 
-.. .. automodule:: nft_ops.ops_rndr
-..   :members:
-..   :undoc-members:
+.. automodule:: nft_ops.ops_rndr
+  :members:
+  :undoc-members:
 
 NFT Blender - QT/PySide
 -----------------------

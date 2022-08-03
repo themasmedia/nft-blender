@@ -6,6 +6,7 @@ NFT Blender - BPY - ANI
 """
 
 import pathlib
+import typing
 
 import bpy
 
@@ -14,7 +15,7 @@ class AniKeyingSetHelper(object):
     """
     Helper object for managing Blender Keying Sets for assets in a project.
     """
-    def __init__(self, ks_dir_path: pathlib.Path | str) -> None:
+    def __init__(self, ks_dir_path: typing.Union[pathlib.Path, str]) -> None:
         """
         Constructor method.
 

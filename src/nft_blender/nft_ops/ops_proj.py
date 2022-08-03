@@ -18,11 +18,11 @@ from nft_blender.nft_bpy import bpy_io
 from nft_blender.nft_db import db_sql
 from nft_blender.nft_qt import qt_ui
 
-import importlib
+# import importlib
 
-importlib.reload(bpy_io)
-importlib.reload(db_sql)
-importlib.reload(qt_ui)
+# importlib.reload(bpy_io)
+# importlib.reload(db_sql)
+# importlib.reload(qt_ui)
 
 
 # Load default data from config file.
@@ -45,28 +45,23 @@ class ProjDialogUI(qt_ui.UIDialogBase):
     _UI_FILE_NAME = 'ui_proj_dialog.ui'
     _UI_WINDOW_TITLE = 'NFT Blender - Project Manager'
 
-    def __init__(self, parent: QtWidgets.QApplication = None):
+    def __init__(
+        self,
+        parent: QtCore.Qobject = None,
+    ) -> None:
         """
         Constructor method.
 
-        :param TODO:
-        :returns: TODO
+        :param parent: Parent object (Application, UI Widget, etc.).
         """
         self._db_engine = None
 
         super().__init__(modality=False, parent=parent)
 
 
-    def _set_up_ui(self):
-        """
-        TODO
-
-        :param TODO:
-        :returns: TODO
-        """
-
+    def _set_up_ui(self) -> None:
+        """"""
         # Create additional QObjects
-
         self._ui.proj_create_btngrp = QtWidgets.QButtonGroup()
         self._ui.proj_create_btngrp.addButton(self._ui.proj_create_reset_pshbtn)
         self._ui.proj_create_btngrp.addButton(self._ui.proj_create_create_pshbtn)
@@ -121,10 +116,10 @@ class ProjDialogUI(qt_ui.UIDialogBase):
             project_name: str = '',
         ) -> db_sql.DBProject:
         """
-        TODO
+        Queries project data for the specified project.
 
-        :param TODO:
-        :returns: TODO
+        :param project_name: Name of the project to query.
+        :returns: The DBProject object, if one exists; otherwise returns a new empty DBProject.
         """
         db_project = db_sql.DBProject(
             code='',
@@ -133,7 +128,7 @@ class ProjDialogUI(qt_ui.UIDialogBase):
             pipeline={},
         )
 
-        if self.set_db_connection():
+        if self.db_connect():
 
             db_col_name = 'name'
             db_projects = db_sql.db_query_basic(
@@ -154,21 +149,24 @@ class ProjDialogUI(qt_ui.UIDialogBase):
 
         return db_project
 
-    def set_db_connection(
+    def db_connect(
         self,
         db_url: str = '',
         force_reset: bool = False,
         force_update: bool = True,
     ) -> bool:
         """
-        TODO
+        Establishes a connection to the database.
 
-        :param TODO:
-        :returns: TODO
+        :param db_url: The DBMS-formatted database url.
+        :param force_reset: If True,
+            creates a new connection even if already connected (default: False).
+        :param force_update: If True,
+            reset the metadata/schema for the database before connecting (default: False).
+        :returns: True if the attempt to connect was successful; otherwise, False.
         """
         if force_reset or self._db_engine is None:
             self._db_engine = db_sql.db_get_engine(db_url)
-            # Assign DB engine to instance variable
 
         db_connected = db_sql.db_test_connection(self._db_engine)
 
@@ -177,19 +175,101 @@ class ProjDialogUI(qt_ui.UIDialogBase):
             db_sql.db_create_table(self._db_engine)
 
             # Create DBUser entry in DB if necessary.
-            proj_db_update_user(
-                db_engine=self._db_engine,
+            self.proj_db_update_user(
                 name=self._ui.proj_db_user_lnedit.text(),
             )
 
         return db_connected
 
-    def ui_update(self, *args):
+    def proj_db_delete_row(
+        self,
+        db_cls: sqlalchemy.Table,
+        db_row_id: int,
+    ) -> None:
         """
-        TODO
+        Deletes the specified entry from the project.
 
-        :param TODO:
-        :returns: TODO
+        :param db_cls: Table class of the entry.
+        :param db_row_id: Primary key ID of the entry.
+        """
+        db_sql.db_delete_rows(self._db_engine, db_cls, (('id', db_row_id),))
+
+    def proj_db_update_project(
+        self,
+        code: str,
+        name: str,
+        path: typing.Union[pathlib.Path, str],
+        pipeline: dict,
+    ) -> bool:
+        """
+        Updates the project with the given data (or creates a new project if one doesn't exist yet).
+
+        :param code: Project code of the project to update.
+        :param name: Project name to update the project with.
+        :param path: Project path to update the project with.
+        :param pipeline: Project pipeline structure to update the project with.
+        :returns: True if the project was updated successfully; otherwise, False.
+        """
+        column_name_filter = 'code'
+        db_entry = db_sql.DBProject(
+            code=code,
+            name=name,
+            path=pathlib.Path(path).resolve().as_posix(),
+            pipeline=pipeline,
+        )
+
+        db_entry_results = db_sql.db_upsert(
+            db_engine=self._db_engine,
+            db_entries=[db_entry],
+            column_name_filter=column_name_filter,
+        )
+
+        return db_entry_results[0]
+
+    def proj_db_update_user(
+        self,
+        name: str,
+    ):
+        """
+        Updates the user with the given data (or creates a new user if one doesn't exist yet).
+
+        :param name: User name to create/update.
+        :returns: True if the user was updated successfully; otherwise, False.
+        """
+        db_user = db_sql.DBUser(name=name)
+        db_results = db_sql.db_upsert(
+            db_engine=self._db_engine,
+            db_entries=[db_user],
+            column_name_filter='name',
+        )
+
+        return db_results[0]
+
+    def proj_io_pipeline_to_paths(
+        self,
+        root_dir_path: typing.Union[pathlib.Path, str],
+        project_pipeline: dict,
+    ) -> list[pathlib.Path]:
+        """
+        Creates a list of Paths for all folders in a project.
+
+        :param root_dir_path:The root path of the project.
+        :param project_pipeline: Project pipeline heirarchy data.
+        :returns: A list of Paths for each folder in the pipeline data.
+        """
+        root_dir_path = pathlib.Path(root_dir_path)
+        project_dir_paths = [root_dir_path]
+
+        for key, val in project_pipeline.items():
+            sub_dir_path = root_dir_path.joinpath(key)
+            project_dir_paths.extend(self.proj_io_pipeline_to_paths(sub_dir_path, val))
+
+        return project_dir_paths
+
+    def ui_update(self, *args) -> None:
+        """
+        Updates the UI section(s) based on the widget sender
+        (or all sections if called by the script).
         """
         if self.sender() == self._ui.proj_toolbox:
 
@@ -199,11 +279,11 @@ class ProjDialogUI(qt_ui.UIDialogBase):
                 self.ui_update_proj_db()
 
             elif proj_widget == self._ui.proj_create_widget:
-                proj_widget.setEnabled(self.set_db_connection(force_update=False))
+                proj_widget.setEnabled(self.db_connect(force_update=False))
                 self.ui_update_proj_create()
 
             elif proj_widget == self._ui.proj_nav_widget:
-                proj_widget.setEnabled(self.set_db_connection(force_update=False))
+                proj_widget.setEnabled(self.db_connect(force_update=False))
                 self.ui_update_proj_nav()
 
         else:
@@ -213,7 +293,9 @@ class ProjDialogUI(qt_ui.UIDialogBase):
 
 
     def ui_update_proj_create(self, *args):
-        """TODO Select newly created index for self._ui.proj_create_pipe_btngrp"""
+        """
+        Updates the Create Project section of the UI.
+        """
         if self.sender() == self._ui.proj_create_dir_pshbtn:
             proj_dir = qt_ui.ui_get_directory(
                 caption='Select Location to Create Project',
@@ -226,6 +308,7 @@ class ProjDialogUI(qt_ui.UIDialogBase):
         elif self.sender() == self._ui.proj_create_code_lnedit:
             self._ui.proj_create_code_lnedit.setText(args[0].upper())
 
+        # TODO Select newly created index for self._ui.proj_create_pipe_btngrp
         elif self.sender() == self._ui.proj_create_btngrp:
 
             if args[0] == self._ui.proj_create_create_pshbtn:
@@ -246,8 +329,7 @@ class ProjDialogUI(qt_ui.UIDialogBase):
                     return
 
                 # Create/update DBProject entry in DB.
-                proj_db_update_project(
-                    db_engine=self._db_engine,
+                self.proj_db_update_project(
                     code=project_code,
                     name=project_name,
                     path=project_path,
@@ -262,7 +344,7 @@ class ProjDialogUI(qt_ui.UIDialogBase):
                     message_box_type='question',
                     parent=self,
                 ):
-                    proj_paths = proj_io_pipeline_to_paths(project_path, project_pipeline)
+                    proj_paths = self.proj_io_pipeline_to_paths(project_path, project_pipeline)
                     bpy_io.io_make_dirs(*proj_paths)
                     qt_ui.ui_message_box(
                         title='Folders Created/Updated',
@@ -302,12 +384,9 @@ class ProjDialogUI(qt_ui.UIDialogBase):
             self._ui.proj_create_pipe_trview.setHeaderHidden(False)
 
 
-    def ui_update_proj_db(self, *args):
+    def ui_update_proj_db(self, *args) -> None:
         """
-        TODO
-
-        :param TODO:
-        :returns: TODO
+        Updates the Database section of the UI.
         """
         if self.sender() in (self._ui.proj_db_btngrp, self._ui.proj_db_dbms_combox):
 
@@ -331,7 +410,7 @@ class ProjDialogUI(qt_ui.UIDialogBase):
 
         elif self.sender() == self._ui.proj_db_connect_pshbtn:
 
-            if self.set_db_connection(self._ui.proj_db_url_lnedit.text()):
+            if self.db_connect(self._ui.proj_db_url_lnedit.text()):
                 lbl_css = 'color: white; background-color: green'
                 lbl_txt = 'Connected'
 
@@ -359,8 +438,7 @@ class ProjDialogUI(qt_ui.UIDialogBase):
                 message_box_type='question',
                 parent=self,
             ):
-                proj_db_delete_row(
-                    db_engine=self._db_engine,
+                self.proj_db_delete_row(
                     db_cls=db_cls,
                     db_row_id=db_row.id,
                 )
@@ -384,14 +462,11 @@ class ProjDialogUI(qt_ui.UIDialogBase):
         elif self.sender() == self._ui.proj_toolbox:
             self._ui.proj_db_del_table_combox.setCurrentIndex(0)
 
-        self._ui.proj_db_del_grpbox.setEnabled(self.set_db_connection(force_update=False))
+        self._ui.proj_db_del_grpbox.setEnabled(self.db_connect(force_update=False))
 
-    def ui_update_proj_nav(self, *args):
+    def ui_update_proj_nav(self, *args) -> None:
         """
-        TODO
-
-        :param TODO:
-        :returns: TODO
+        Updates the Navigate Project section of the UI.
         """
         if self.sender() == self._ui.proj_nav_combox:
             db_proj_data = self.query_db_proj_data(self._ui.proj_nav_combox.itemText(args[0]))
@@ -424,12 +499,9 @@ class ProjDialogUI(qt_ui.UIDialogBase):
             proj_name_index = self._ui.proj_nav_combox.findText(current_proj_name)
             self._ui.proj_nav_combox.setCurrentIndex(proj_name_index)
 
-    def ui_init(self):
+    def ui_init(self) -> None:
         """
-        TODO
-
-        :param TODO:
-        :returns: TODO
+        Initializes the UI.
         """
         self._ui.proj_db_dbms_combox.clear()
         self._ui.proj_db_dbms_combox.addItems(PROJ_CONFIG_DATA['databases'])
@@ -446,10 +518,7 @@ class ProjDialogUI(qt_ui.UIDialogBase):
 
 class UITreeModelProjCreate(qt_ui.UITreeModel):
     """
-    TODO
-
-    :param TODO:
-    :returns: TODO
+    Extended Tree Model class for projects.
     """
     def data(
         self,
@@ -485,7 +554,7 @@ class UITreeModelProjCreate(qt_ui.UITreeModel):
     def setData(
         self,
         index: QtCore.QModelIndex = QtCore.QModelIndex(),
-        value: object | type[None] = None,
+        value: object = None,
         role: int = QtCore.Qt.EditRole,
     ) -> bool:
         """
@@ -505,16 +574,13 @@ class UITreeModelProjCreate(qt_ui.UITreeModel):
 
 class UITreeModelProjNav(qt_ui.UITreeModel):
     """
-    TODO
-
-    :param TODO:
-    :returns: TODO
+    Extended Tree Model Item class for projects.
     """
     def setModelData(
         self,
         data: typing.Iterable,
         parent_item: 'UITreeModelProjNav' = None,
-        root_url: pathlib.Path | str = '.',
+        root_url: typing.Union[pathlib.Path, str] = '.',
     ):
         """
         TODO
@@ -536,97 +602,9 @@ class UITreeModelProjNav(qt_ui.UITreeModel):
             parent_item.insertChildren([tree_item])
 
 
-def proj_db_delete_row(
-    db_engine: sqlalchemy.engine.base.Engine,
-    db_cls: sqlalchemy.Table,
-    db_row_id: int,
-):
+def proj_launch_dialog_ui() -> None:
     """
-    TODO
-
-    :param TODO:
-    :returns: TODO
-    """
-    db_sql.db_delete_rows(db_engine, db_cls, (('id', db_row_id),))
-
-
-def proj_db_update_project(
-    db_engine: sqlalchemy.engine.base.Engine,
-    code: str,
-    name: str,
-    path: pathlib.Path | str,
-    pipeline: dict,
-) -> bool:
-    """
-    TODO
-
-    :param TODO:
-    :returns: TODO
-    """
-    column_name_filter = 'code'
-    db_entry = db_sql.DBProject(
-        code=code,
-        name=name,
-        path=pathlib.Path(path).resolve().as_posix(),
-        pipeline=pipeline,
-    )
-
-    db_entry_results = db_sql.db_upsert(
-        db_engine=db_engine,
-        db_entries=[db_entry],
-        column_name_filter=column_name_filter,
-    )
-
-    return db_entry_results[0]
-
-
-def proj_db_update_user(
-    db_engine: sqlalchemy.engine.base.Engine,
-    name: str,
-):
-    """
-    TODO
-
-    :param TODO:
-    :returns: TODO
-    """
-    db_user = db_sql.DBUser(name=name)
-    db_results = db_sql.db_upsert(
-        db_engine=db_engine,
-        db_entries=[db_user],
-        column_name_filter='name',
-    )
-
-    return db_results[0]
-
-
-def proj_io_pipeline_to_paths(
-    root_dir_path: pathlib.Path | str,
-    project_pipeline: dict,
-) -> list[pathlib.Path]:
-    """
-    TODO
-
-    :param TODO:
-    :returns: TODO
-    """
-    root_dir_path = pathlib.Path(root_dir_path)
-    project_dir_paths = [root_dir_path]
-
-    for key, val in project_pipeline.items():
-        sub_dir_path = root_dir_path.joinpath(key)
-        # project_dir_paths.append(sub_dir_path)
-        project_dir_paths.extend(proj_io_pipeline_to_paths(sub_dir_path, val))
-
-    return project_dir_paths
-
-
-def proj_launch_dialog_ui():
-    """
-    TODO
-
-    :param TODO:
-    :returns: TODO
+    Launches the project Dialog Box UI.
     """
     os.system('cls')
 
