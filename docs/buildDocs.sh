@@ -9,14 +9,22 @@
 # Updated: 2020-07-17
 # Version: 0.1
 ################################################################################
+
+###################
+# NON-INTERACTIVE #
+###################
+
+export DEBIAN_FRONTEND=noninteractive
+export DEBCONF_NONINTERACTIVE_SEEN=true
+sudo echo "Canada/Vancouver" > /etc/timezone
+sudo dpkg-reconfigure -f noninteractive tzdata
  
 ###################
 # INSTALL DEPENDS #
 ###################
- 
-apt update
-# apt -y install git rsync python3-sphinx python3-sphinx-autodoc-typehints python3-sphinx-rtd-theme
-apt -y install git rsync python3-sphinx python3-sphinx-rtd-theme
+
+apt-get update
+apt-get -y install git rsync python3-sphinx python3-sphinx-autodoc-typehints python3-sphinx-rtd-theme
  
 #####################
 # DECLARE VARIABLES #
@@ -24,7 +32,8 @@ apt -y install git rsync python3-sphinx python3-sphinx-rtd-theme
  
 pwd
 ls -lah
-export SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)
+# export SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)
+export SOURCE_DATE_EPOCH=$(date +%s)
  
 ##############
 # BUILD DOCS #

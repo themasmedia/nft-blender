@@ -276,7 +276,7 @@ def db_upsert(
     db_engine: sqlalchemy.engine.base.Engine,
     db_entries: typing.Iterable[DBObjectBase] = (),
     column_name_filter: str = None,
-) -> tuple[bool]:
+) -> typing.Iterable[bool]:
     """
     Upserts the given entries as Rows (Rows are updated if they exist or created if they don't).
     If a filter is given, existing Rows that match values in the entr(ies) will be updated.
