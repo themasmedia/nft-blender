@@ -14,8 +14,8 @@
 # INSTALL DEPENDS #
 ###################
  
-apt-get update
-apt-get -y install git rsync python3-sphinx python3-sphinx-rtd-theme
+apt update
+apt -y install git rsync python3-sphinx python3-sphinx-autodoc-typehints python3-sphinx-rtd-theme
  
 #####################
 # DECLARE VARIABLES #

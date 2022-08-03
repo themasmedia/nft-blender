@@ -18,12 +18,12 @@ bl_info = {
 
 import bpy
 
-from nft_blender.nft_ops import ops_asset, ops_proj, ops_rndr
+from nft_blender.nft_ops import ops_asst, ops_proj, ops_rndr
 
 
 import importlib
 
-for module in (ops_asset, ops_proj, ops_rndr):
+for module in (ops_asst, ops_proj, ops_rndr):
     importlib.reload(module)
 
 
@@ -85,9 +85,41 @@ class NFTOperatorPROJ01(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class NFTOperatorPRE01(bpy.types.Operator):
+    """TODO"""
+    bl_idname = 'nft.asst_set_material_data'
+    bl_label = 'Set Material Data for Selected Meshes'
+
+    def invoke(
+        self,
+        context: bpy.types.Context,
+        event: bpy.types.Event,
+    ):
+        """Invoke method override."""
+        ops_asst.asst_set_material_data()
+
+        return {'FINISHED'}
+
+
+class NFTOperatorPOST01(bpy.types.Operator):
+    """TODO"""
+    bl_idname = 'nft.rndr_batch_render'
+    bl_label = 'NFT Project Manager'
+
+    def invoke(
+        self,
+        context: bpy.types.Context,
+        event: bpy.types.Event,
+    ):
+        """Invoke method override."""
+        ops_rndr.rndr_batch_render()
+
+        return {'FINISHED'}
+
+
 # MENUS
 
-class NFTSubmenuPREPROD(bpy.types.Menu):
+class NFTSubmenuPRE(bpy.types.Menu):
     """TODO"""
     bl_label = 'Pre-Production'
 
@@ -96,8 +128,8 @@ class NFTSubmenuPREPROD(bpy.types.Menu):
         context: bpy.types.Context,
     ):
         """Draw method override."""
-    #     layout = self.layout
-    #     layout.operator(f'nft.example')
+        layout = self.layout
+        layout.operator('nft.asst_set_material_data')
 
 
 class NFTSubmenuPROD(bpy.types.Menu):
@@ -113,6 +145,19 @@ class NFTSubmenuPROD(bpy.types.Menu):
     #     layout.operator(f'nft.')
 
 
+class NFTSubmenuPOST(bpy.types.Menu):
+    """TODO"""
+    bl_label = 'Post-Production'
+
+    def draw(
+        self,
+        context: bpy.types.Context,
+    ):
+        """Draw method override."""
+        layout = self.layout
+        layout.operator('nft.rndr_batch_render')
+
+
 class NFTMenu(bpy.types.Menu):
     """TODO"""
     bl_label = 'NFT Blender'
@@ -124,8 +169,9 @@ class NFTMenu(bpy.types.Menu):
         """Draw method override."""
         layout = self.layout
         layout.operator('nft.proj_launch_dialog_ui')
-        layout.menu('NFTSubmenuPREPROD')
+        layout.menu('NFTSubmenuPRE')
         layout.menu('NFTSubmenuPROD')
+        layout.menu('NFTSubmenuPOST')
 
     def menu_draw(
         self,
@@ -138,8 +184,11 @@ class NFTMenu(bpy.types.Menu):
 classes = (
     NFTAddonPrefs,
     NFTOperatorPROJ01,
-    NFTSubmenuPREPROD,
+    NFTOperatorPRE01,
+    NFTOperatorPOST01,
+    NFTSubmenuPRE,
     NFTSubmenuPROD,
+    NFTSubmenuPOST,
     NFTMenu,
 )
 

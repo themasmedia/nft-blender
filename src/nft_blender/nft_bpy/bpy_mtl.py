@@ -75,17 +75,22 @@ def mtl_search_replace_image_dir_paths(
 
 
 def mtl_set_material_data(
-    material_name: str = None,
+    mtl_name: str = None,
     mesh_objs: typing.Iterable = (),
-) -> None:
+) -> bool:
     """
-    Sets thge active Material for the given Mesh objects.
+    Sets the active Material for the given Mesh objects.
 
-    :param material_name: The name of the Material to set as the activae Material.
+    :param mtl_name: The name of the Material to set as the active Material.
     :param mesh_objs: The Mesh objects to set.
+    :returns: True if Material data was assigned to at least one Mesh; otherwise False.
     """
-    if material_name and mesh_objs:
+    mtl = bpy.data.materials.get(mtl_name)
+    mtl_assigned = False
 
-        material = bpy.data.materials.get(material_name)
+    if mtl:
         for mesh_obj in (obj for obj in mesh_objs if obj.type == 'MESH'):
-            mesh_obj.active_material = material
+            mesh_obj.active_material = mtl
+        mtl_assigned = True
+
+    return mtl_assigned
