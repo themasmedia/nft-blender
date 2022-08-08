@@ -28,7 +28,6 @@ import typing
 
 import sqlalchemy
 
-from nft_blender.nft_bpy import nft_io
 from nft_blender.nft_db import db_sql
 
 
@@ -44,7 +43,7 @@ class OpsSessionDataMeta(type):
         cls._project = db_sql.DBProject(
             code='',
             name='',
-            path=nft_io.io_get_temp_dir(),
+            path=pathlib.Path(),
             pipeline={},
         )
 
@@ -90,7 +89,7 @@ class OpsSessionData(dict, metaclass=OpsSessionDataMeta):
         """
         Creates a list of Paths for all folders in a project.
 
-        :param root_dir_path:The root path of the project.
+        :param root_dir_path: The root path of the project.
         :param project_pipeline: Project pipeline heirarchy data.
         :returns: A list of Paths for each folder in the pipeline data.
         """
