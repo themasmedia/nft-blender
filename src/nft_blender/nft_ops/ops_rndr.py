@@ -7,6 +7,8 @@ NFT Blender - OPS - Render
 
 from nft_blender.nft_qt import qt_os, qt_ui
 
+# from nft_blender.nft_ops import OpsSessionData
+
 # import importlib
 
 # importlib.reload(qt_os)

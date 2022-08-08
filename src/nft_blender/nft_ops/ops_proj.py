@@ -18,6 +18,8 @@ from nft_blender.nft_bpy import bpy_io
 from nft_blender.nft_db import db_sql
 from nft_blender.nft_qt import qt_ui
 
+from nft_blender.nft_ops import OpsSessionData
+
 # import importlib
 
 # importlib.reload(bpy_io)
@@ -42,20 +44,18 @@ class ProjDialogUI(qt_ui.UIDialogBase):
     """
     Dialog Box UI for creating and tracking high-level database data, such as projects and users.
     """
-    _UI_FILE_NAME = 'ui_proj_dialog.ui'
+    _UI_FILE_NAME = 'qt_proj_dialog.ui'
     _UI_WINDOW_TITLE = 'NFT Blender - Project Manager'
 
     def __init__(
         self,
-        parent: QtCore.Qobject = None,
+        parent: QtCore.QObject = None,
     ) -> None:
         """
         Constructor method.
 
         :param parent: Parent object (Application, UI Widget, etc.).
         """
-        self._db_engine = None
-
         super().__init__(modality=False, parent=parent)
 
 
@@ -111,12 +111,13 @@ class ProjDialogUI(qt_ui.UIDialogBase):
 
         self.ui_init()
 
-    def query_db_proj_data(
+    def set_db_proj(
             self,
             project_name: str = '',
-        ) -> db_sql.DBProject:
+        ):
         """
-        Queries project data for the specified project.
+        Queries project data for the specified project,
+        and sets the global variable: OpsSessionData.project.
 
         :param project_name: Name of the project to query.
         :returns: The DBProject object, if one exists; otherwise returns a new empty DBProject.
@@ -132,7 +133,7 @@ class ProjDialogUI(qt_ui.UIDialogBase):
 
             db_col_name = 'name'
             db_projects = db_sql.db_query_basic(
-                self._db_engine,
+                OpsSessionData.db_engine,
                 db_sql.DBProject,
                 limit=1,
                 columns=(db_col_name,),
@@ -147,7 +148,7 @@ class ProjDialogUI(qt_ui.UIDialogBase):
                     pipeline=db_projects[0].pipeline,
                 )
 
-        return db_project
+        OpsSessionData.project = db_project
 
     def db_connect(
         self,
@@ -165,19 +166,24 @@ class ProjDialogUI(qt_ui.UIDialogBase):
             reset the metadata/schema for the database before connecting (default: False).
         :returns: True if the attempt to connect was successful; otherwise, False.
         """
-        if force_reset or self._db_engine is None:
-            self._db_engine = db_sql.db_get_engine(db_url)
+        if OpsSessionData.db_engine is not None:
+            db_url = OpsSessionData.db_engine.url
 
-        db_connected = db_sql.db_test_connection(self._db_engine)
+        if force_reset or (OpsSessionData.db_engine is None):
+            OpsSessionData.db_engine = db_sql.db_get_engine(db_url)
 
-        if db_connected and force_update:
-            # Create default FB metadata table(s)
-            db_sql.db_create_table(self._db_engine)
+        db_connected = db_sql.db_test_connection(OpsSessionData.db_engine)
 
-            # Create DBUser entry in DB if necessary.
-            self.proj_db_update_user(
-                name=self._ui.proj_db_user_lnedit.text(),
-            )
+        if db_connected:
+
+            if force_update:
+                # Create default FB metadata table(s)
+                db_sql.db_create_table(OpsSessionData.db_engine)
+
+                # Create DBUser entry in DB if necessary.
+                self.proj_db_update_user(
+                    name=self._ui.proj_db_user_lnedit.text(),
+                )
 
         return db_connected
 
@@ -192,7 +198,7 @@ class ProjDialogUI(qt_ui.UIDialogBase):
         :param db_cls: Table class of the entry.
         :param db_row_id: Primary key ID of the entry.
         """
-        db_sql.db_delete_rows(self._db_engine, db_cls, (('id', db_row_id),))
+        db_sql.db_delete_rows(OpsSessionData.db_engine, db_cls, (('id', db_row_id),))
 
     def proj_db_update_project(
         self,
@@ -219,7 +225,7 @@ class ProjDialogUI(qt_ui.UIDialogBase):
         )
 
         db_entry_results = db_sql.db_upsert(
-            db_engine=self._db_engine,
+            db_engine=OpsSessionData.db_engine,
             db_entries=[db_entry],
             column_name_filter=column_name_filter,
         )
@@ -238,33 +244,29 @@ class ProjDialogUI(qt_ui.UIDialogBase):
         """
         db_user = db_sql.DBUser(name=name)
         db_results = db_sql.db_upsert(
-            db_engine=self._db_engine,
+            db_engine=OpsSessionData.db_engine,
             db_entries=[db_user],
             column_name_filter='name',
         )
 
         return db_results[0]
 
-    def proj_io_pipeline_to_paths(
-        self,
-        root_dir_path: typing.Union[pathlib.Path, str],
-        project_pipeline: dict,
-    ) -> list[pathlib.Path]:
+    def ui_init(self) -> None:
         """
-        Creates a list of Paths for all folders in a project.
-
-        :param root_dir_path:The root path of the project.
-        :param project_pipeline: Project pipeline heirarchy data.
-        :returns: A list of Paths for each folder in the pipeline data.
+        Initializes the UI.
         """
-        root_dir_path = pathlib.Path(root_dir_path)
-        project_dir_paths = [root_dir_path]
+        db_connected = self.db_connect(force_reset=True)
+        self.ui_update_proj_db_connection(db_connected)
 
-        for key, val in project_pipeline.items():
-            sub_dir_path = root_dir_path.joinpath(key)
-            project_dir_paths.extend(self.proj_io_pipeline_to_paths(sub_dir_path, val))
+        self._ui.proj_db_dbms_combox.clear()
+        self._ui.proj_db_dbms_combox.addItems(PROJ_CONFIG_DATA['databases'])
+        self._ui.proj_db_url_lnedit.setEnabled(False)
+        self._ui.proj_db_user_lnedit.setText(bpy_io.io_get_user())
 
-        return project_dir_paths
+        self._ui.proj_create_tmplt_combox.clear()
+        self._ui.proj_create_tmplt_combox.addItems(PROJ_CONFIG_DATA['pipelines'])
+
+        self.ui_update()
 
     def ui_update(self, *args) -> None:
         """
@@ -344,7 +346,7 @@ class ProjDialogUI(qt_ui.UIDialogBase):
                     message_box_type='question',
                     parent=self,
                 ):
-                    proj_paths = self.proj_io_pipeline_to_paths(project_path, project_pipeline)
+                    proj_paths = OpsSessionData.proj_io_pipeline_to_paths(project_path, project_pipeline)
                     bpy_io.io_make_dirs(*proj_paths)
                     qt_ui.ui_message_box(
                         title='Folders Created/Updated',
@@ -410,23 +412,8 @@ class ProjDialogUI(qt_ui.UIDialogBase):
 
         elif self.sender() == self._ui.proj_db_connect_pshbtn:
 
-            if self.db_connect(self._ui.proj_db_url_lnedit.text()):
-                lbl_css = 'color: white; background-color: green'
-                lbl_txt = 'Connected'
-
-                # Populate with DB Model Classes.
-                self._ui.proj_db_del_table_combox.clear()
-                self._ui.proj_db_del_table_combox.addItem('', None)
-
-                for db_model in db_sql.DBModels:
-                    self._ui.proj_db_del_table_combox.addItem(db_model.__tablename__, db_model)
-
-            else:
-                lbl_css = 'color: white; background-color: red'
-                lbl_txt = 'Not Connected'
-
-            self._ui.proj_db_status_lnedit.setStyleSheet(lbl_css)
-            self._ui.proj_db_status_lnedit.setText(lbl_txt)
+            if self.db_connect(self._ui.proj_db_url_lnedit.text(), force_reset=True):
+                self.ui_update_proj_db_connection(True)
 
         elif self.sender() == self._ui.proj_db_del_pshbtn:
             db_cls = self._ui.proj_db_del_table_combox.currentData()
@@ -453,7 +440,7 @@ class ProjDialogUI(qt_ui.UIDialogBase):
             self._ui.proj_db_del_rows_combox.addItem('', None)
 
             if db_cls is not None:
-                for db_row in db_sql.db_query_basic(self._db_engine, db_cls):
+                for db_row in db_sql.db_query_basic(OpsSessionData.db_engine, db_cls):
                     self._ui.proj_db_del_rows_combox.addItem(db_row.name, db_row)
 
         elif self.sender() == self._ui.proj_db_del_rows_combox:
@@ -464,18 +451,46 @@ class ProjDialogUI(qt_ui.UIDialogBase):
 
         self._ui.proj_db_del_grpbox.setEnabled(self.db_connect(force_update=False))
 
+    def ui_update_proj_db_connection(
+        self,
+        connected: bool,
+    ) -> None:
+        """
+        Updates the Database section's visual connection status of the UI.
+        """
+        if connected:
+            lbl_css = 'color: white; background-color: green'
+            lbl_txt = 'Connected'
+
+            # Populate with DB Model Classes.
+            self._ui.proj_db_del_table_combox.clear()
+            self._ui.proj_db_del_table_combox.addItem('', None)
+
+            for db_model in db_sql.DBModels:
+                self._ui.proj_db_del_table_combox.addItem(db_model.__tablename__, db_model)
+
+        else:
+            lbl_css = 'color: white; background-color: red'
+            lbl_txt = 'Not Connected'
+
+        self._ui.proj_db_status_lnedit.setStyleSheet(lbl_css)
+        self._ui.proj_db_status_lnedit.setText(lbl_txt)
+
     def ui_update_proj_nav(self, *args) -> None:
         """
         Updates the Navigate Project section of the UI.
         """
         if self.sender() == self._ui.proj_nav_combox:
-            db_proj_data = self.query_db_proj_data(self._ui.proj_nav_combox.itemText(args[0]))
+            self.set_db_proj(self._ui.proj_nav_combox.itemText(args[0]))
             self._ui.proj_nav_trmodl = UITreeModelProjNav(
                 ['Project Structure:', 'Directory Path']
             )
-            self._ui.proj_nav_trmodl.setModelData(db_proj_data.pipeline, root_url=db_proj_data.path)
+            self._ui.proj_nav_trmodl.setModelData(
+                OpsSessionData.project.pipeline,
+                root_url=OpsSessionData.project.path
+            )
             self._ui.proj_nav_trview.setModel(self._ui.proj_nav_trmodl)
-            self._ui.proj_nav_trview.setHeaderHidden(not db_proj_data.pipeline)
+            self._ui.proj_nav_trview.setHeaderHidden(not OpsSessionData.project.pipeline)
             self._ui.proj_nav_trview.header().setSectionResizeMode(
                 QtWidgets.QHeaderView.ResizeToContents
             )
@@ -488,32 +503,17 @@ class ProjDialogUI(qt_ui.UIDialogBase):
 
         elif self.sender() == self._ui.proj_toolbox:
             proj_names = ['']
-            current_proj_name = self._ui.proj_nav_combox.currentText()
+            # current_proj_name = self._ui.proj_nav_combox.currentText()
+            current_proj_name = OpsSessionData.project.name
 
-            if db_sql.db_test_connection(self._db_engine):
-                proj_entries = db_sql.db_query_basic(self._db_engine, db_sql.DBProject)
+            if db_sql.db_test_connection(OpsSessionData.db_engine):
+                proj_entries = db_sql.db_query_basic(OpsSessionData.db_engine, db_sql.DBProject)
                 proj_names.extend((proj_entry.name for proj_entry in proj_entries))
 
             self._ui.proj_nav_combox.clear()
             self._ui.proj_nav_combox.addItems(proj_names)
             proj_name_index = self._ui.proj_nav_combox.findText(current_proj_name)
             self._ui.proj_nav_combox.setCurrentIndex(proj_name_index)
-
-    def ui_init(self) -> None:
-        """
-        Initializes the UI.
-        """
-        self._ui.proj_db_dbms_combox.clear()
-        self._ui.proj_db_dbms_combox.addItems(PROJ_CONFIG_DATA['databases'])
-        self._ui.proj_db_status_lnedit.setStyleSheet('color: white; background-color: red')
-        self._ui.proj_db_status_lnedit.setText('Not Connected')
-        self._ui.proj_db_url_lnedit.setEnabled(False)
-        self._ui.proj_db_user_lnedit.setText(bpy_io.io_get_user())
-
-        self._ui.proj_create_tmplt_combox.clear()
-        self._ui.proj_create_tmplt_combox.addItems(PROJ_CONFIG_DATA['pipelines'])
-
-        self.ui_update()
 
 
 class UITreeModelProjCreate(qt_ui.UITreeModel):

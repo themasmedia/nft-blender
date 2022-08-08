@@ -265,7 +265,7 @@ def db_test_connection(
 
         return True
 
-    except (AssertionError, sqlalchemy.exc.SQLAlchemyError) as sqle:
+    except (AssertionError, AttributeError, sqlalchemy.exc.SQLAlchemyError) as sqle:
         logger_msg = f'Database error: {sqle}.'
         __LOGGER__.warning(logger_msg)
 

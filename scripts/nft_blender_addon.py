@@ -23,52 +23,10 @@ import bpy
 from nft_blender.nft_ops import ops_asst, ops_proj, ops_rndr
 
 
-# import importlib
+import importlib
 
-# for module in (ops_asst, ops_proj, ops_rndr):
-#     importlib.reload(module)
-
-
-# PREFERENCES
-
-class NFTAddonPrefs(bpy.types.AddonPreferences):
-    """
-    Persistent properties available for the duration of the Blender session via add-on preferences.
-    """
-    bl_idname = __name__
-
-    db_connected: bpy.props.BoolProperty(
-        default=False,
-        name='Database connection status',
-    )
-
-    proj_code: bpy.props.StringProperty(
-        default='',
-        name='Short-hand code for the current project',
-    )
-
-    proj_name: bpy.props.StringProperty(
-        default='',
-        name='Name of the current project',
-    )
-
-    proj_path: bpy.props.StringProperty(
-        default='',
-        name='Root file path for the current project',
-        subtype='DIR_PATH',
-    )
-
-    def draw(
-        self,
-        context: bpy.types.Context,
-    ):
-        """Draw method override."""
-        layout = self.layout
-        layout.label(text='This is a preferences view for our add-on')
-        layout.prop(self, 'db_connected')
-        layout.prop(self, 'proj_code')
-        layout.prop(self, 'proj_name')
-        layout.prop(self, 'proj_path')
+for module in (ops_asst, ops_proj, ops_rndr):
+    importlib.reload(module)
 
 
 # OPERATORS
@@ -198,7 +156,6 @@ class NFT_MT_Menu(bpy.types.Menu):
 
 
 classes = (
-    NFTAddonPrefs,
     NFTOperatorPROJ01,
     NFTOperatorPRE01,
     NFTOperatorPOST01,

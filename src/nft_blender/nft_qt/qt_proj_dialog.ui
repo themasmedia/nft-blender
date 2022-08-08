@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>UI_proj_dialog</class>
- <widget class="QDialog" name="UI_proj_dialog">
+ <class>proj_dialog</class>
+ <widget class="QDialog" name="proj_dialog">
   <property name="windowModality">
    <enum>Qt::ApplicationModal</enum>
   </property>
@@ -215,7 +215,7 @@ Status:</string>
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>429</width>
+        <width>365</width>
         <height>565</height>
        </rect>
       </property>
@@ -415,8 +415,8 @@ Directory</string>
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>450</width>
-        <height>457</height>
+        <width>194</width>
+        <height>138</height>
        </rect>
       </property>
       <attribute name="label">
@@ -432,7 +432,7 @@ Directory</string>
           </sizepolicy>
          </property>
          <property name="text">
-          <string>Project:</string>
+          <string>Current Project:</string>
          </property>
         </widget>
        </item>
