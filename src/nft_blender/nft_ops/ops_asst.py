@@ -5,6 +5,7 @@ NFT Blender - OPS - Asset
 
 """
 
+import os
 import typing
 
 import bpy
@@ -15,11 +16,11 @@ from nft_blender.nft_qt import qt_ui
 
 # from nft_blender.nft_ops import OpsSessionData
 
-# import importlib
+import importlib
 
-# importlib.reload(bpy_mtl)
-# importlib.reload(bpy_scn)
-# importlib.reload(qt_ui)
+importlib.reload(bpy_mtl)
+importlib.reload(bpy_scn)
+importlib.reload(qt_ui)
 
 
 def asst_set_material_data(mesh_objs: typing.Iterable = ()) -> bool:
@@ -44,3 +45,39 @@ def asst_set_material_data(mesh_objs: typing.Iterable = ()) -> bool:
         return bpy_mtl.mtl_set_material_data(mtl_name, mesh_objs)
 
     return False
+
+
+def asst_swap_armature(*modified_objs) -> bool:
+    """
+    Swaps the Armature modifying a given group of Objects with a new one.
+
+    :param modified_objs: Objects with Armature Modifiers to change.
+        If no objects are given, the selected objects in the scene are used.
+    :returns: True upon successful modification.
+    """
+    os.system('cls')
+
+    armature_objs = bpy_scn.scn_get_objects_of_type('ARMATURE')
+
+    armature_obj = qt_ui.ui_get_item(
+        title='Select Armature',
+        label='Select which armature object will be modify the selected object(s):',
+        items=armature_objs,
+    )
+    if not armature_obj:
+        return False
+
+    if not modified_objs:
+        modified_objs = bpy_scn.scn_get_selected_objects(['MESH'])
+
+    for modified_obj in modified_objs:
+
+        if isinstance(armature_obj, bpy.types.Object):
+            modified_obj.parent = armature_obj
+            modified_obj.matrix_parent_inverse = armature_obj.matrix_world.inverted()
+
+        obj_driven_modifiers = [mod for mod in modified_obj.modifiers if mod.type == 'ARMATURE']
+        for mod in obj_driven_modifiers:
+            mod.object = armature_obj
+
+    return True

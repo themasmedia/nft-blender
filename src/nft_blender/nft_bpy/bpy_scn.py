@@ -55,6 +55,18 @@ def scn_get_selected_objects(
     return sl_objs
 
 
+def scn_get_objects_of_type(
+    obj_type: str,
+) -> list:
+    """
+    Gets a list of allo objects of a specific data type in the current Blender Ccene.
+
+    :param obj_type: Name of the data type (i.e. "ARMATURE").
+    :returns: A list of objects.
+    """
+    return [obj for obj in bpy.data.objects if obj.type == obj_type]
+
+
 def scn_set_frame_range(
     frame_start: int = 1,
     frame_end: int = 250,

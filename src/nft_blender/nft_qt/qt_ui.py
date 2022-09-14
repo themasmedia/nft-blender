@@ -894,19 +894,27 @@ def ui_get_item(
     :param parent: Parent object (Application, UI Widget, etc.).
     :returns: The selected item.
     """
-    current = items.index(default_item) if default_item in items else 0
+    if not all((isinstance(item, str) for item in items)):
+        item_strings = [repr(item) for item in items]
+    else:
+        item_strings = items
+
+    current = items.index(default_item) if default_item in item_strings else 0
 
     _ = ui_get_app()
     result, success = QtWidgets.QInputDialog.getItem(
         parent,
         title,
         label,
-        items,
+        item_strings,
         current=current,
         editable=editable,
     )
 
-    return result if success else None
+    if success:
+        return items[item_strings.index(result)]
+
+    return None
 
 
 def ui_get_text(
