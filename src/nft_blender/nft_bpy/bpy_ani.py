@@ -5,10 +5,19 @@ NFT Blender - BPY - ANI
 
 """
 
+import mathutils
 import pathlib
 import typing
 
 import bpy
+
+
+#
+# rigify_armature_obj = ani_rigify_for_ue(
+#     active_bone_layer_ids=(3, 4, 8, 11, 13, 15, 16, 18,)
+# )
+# ani_create_fcurve_modifiers(rigify_armature_obj)
+#
 
 
 class AniKeyingSetHelper(object):
@@ -98,3 +107,64 @@ class AniKeyingSetHelper(object):
             return True
 
         return False
+
+
+def ani_create_fcurve_modifiers(
+    armature_obj: bpy.types.Object,
+    reset_modifiers: bool = True,
+    create_cycles: bool = True,
+    create_stepped: bool = True,
+    stepped_frame_step: int = 2,
+) -> None:
+    """TODO"""
+    for fcrv in armature_obj.animation_data.action.fcurves:
+
+        if reset_modifiers:
+            for mdfr in fcrv.modifiers:
+                fcrv.modifiers.remove(mdfr)
+
+        if create_cycles:
+            cyc_mdfr = fcrv.modifiers.new('CYCLES')
+            cyc_mdfr.cycles_after = 1
+            cyc_mdfr.cycles_before = 1
+
+        if create_stepped:
+            step_mdfr = fcrv.modifiers.new('STEPPED')
+            step_mdfr.frame_step = stepped_frame_step
+
+
+def ani_rigify_for_ue(
+    rigifiy_armature_obj_name: str = 'rig',
+    active_bone_layer_ids: typing.Sequence = (),
+    pole_vectors: int = 1,
+    reset_scale: bool = True,
+) -> bpy.types.Object:
+    """TODO"""
+    rigify_armature_obj = bpy.data.objects[rigifiy_armature_obj_name]
+
+    for i in range(32):
+        rigify_armature_obj.data.layers[i] = i in active_bone_layer_ids
+
+    for pose_bone in rigify_armature_obj.pose.bones:
+
+        # Turn off stretch constraints on deform bones
+        if pose_bone.bone.use_deform:
+            stretch_cnsts = [
+                cnst for cnst in pose_bone.constraints if isinstance(
+                    cnst, bpy.types.StretchToConstraint
+                )
+            ]
+            if stretch_cnsts:
+                for cnst in stretch_cnsts:
+                    cnst.enabled = False
+
+        elif not pose_bone.bone.use_deform:
+            if pose_bone.get('pole_vector') is not None:
+                pose_bone['pole_vector'] = pole_vectors
+
+        #
+        if reset_scale:
+            if pose_bone.scale != mathutils.Vector([1.0, 1.0, 1.0]):
+                pose_bone.scale = mathutils.Vector([1.0, 1.0, 1.0])
+
+    return rigify_armature_obj
