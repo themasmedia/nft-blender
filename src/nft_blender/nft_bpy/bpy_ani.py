@@ -14,9 +14,9 @@ import bpy
 
 #
 # rigify_armature_obj = ani_rigify_for_ue(
-#     active_bone_layer_ids=(3, 4, 8, 11, 13, 15, 16, 18,)
+#     active_bone_layer_ids=(3, 4, 8, 11, 13, 14, 15, 16, 17, 18,)
 # )
-# ani_create_fcurve_modifiers(rigify_armature_obj)
+# ani_reset_fcurve_modifiers(rigify_armature_obj)
 #
 
 
@@ -109,15 +109,17 @@ class AniKeyingSetHelper(object):
         return False
 
 
-def ani_create_fcurve_modifiers(
+def ani_reset_fcurve_modifiers(
     armature_obj: bpy.types.Object,
     reset_modifiers: bool = True,
-    create_cycles: bool = True,
-    create_stepped: bool = True,
+    create_cycles: bool = False,
+    create_stepped: bool = False,
     stepped_frame_step: int = 2,
 ) -> None:
     """TODO"""
-    for fcrv in armature_obj.animation_data.action.fcurves:
+    current_action = armature_obj.animation_data.action
+    fcrvs = current_action.fcurves if current_action else []
+    for fcrv in fcrvs:
 
         if reset_modifiers:
             for mdfr in fcrv.modifiers:
