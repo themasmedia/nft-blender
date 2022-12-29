@@ -10,6 +10,38 @@ import typing
 import bpy
 
 
+def scn_create_and_link_new_scene(
+    scene_name: str = '',
+    scene_type: str = 'EMPTY',
+    objects_to_link: typing.Sequence = ()
+) -> bpy.types.Scene:
+    """TODO"""
+    # Create new scene
+    bpy.ops.scene.new(type=scene_type)
+    scn = bpy.context.scene
+    scn.name = scene_name
+
+    for obj in objects_to_link:
+        scn.collection.objects.link(obj)
+
+    return scn
+
+
+def scn_duplicate_object(
+    obj: bpy.types.Object,
+    name:str = ''
+) -> bpy.types.Object:
+    """TODO"""
+    scn_select_items(items=[obj])
+    bpy.ops.object.duplicate(linked=False)
+    dup_mesh_obj = bpy.context.object
+    if name:
+        dup_mesh_obj.name = name
+    scn_select_items(items=[dup_mesh_obj])
+
+    return dup_mesh_obj
+
+
 def scn_get_child_layer_collections(
     root_layer_collection: bpy.types.Collection,
     recursive: bool = False,
@@ -65,6 +97,33 @@ def scn_get_objects_of_type(
     :returns: A list of objects.
     """
     return [obj for obj in bpy.data.objects if obj.type == obj_type]
+
+
+def scn_select_items(
+    mode: str = 'OBJECT',
+    items: list = typing.Iterable
+) -> None:
+    """TODO"""
+    if bpy.context.mode != mode:
+        bpy.ops.object.mode_set(mode=mode)
+    bpy.ops.object.select_all(action='DESELECT')
+    for item in items:
+        scn_set_all_hidden(item, False)
+        item.select_set(True)
+        if mode == 'OBJECT':
+            bpy.context.view_layer.objects.active = item
+
+
+def scn_set_all_hidden(
+    obj: bpy.types.Object,
+    state: bool
+) -> None:
+    """
+    TODO
+    """
+    obj.hide_viewport = state
+    obj.hide_render = state
+    obj.hide_set(state)
 
 
 def scn_set_frame_range(

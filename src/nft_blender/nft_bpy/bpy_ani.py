@@ -5,19 +5,12 @@ NFT Blender - BPY - ANI
 
 """
 
-import mathutils
 import pathlib
 import typing
 
+import mathutils
+
 import bpy
-
-
-#
-# rigify_armature_obj = ani_rigify_for_ue(
-#     active_bone_layer_ids=(3, 4, 8, 11, 13, 14, 15, 16, 17, 18,)
-# )
-# ani_reset_fcurve_modifiers(rigify_armature_obj)
-#
 
 
 class AniKeyingSetHelper(object):
@@ -163,6 +156,8 @@ def ani_rigify_for_ue(
         elif not pose_bone.bone.use_deform:
             if pose_bone.get('pole_vector') is not None:
                 pose_bone['pole_vector'] = pole_vectors
+            if pose_bone.get('IK_Stretch') is not None:
+                pose_bone['IK_Stretch'] = 0.0
 
         #
         if reset_scale:
