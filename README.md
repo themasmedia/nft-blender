@@ -50,8 +50,16 @@ To view the latest documentation for using **NFT Blender**, please visit:<br/>
    - Set the value to the Windows path from the System Console window in step 3.5 above.<br/>
      ![README_4](./docs/gfx/README_4.png)
 5. Close Blender and relaunch.
-   - You will now be able to run `import nft_blender` to access the full NFT Blender module.
-   - Note that there is no custom menu add-on yet (currently working on it), and scripts will need to be run from the *Scripting* tab by the user.
+   - You will also be able to run `import nft_blender` directly to access the full `NFT Blender Add-On` module.
+6. Install the `NFT Blender Add-On` and enable the custom menu:
+   1. Open the Preferences window - in the main menu bar, go `Edit > Preferences...`.<br/>
+   2. Switch to the `Add-On...` section (left panel) and click the `Install` button (top panel).<br/>
+   ![README_6_2](./docs/gfx/README_6_2.png)
+   3. Locate the `nft_blender_addon.py` script found in `scripts/` directory of the [NFT Blender repository](https://github.com/Masangri/nft-blender).<br/>
+   4. Enable the `NFT Blender Add-On` in the Preferences window. The `NFT Blender` custom menu will now be accessible via the main menu bar.<br/>
+   ![README_6_4](./docs/gfx/README_6_4.png)
+   <br/>
+   - Note that some tools are not yet accessible via the custom menu, and will need to be run from the *Scripting* tab by the user.
 
 ## Installation for Python Development
 - Clone from GitHub:<br/>
