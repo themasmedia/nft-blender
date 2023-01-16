@@ -20,18 +20,20 @@ import os
 
 import bpy
 
-from nft_blender.nft_ops import ops_asst, ops_proj, ops_rndr
+from nft_blender.nft_ops import ops_asst, ops_io, ops_proj, ops_rndr
 
 
 import importlib
 
-for module in (ops_asst, ops_proj, ops_rndr):
+for module in (ops_asst, ops_io, ops_proj, ops_rndr):
     importlib.reload(module)
 
 
 # OPERATORS
 
-class NFTOperatorPROJ01(bpy.types.Operator):
+# PROJ
+
+class NFTOperatorProjectLaunchDialogUi(bpy.types.Operator):
     """
     Operator for nft_ops.ops_proj.proj_launch_dialog_ui().
     """
@@ -49,7 +51,9 @@ class NFTOperatorPROJ01(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class NFTOperatorPRE01(bpy.types.Operator):
+# PRE
+
+class NFTOperatorAssetSetMaterialData(bpy.types.Operator):
     """
     Operator for nft_ops.ops_asst.asst_set_material_data().
     """
@@ -67,12 +71,35 @@ class NFTOperatorPRE01(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class NFTOperatorPOST01(bpy.types.Operator):
+# PROD
+
+
+# POST
+
+class NFTOperatorIoLaunchExportDialogUi(bpy.types.Operator):
+    """
+    Operator for ops_io.io_launch_export_dialog_ui().
+    """
+    bl_idname = 'nft.io_launch_export_dialog_ui'
+    bl_label = 'Launch Export Dialog'
+
+    def invoke(
+        self,
+        context: bpy.types.Context,
+        event: bpy.types.Event,
+    ):
+        """Invoke method override."""
+        ops_io.io_launch_export_dialog_ui()
+
+        return {'FINISHED'}
+
+
+class NFTOperatorRenderBatchRender(bpy.types.Operator):
     """
     Operator for nft_ops.ops_rndr.rndr_batch_render().
     """
     bl_idname = 'nft.rndr_batch_render'
-    bl_label = 'Select and Render Blender File(s) Locally.'
+    bl_label = 'Select and Render Blender File(s) Locally'
 
     def invoke(
         self,
@@ -127,6 +154,7 @@ class NFT_MT_SubmenuPOST(bpy.types.Menu):
     ):
         """Draw method override."""
         layout = self.layout
+        layout.operator('nft.io_launch_export_dialog_ui')
         layout.operator('nft.rndr_batch_render')
 
 
@@ -156,9 +184,10 @@ class NFT_MT_Menu(bpy.types.Menu):
 
 
 classes = (
-    NFTOperatorPROJ01,
-    NFTOperatorPRE01,
-    NFTOperatorPOST01,
+    NFTOperatorProjectLaunchDialogUi,
+    NFTOperatorAssetSetMaterialData,
+    NFTOperatorIoLaunchExportDialogUi,
+    NFTOperatorRenderBatchRender,
     NFT_MT_SubmenuPRE,
     NFT_MT_SubmenuPROD,
     NFT_MT_SubmenuPOST,

@@ -346,8 +346,10 @@ class ProjDialogUI(qt_ui.UIDialogBase):
                     message_box_type='question',
                     parent=self,
                 ):
-                    proj_paths = OpsSessionData.proj_io_pipeline_to_paths(project_path, project_pipeline)
-                    bpy_io.io_make_dirs(*proj_paths)
+                    proj_paths = OpsSessionData.proj_pipeline_paths(
+                        project_pipeline=project_pipeline
+                    )
+                    bpy_io.io_make_dirs(*proj_paths.values())
                     qt_ui.ui_message_box(
                         title='Folders Created/Updated',
                         text=f'Project directory structure created/updated in {project_path}.',
@@ -487,7 +489,7 @@ class ProjDialogUI(qt_ui.UIDialogBase):
             )
             self._ui.proj_nav_trmodl.setModelData(
                 OpsSessionData.project.pipeline,
-                root_url=OpsSessionData.project.path
+                root_url=OpsSessionData.project_path.as_posix()
             )
             self._ui.proj_nav_trview.setModel(self._ui.proj_nav_trmodl)
             self._ui.proj_nav_trview.setHeaderHidden(not OpsSessionData.project.pipeline)

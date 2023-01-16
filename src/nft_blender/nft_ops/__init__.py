@@ -23,6 +23,14 @@ NFT Blender - OPS (Operators)
 # for batch RNDR
 # nft_scripts.script_batch_render()
 
+# from nft_blender.nft_ops import OpsSessionData
+
+# proj = OpsSessionData.project
+# proj_paths = OpsSessionData.proj_pipeline_paths(
+#     root_dir_path=proj.path,
+#     project_pipeline=proj.pipeline
+# )
+
 import pathlib
 import typing
 
@@ -43,9 +51,10 @@ class OpsSessionDataMeta(type):
         cls._project = db_sql.DBProject(
             code='',
             name='',
-            path=pathlib.Path(),
+            path='',
             pipeline={},
         )
+        cls._project_path = pathlib.Path(cls._project.path)
 
     @property
     def db_engine(cls) -> sqlalchemy.engine.base.Engine:
@@ -75,29 +84,40 @@ class OpsSessionDataMeta(type):
         """
         cls._project = project
 
+    @property
+    def project_path(cls) -> pathlib.Path:
+        """
+        Persistent Project Path property for the Blender session.
+        """
+        return pathlib.Path(cls.project.path)
+
 
 class OpsSessionData(dict, metaclass=OpsSessionDataMeta):
     """
     Global class with persistent class properties available for the duration of the Blender session.
     """
     @classmethod
-    def proj_io_pipeline_to_paths(
+    def proj_pipeline_paths(
         cls,
-        root_dir_path: typing.Union[pathlib.Path, str],
         project_pipeline: dict,
-    ) -> list[pathlib.Path]:
+        sub_dir_str: str = ''
+    ) -> typing.Dict[str, pathlib.Path]:
         """
         Creates a list of Paths for all folders in a project.
 
-        :param root_dir_path: The root path of the project.
         :param project_pipeline: Project pipeline heirarchy data.
-        :returns: A list of Paths for each folder in the pipeline data.
+        :returns: A dictionary of Paths for each folder in the pipeline data.
         """
-        root_dir_path = pathlib.Path(root_dir_path)
-        project_dir_paths = [root_dir_path]
+        sub_dir_path = cls.project_path.joinpath(sub_dir_str)
+        project_dir_paths = {sub_dir_str: sub_dir_path}
 
         for key, val in project_pipeline.items():
-            sub_dir_path = root_dir_path.joinpath(key)
-            project_dir_paths.extend(cls.proj_io_pipeline_to_paths(sub_dir_path, val))
+            sub_dir_str_ext = pathlib.os.sep.join((sub_dir_str, key)).strip(pathlib.os.sep)
+            project_dir_paths.update(
+                cls.proj_pipeline_paths(
+                    project_pipeline=val,
+                    sub_dir_str=sub_dir_str_ext
+                )
+            )
 
         return project_dir_paths
