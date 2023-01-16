@@ -102,6 +102,27 @@ class AniKeyingSetHelper(object):
         return False
 
 
+def ani_reset_armature_transforms(
+    armature_obj: bpy.types.Object,
+    reference_frame: int = 1
+):
+    """TODO"""
+    # Ensure it is an Armature Object and select it.
+    assert isinstance(armature_obj.data, bpy.types.Armature)
+    bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.select_all(action='DESELECT')
+    armature_obj.select_set(True)
+    armature_obj.hide_set(False)
+
+    # Clear current action and reset armature transforms.
+    bpy.context.scene.frame_set(reference_frame)
+    armature_obj.animation_data.action = None
+    bpy.ops.object.mode_set(mode='POSE')
+    bpy.ops.pose.select_all(action='SELECT')
+    bpy.ops.pose.transforms_clear()
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+
 def ani_reset_fcurve_modifiers(
     armature_obj: bpy.types.Object,
     reset_modifiers: bool = True,
