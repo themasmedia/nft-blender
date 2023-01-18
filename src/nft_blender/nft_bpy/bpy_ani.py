@@ -105,16 +105,18 @@ class AniKeyingSetHelper(object):
 def ani_reset_armature_transforms(
     armature_obj: bpy.types.Object,
     reference_frame: int = 1
-):
-    """TODO"""
+) -> None:
+    """
+    Clears the current action and resets armature transforms for the given Armature Object.
+    It is recommended to set the visibility of the Object to True beforehand with:
+    bpy_scn.scn_select_itemsitems=[armature_obj]).
+
+    :param asset_name: The name of the asset.
+    :param ks_name: The name of the Keying Set to load.
+    """
     # Ensure it is an Armature Object and select it.
     assert isinstance(armature_obj.data, bpy.types.Armature)
-    bpy.ops.object.mode_set(mode='OBJECT')
-    bpy.ops.object.select_all(action='DESELECT')
-    armature_obj.select_set(True)
-    armature_obj.hide_set(False)
 
-    # Clear current action and reset armature transforms.
     bpy.context.scene.frame_set(reference_frame)
     armature_obj.animation_data.action = None
     bpy.ops.object.mode_set(mode='POSE')

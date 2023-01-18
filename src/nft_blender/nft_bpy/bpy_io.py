@@ -56,13 +56,23 @@ def io_get_current_file_path() -> pathlib.Path:
     return pathlib.Path(bpy.data.filepath)
 
 
-def io_get_temp_dir() -> typing.Union[pathlib.Path, None]:
+def io_get_temp_dir(
+    context: str = ''
+) -> typing.Union[pathlib.Path, None]:
     """
-    Gets the systems default path for temporary files and folders.
+    Gets the default path for temporary folders.
 
-    :returns: The default temp path.
+    :param context: Context to reference. By default, the default system path is used.
+    :returns: The temp directory as a Path.
     """
-    return pathlib.Path(tempfile.gettempdir()).resolve() or None
+    if context == 'preferences':
+        temp_dir = bpy.context.preferences.filepaths.temporary_directory
+    elif context == 'session':
+        temp_dir = bpy.app.tempdir
+    else:
+        temp_dir = tempfile.gettempdir()
+
+    return pathlib.Path(temp_dir).resolve() or None
 
 
 def io_get_user() -> str:
