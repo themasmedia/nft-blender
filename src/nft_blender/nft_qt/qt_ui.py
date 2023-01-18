@@ -834,8 +834,8 @@ def ui_get_file(
         result, success = QtWidgets.QFileDialog.getOpenFileName(
             parent,
             caption,
-            dir,
-            filter,
+            dir_str,
+            filter_str,
         )
         return pathlib.Path(result) if success else None
 
