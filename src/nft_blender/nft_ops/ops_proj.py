@@ -20,12 +20,6 @@ from nft_blender.nft_qt import qt_ui
 
 from nft_blender.nft_ops import OpsSessionData
 
-# import importlib
-
-# importlib.reload(bpy_io)
-# importlib.reload(db_sql)
-# importlib.reload(qt_ui)
-
 
 # Load default data from config file.
 ops_proj_config_file_path = pathlib.Path(__file__).parent.joinpath('ops_proj.config.json')
@@ -125,7 +119,7 @@ class ProjDialogUI(qt_ui.UIDialogBase):
         db_project = db_sql.DBProject(
             code='',
             name='',
-            path=pathlib.Path(),
+            path='',
             pipeline={},
         )
 
@@ -293,7 +287,6 @@ class ProjDialogUI(qt_ui.UIDialogBase):
             self.ui_update_proj_create()
             self.ui_update_proj_nav()
 
-
     def ui_update_proj_create(self, *args):
         """
         Updates the Create Project section of the UI.
@@ -386,7 +379,6 @@ class ProjDialogUI(qt_ui.UIDialogBase):
             self._ui.proj_create_pipe_trmodl.clear()
             self._ui.proj_create_pipe_trmodl.setModelData(tmplt_data)
             self._ui.proj_create_pipe_trview.setHeaderHidden(False)
-
 
     def ui_update_proj_db(self, *args) -> None:
         """

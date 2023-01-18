@@ -112,7 +112,7 @@ class OpsSessionData(dict, metaclass=OpsSessionDataMeta):
         project_dir_paths = {sub_dir_str: sub_dir_path}
 
         for key, val in project_pipeline.items():
-            sub_dir_str_ext = pathlib.os.sep.join((sub_dir_str, key)).strip(pathlib.os.sep)
+            sub_dir_str_ext = '/'.join((sub_dir_str, key)).strip('/')
             project_dir_paths.update(
                 cls.proj_pipeline_paths(
                     project_pipeline=val,
