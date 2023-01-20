@@ -108,10 +108,11 @@ def scn_select_items(
         bpy.ops.object.mode_set(mode=mode)
     bpy.ops.object.select_all(action='DESELECT')
     for item in items:
-        scn_set_all_hidden(item, False)
-        item.select_set(True)
-        if mode == 'OBJECT':
-            bpy.context.view_layer.objects.active = item
+        if isinstance(item, bpy.types.bpy_struct):
+            scn_set_all_hidden(item, False)
+            item.select_set(True)
+            if mode == 'OBJECT':
+                bpy.context.view_layer.objects.active = item
 
 
 def scn_set_all_hidden(

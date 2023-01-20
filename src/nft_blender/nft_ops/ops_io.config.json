@@ -21,7 +21,7 @@
           "armature_nodetype": "NULL",
           "axis_forward": "-Z",
           "axis_up": "Y",
-          "bake_anim": false,
+          "bake_anim": true,
           "bake_anim_force_startend_keying": true,
           "bake_anim_simplify_factor": 0.0,
           "bake_anim_step": 1.0,

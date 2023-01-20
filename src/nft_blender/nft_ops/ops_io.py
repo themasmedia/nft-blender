@@ -12,12 +12,12 @@ import pathlib
 import re
 import typing
 
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtWidgets
 # from __feature__ import snake_case, true_property
 
 import bpy
 
-from nft_blender.nft_bpy import bpy_ani, bpy_io, bpy_mdl, bpy_mtl, bpy_scn
+from nft_blender.nft_bpy import bpy_ani, bpy_ctx, bpy_io, bpy_mdl, bpy_mtl, bpy_scn
 from nft_blender.nft_qt import qt_ui
 from nft_blender.nft_ops import OpsSessionData
 
@@ -61,13 +61,16 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
     def _set_up_ui(self) -> None:
         """"""
         # Create additional QObjects
+        self._ui.io_export_data_btngrp = QtWidgets.QButtonGroup()
+        self._ui.io_export_data_btngrp.setExclusive(True)
+
+        self._ui.io_export_mdfr_type_btngrp = QtWidgets.QButtonGroup()
+        self._ui.io_export_mdfr_type_btngrp.setExclusive(False)
+
         self._ui.io_export_platform_btngrp = QtWidgets.QButtonGroup()
         self._ui.io_export_platform_btngrp.setExclusive(True)
         self._ui.io_export_platform_btngrp.buttonClicked[QtWidgets.QAbstractButton] \
             .connect(self.ui_update)
-
-        self._ui.io_export_mdfr_type_btngrp = QtWidgets.QButtonGroup()
-        self._ui.io_export_mdfr_type_btngrp.setExclusive(False)
 
         # Make connections
         self._ui.io_export_data_file_pshbtn.clicked.connect(self.ui_update_io_export_data_file)
@@ -84,17 +87,34 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
         """TODO"""
         export_dir_path = self._ui.io_proj_export_dir_lnedit.text()
         export_platform_name = self._ui.io_export_platform_btngrp.checkedButton().text()
-        export_data = IO_CONFIG_DATA['export']['platforms'][export_platform_name]
-        export_file_format = export_data['format']
-        export_settings = export_data['settings']
-        for type_k, type_v in export_data['convert'].items():
+        export_platform_data = IO_CONFIG_DATA['export']['platforms'][export_platform_name]
+        export_file_format = export_platform_data['format']
+        export_settings = export_platform_data['settings']
+        for type_k, type_v in export_platform_data['convert'].items():
             # export_settings[type_k] = vars(__builtins__)[type_k](export_settings[type_v])
             export_settings[type_k] = dict(__builtins__)[type_v](export_settings[type_k])
 
-        export_data_file_path_str = self._ui.io_export_data_file_label.text()
-        export_data_file_path = pathlib.Path(export_data_file_path_str)
-        with pathlib.Path(export_data_file_path).open('r', encoding='UTF-8') as r_file:
-            export_data = json.load(r_file)
+        if self._ui.io_export_data_btngrp.checkedId() == 1:
+            export_data_file_path_str = self._ui.io_export_data_file_label.text()
+            export_data_file_path = pathlib.Path(export_data_file_path_str)
+            with pathlib.Path(export_data_file_path).open('r', encoding='UTF-8') as r_file:
+                export_data = json.load(r_file)
+
+        else:
+            if self._ui.io_export_data_btngrp.checkedId() == 2:
+                export_mesh_name = bpy.context.collection.name
+                objs = bpy.context.collection.all_objects
+            elif self._ui.io_export_data_btngrp.checkedId() == 3:
+                export_mesh_name = re.sub(r'\W', '_', bpy_io.io_get_current_file_path().stem)
+                objs = bpy.context.selected_objects
+
+            export_data = {
+                export_mesh_name: {
+                    'meshes': [obj.name for obj in objs if isinstance(obj.data, bpy.types.Mesh)],
+                    'overrides': {},
+                },
+            }
+
         export_mesh_names = sum(
             [export_data['meshes'] for export_data in export_data.values()],
             list()
@@ -115,7 +135,7 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
         b3d_exporter = IOExporter(
             root_export_dir_path=export_dir_path
         )
-        b3d_exporter.bake_rigify_rig_to_source()
+        b3d_exporter.bake_ue2rigify_rig_to_source()
         # b3d_exporter.render_preview_images(
         #     preview_image_data=preview_image_data
         # )
@@ -148,11 +168,20 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
             text=f'{export_platform_name} export completed successfully.',
             message_box_type='information'
         )
+        self.done(0)
 
     def ui_init(self) -> None:
         """
         Initializes the UI.
         """
+        export_data_names = ('Export Data File', 'Active Collection', 'Selected Object(s)')
+        for i, export_data_name in enumerate(export_data_names, 1):
+            export_data_radbtn = QtWidgets.QRadioButton(export_data_name)
+            self._ui.io_export_data_frame.layout().addWidget(export_data_radbtn)
+            self._ui.io_export_data_btngrp.addButton(export_data_radbtn, i)
+            self._ui.io_export_data_btngrp.setId(export_data_radbtn, i)
+        self._ui.io_export_data_btngrp.button(1).setChecked(True)
+
         for i, mdfr_name in enumerate(IO_CONFIG_DATA['export']['modifier_types'], 1):
             mdfr_type_chbox = QtWidgets.QCheckBox(mdfr_name)
             mdfr_type_chbox.setChecked(True)
@@ -172,6 +201,14 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
             self._project_paths.get('models', self._project_path).as_posix()
         )
 
+        try:
+            armature_msg = \
+                'Control mode for ue2rigify detected.' + \
+                f'Source Rig will be exported: {bpy.context.scene.ue2rigify.source_rig.name}'
+        except AttributeError:
+            armature_msg = 'Armature objects modifying exported Mesh Object(s) will be exported.'
+        self._ui.io_export_armature_detect.setText(armature_msg)
+
         #
         proj_data_dir_path = self._project_paths.get('data/addons/nft_blender')
         export_platform = self._ui.io_export_platform_btngrp.checkedButton().text()
@@ -188,11 +225,16 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
         (or all sections if called by the script).
         """
         if self.sender() == self._ui.io_export_reset_pshbtn:
+            self._ui.io_export_data_btngrp.button(1).setChecked(True)
             self._ui.io_export_data_file_label.setText('')
             self._ui.io_export_mdfr_end_frame_spbox.setValue(0)
             self._ui.io_export_mdfr_frame_step_spbox.setValue(1)
             self._ui.io_export_mdfr_name_lnedit.setText('')
             self._ui.io_export_mdfr_start_frame_spbox.setValue(0)
+
+        use_export_data_file = self._ui.io_export_data_btngrp.checkedId() == 1
+        self._ui.io_export_data_file_pshbtn.setEnabled(use_export_data_file)
+        self._ui.io_export_data_file_label.setEnabled(use_export_data_file)
 
         export_platform_name = self._ui.io_export_platform_btngrp.checkedButton().text()
         export_file_format = IO_CONFIG_DATA['export']['platforms'][export_platform_name]['format']
@@ -250,11 +292,6 @@ class IOExporter(object):
         self.export_dir_path = root_export_dir_path.joinpath(bpy_io.io_get_current_file_path().stem)
         self.export_dir_path.mkdir(parents=True, exist_ok=True)
         #
-        self.armature_obj_rig = bpy.data.collections.get('Extras').objects[0]
-        self.armature_obj_src = bpy.context.scene.ue2rigify.source_rig
-        self.shape_key_meshes = {}
-        self.shape_key_modifier_types = set()
-        #
         # Save as a separate file in the temp directory for the session.
         current_file_name = bpy_io.io_get_current_file_path().name
         temp_dir_path = bpy_io.io_get_temp_dir(context='session')
@@ -263,6 +300,26 @@ class IOExporter(object):
             file_path=save_file_path,
             check_existing=False
         )
+        #
+        self.armature_obj = None
+        self.control_rig = None
+        self.shape_key_meshes = {}
+        self.shape_key_modifier_types = set()
+
+        ue2rigify_loaded = all((
+            bpy_ctx.ctx_get_addon('rigify'),
+            bpy_ctx.ctx_get_addon('ue2rigify')
+        ))
+        if ue2rigify_loaded:
+            import ue2rigify
+            ue2rigify_extras_col = bpy.data.collections.get(
+                ue2rigify.constants.Collections.EXTRAS_COLLECTION_NAME
+            )
+            self.armature_obj = bpy.context.scene.ue2rigify.source_rig
+            if ue2rigify_extras_col:
+                self.control_rig = ue2rigify_extras_col.objects.get(
+                    ue2rigify.constants.Rigify.CONTROL_RIG_NAME
+                )
 
     def apply_modifiers(
         self,
@@ -358,45 +415,47 @@ class IOExporter(object):
                 bpy.ops.object.delete(use_global=False)
             orig_mesh_obj.active_shape_key_index = 0
 
-    def bake_rigify_rig_to_source(self):
+    def bake_ue2rigify_rig_to_source(self):
         """
         Note that ue2rigify will only bake actions present in the rig's NLA editor.
         Make sure to stash (or push down) all actions and
         set their frame range to include them before baking.
         """
-        # Create NLA strips for each action
-        anim_data = self.armature_obj_rig.animation_data
-        if anim_data is not None:
-            bpy_scn.scn_select_items(items=[self.armature_obj_rig])
-            bpy_ani.ani_reset_armature_transforms(self.armature_obj_rig)
-            for nla_track in anim_data.nla_tracks:
-                anim_data.nla_tracks.remove(nla_track)
+        if self.control_rig is not None:
 
-            for action in reversed(bpy.data.actions):
-                nla_track = anim_data.nla_tracks.new()
-                nla_track.lock = True
-                nla_track.mute = True
-                nla_track.name = action.name
-                nla_track.select = False
+            # Create NLA strips for each action
+            anim_data = self.control_rig.animation_data
+            if anim_data is not None:
+                bpy_scn.scn_select_items(items=[self.control_rig])
+                bpy_ani.ani_reset_armature_transforms(self.control_rig)
+                for nla_track in anim_data.nla_tracks:
+                    anim_data.nla_tracks.remove(nla_track)
 
-                nla_strip = nla_track.strips.new(
-                    name=action.name,
-                    start=int(action.frame_range[0]),
-                    action=action
-                )
-                nla_strip.action_frame_end = int(action.frame_range[1])
-                nla_strip.action_frame_start = int(action.frame_range[0])
-                nla_strip.select = False
+                for action in reversed(bpy.data.actions):
+                    nla_track = anim_data.nla_tracks.new()
+                    nla_track.lock = True
+                    nla_track.mute = True
+                    nla_track.name = action.name
+                    nla_track.select = False
 
-                bpy_scn.scn_select_items(items=[self.armature_obj_rig])
-                bpy_ani.ani_reset_armature_transforms(self.armature_obj_rig)
+                    nla_strip = nla_track.strips.new(
+                        name=action.name,
+                        start=int(action.frame_range[0]),
+                        action=action
+                    )
+                    nla_strip.action_frame_end = int(action.frame_range[1])
+                    nla_strip.action_frame_start = int(action.frame_range[0])
+                    nla_strip.select = False
 
-        # ue2rigify bake rig to source
-        bpy.ops.ue2rigify.bake_from_rig_to_rig()
+                    bpy_scn.scn_select_items(items=[self.control_rig])
+                    bpy_ani.ani_reset_armature_transforms(self.control_rig)
+
+            # ue2rigify bake rig to source
+            bpy.ops.ue2rigify.bake_from_rig_to_rig()
 
         # Clear current action and reset armature transforms
-        bpy_scn.scn_select_items(items=[self.armature_obj_src])
-        bpy_ani.ani_reset_armature_transforms(armature_obj=self.armature_obj_src)
+        bpy_scn.scn_select_items(items=[self.armature_obj])
+        bpy_ani.ani_reset_armature_transforms(armature_obj=self.armature_obj)
 
     def export_objects(
         self,
@@ -436,19 +495,25 @@ class IOExporter(object):
         export_function = getattr(bpy.ops.export_scene, export_file_format)
         export_file_suffix = IO_CONFIG_DATA['export']['file_formats'][export_file_format]
 
-        bpy_scn.scn_select_items(items=[self.armature_obj_src])
-        bpy_ani.ani_reset_armature_transforms(armature_obj=self.armature_obj_src)
+        bpy_scn.scn_select_items(items=[self.armature_obj])
+        bpy_ani.ani_reset_armature_transforms(armature_obj=self.armature_obj)
 
         for mesh_name, mesh_export_data in mesh_data.items():
 
             export_file_path = export_dir_path.joinpath(mesh_name).with_suffix(export_file_suffix)
+            export_objs = [self.armature_obj] if self.armature_obj is not None else []
 
-            export_objs = [self.armature_obj_src]
             for mesh_obj_name in mesh_export_data['meshes']:
                 mesh_obj = bpy.data.objects.get(mesh_obj_name)
                 if mesh_obj is not None:
+                    export_objs.extend([
+                        mdfr.object for mdfr in mesh_obj.modifiers if isinstance(
+                            mdfr, bpy.types.ArmatureModifier
+                        )
+                    ])
                     export_objs.append(mesh_obj)
 
+            export_objs = list(set(export_objs))
             bpy_scn.scn_select_items(items=export_objs)
 
             export_settings_copy = copy.deepcopy(export_settings)

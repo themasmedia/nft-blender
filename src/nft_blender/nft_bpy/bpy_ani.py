@@ -114,15 +114,15 @@ def ani_reset_armature_transforms(
     :param asset_name: The name of the asset.
     :param ks_name: The name of the Keying Set to load.
     """
-    # Ensure it is an Armature Object and select it.
-    assert isinstance(armature_obj.data, bpy.types.Armature)
+    # Ensure it is an Armature Object.
+    if  isinstance(armature_obj.data, bpy.types.Armature):
 
-    bpy.context.scene.frame_set(reference_frame)
-    armature_obj.animation_data.action = None
-    bpy.ops.object.mode_set(mode='POSE')
-    bpy.ops.pose.select_all(action='SELECT')
-    bpy.ops.pose.transforms_clear()
-    bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.context.scene.frame_set(reference_frame)
+        armature_obj.animation_data.action = None
+        bpy.ops.object.mode_set(mode='POSE')
+        bpy.ops.pose.select_all(action='SELECT')
+        bpy.ops.pose.transforms_clear()
+        bpy.ops.object.mode_set(mode='OBJECT')
 
 
 def ani_reset_fcurve_modifiers(
