@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>487</width>
-    <height>757</height>
+    <width>527</width>
+    <height>808</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -32,7 +32,56 @@
       <enum>QFrame::Box</enum>
      </property>
      <layout class="QGridLayout" name="gridLayout_4">
-      <item row="0" column="1">
+      <item row="0" column="0" colspan="3">
+       <widget class="QFrame" name="io_proj_export_dir_frame">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::StyledPanel</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <item>
+          <widget class="QRadioButton" name="io_proj_export_dir_project_radbtn">
+           <property name="text">
+            <string>Set Export Directory from Project</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="io_proj_export_dir_manual_radbtn">
+           <property name="text">
+            <string>Set Export Directory Manually</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="io_proj_name_label">
+        <property name="text">
+         <string>Current Project:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="io_proj_export_dir_label">
+        <property name="text">
+         <string>Export Directory</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1" colspan="3">
        <widget class="QLineEdit" name="io_proj_name_lnedit">
         <property name="enabled">
          <bool>false</bool>
@@ -54,24 +103,7 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="io_proj_name_label">
-        <property name="text">
-         <string>Current Project:</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="io_proj_export_dir_label">
-        <property name="text">
-         <string>Export Directory</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
+      <item row="2" column="1" colspan="3">
        <widget class="QLineEdit" name="io_proj_export_dir_lnedit">
         <property name="enabled">
          <bool>false</bool>
@@ -196,7 +228,7 @@
        </widget>
       </item>
       <item row="2" column="0" colspan="3">
-       <spacer name="io_export_data_spacer">
+       <spacer name="io_export_spacer">
         <property name="orientation">
          <enum>Qt::Vertical</enum>
         </property>
@@ -229,13 +261,13 @@
        </widget>
       </item>
       <item row="1" column="0" colspan="3">
-       <widget class="QGroupBox" name="io_export_customize_grrpbox">
+       <widget class="QGroupBox" name="io_export_custom_grrpbox">
         <property name="title">
          <string>Customize Export</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_3">
          <item row="1" column="0" colspan="2">
-          <widget class="QGroupBox" name="io_export_data_grpbox">
+          <widget class="QGroupBox" name="io_export_method_grpbox">
            <property name="minimumSize">
             <size>
              <width>0</width>
@@ -261,7 +293,7 @@ Data File</string>
              </widget>
             </item>
             <item row="1" column="0" colspan="3">
-             <widget class="QFrame" name="io_export_data_frame">
+             <widget class="QFrame" name="io_export_method_frame">
               <property name="minimumSize">
                <size>
                 <width>0</width>
@@ -407,7 +439,7 @@ Frame Range:</string>
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>258</width>
+                    <width>298</width>
                     <height>58</height>
                    </rect>
                   </property>

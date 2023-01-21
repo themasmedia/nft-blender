@@ -34,12 +34,12 @@ def scn_duplicate_object(
     """TODO"""
     scn_select_items(items=[obj])
     bpy.ops.object.duplicate(linked=False)
-    dup_mesh_obj = bpy.context.object
+    dup_obj = bpy.context.object
     if name:
-        dup_mesh_obj.name = name
-    scn_select_items(items=[dup_mesh_obj])
+        dup_obj.name = name
+    scn_select_items(items=[dup_obj])
 
-    return dup_mesh_obj
+    return dup_obj
 
 
 def scn_get_child_layer_collections(

@@ -61,25 +61,32 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
     def _set_up_ui(self) -> None:
         """"""
         # Create additional QObjects
-        self._ui.io_export_data_btngrp = QtWidgets.QButtonGroup()
-        self._ui.io_export_data_btngrp.setExclusive(True)
+        self._ui.io_export_method_btngrp = QtWidgets.QButtonGroup()
+        self._ui.io_export_method_btngrp.setExclusive(True)
 
         self._ui.io_export_mdfr_type_btngrp = QtWidgets.QButtonGroup()
         self._ui.io_export_mdfr_type_btngrp.setExclusive(False)
 
         self._ui.io_export_platform_btngrp = QtWidgets.QButtonGroup()
         self._ui.io_export_platform_btngrp.setExclusive(True)
-        self._ui.io_export_platform_btngrp.buttonClicked[QtWidgets.QAbstractButton] \
-            .connect(self.ui_update)
+
+        self._ui.io_export_dir_btngrp = QtWidgets.QButtonGroup()
+        self._ui.io_export_dir_btngrp.setExclusive(True)
 
         # Make connections
+        self._ui.io_export_method_btngrp.buttonClicked[QtWidgets.QAbstractButton] \
+            .connect(self.ui_update)
         self._ui.io_export_data_file_pshbtn.clicked.connect(self.ui_update_io_export_data_file)
+        self._ui.io_export_dir_btngrp.buttonClicked[QtWidgets.QAbstractButton] \
+            .connect(self.ui_update_io_export_dir)
         self._ui.io_export_export_pshbtn.clicked.connect(self.io_export)
-        self._ui.io_export_reset_pshbtn.clicked.connect(self.ui_update)
         self._ui.io_export_mdfr_type_select_pshbtn.clicked \
             .connect(lambda: self.ui_update_io_export_mdfr(True))
         self._ui.io_export_mdfr_type_deselect_pshbtn.clicked \
             .connect(lambda: self.ui_update_io_export_mdfr(False))
+        self._ui.io_export_platform_btngrp.buttonClicked[QtWidgets.QAbstractButton] \
+            .connect(self.ui_update)
+        self._ui.io_export_reset_pshbtn.clicked.connect(self.ui_update)
 
         self.ui_init()
 
@@ -94,29 +101,34 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
             # export_settings[type_k] = vars(__builtins__)[type_k](export_settings[type_v])
             export_settings[type_k] = dict(__builtins__)[type_v](export_settings[type_k])
 
-        if self._ui.io_export_data_btngrp.checkedId() == 1:
+        export_method = self._ui.io_export_method_btngrp.checkedId()
+        export_settings['use_active_collection'] = export_method == 2
+        export_settings['use_selection'] = export_method in (1, 3)
+
+        if export_method == 1:
             export_data_file_path_str = self._ui.io_export_data_file_label.text()
             export_data_file_path = pathlib.Path(export_data_file_path_str)
             with pathlib.Path(export_data_file_path).open('r', encoding='UTF-8') as r_file:
                 export_data = json.load(r_file)
 
         else:
-            if self._ui.io_export_data_btngrp.checkedId() == 2:
-                export_mesh_name = bpy.context.collection.name
+            if export_method == 2:
+                export_obj_name = bpy.context.collection.name
                 objs = bpy.context.collection.all_objects
-            elif self._ui.io_export_data_btngrp.checkedId() == 3:
-                export_mesh_name = re.sub(r'\W', '_', bpy_io.io_get_current_file_path().stem)
+
+            elif export_method == 3:
+                export_obj_name = re.sub(r'\W', '_', bpy_io.io_get_current_file_path().stem)
                 objs = bpy.context.selected_objects
 
             export_data = {
-                export_mesh_name: {
-                    'meshes': [obj.name for obj in objs if isinstance(obj.data, bpy.types.Mesh)],
+                export_obj_name: {
+                    'objects': [obj.name for obj in objs if isinstance(obj.data, bpy.types.Mesh)],
                     'overrides': {},
                 },
             }
 
-        export_mesh_names = sum(
-            [export_data['meshes'] for export_data in export_data.values()],
+        export_obj_names = sum(
+            [export_data['objects'] for export_data in export_data.values()],
             list()
         )
 
@@ -144,12 +156,12 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
             b3d_exporter.prepare_shape_keys_from_modifiers(
                 modifier_types=mdfr_types,
                 keep_as_separate=False,
-                mesh_object_names=export_mesh_names,
+                object_names=export_obj_names,
                 shape_key_name_prefix=mdfr_name_prefix,
                 modifier_frame_range=mdfr_frame_range
             )
         b3d_exporter.apply_modifiers(
-            mesh_object_names=export_mesh_names
+            object_names=export_obj_names
         )
         if mdfrs_as_shape_keys:
             b3d_exporter.apply_shape_keys_from_modifiers(
@@ -157,7 +169,7 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
             )
         #
         b3d_exporter.export_objects(
-            mesh_data=export_data,
+            export_obj_data=export_data,
             export_file_format=export_file_format,
             **export_settings
         )
@@ -177,10 +189,10 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
         export_data_names = ('Export Data File', 'Active Collection', 'Selected Object(s)')
         for i, export_data_name in enumerate(export_data_names, 1):
             export_data_radbtn = QtWidgets.QRadioButton(export_data_name)
-            self._ui.io_export_data_frame.layout().addWidget(export_data_radbtn)
-            self._ui.io_export_data_btngrp.addButton(export_data_radbtn, i)
-            self._ui.io_export_data_btngrp.setId(export_data_radbtn, i)
-        self._ui.io_export_data_btngrp.button(1).setChecked(True)
+            self._ui.io_export_method_frame.layout().addWidget(export_data_radbtn)
+            self._ui.io_export_method_btngrp.addButton(export_data_radbtn, i)
+            self._ui.io_export_method_btngrp.setId(export_data_radbtn, i)
+        self._ui.io_export_method_btngrp.button(1).setChecked(True)
 
         for i, mdfr_name in enumerate(IO_CONFIG_DATA['export']['modifier_types'], 1):
             mdfr_type_chbox = QtWidgets.QCheckBox(mdfr_name)
@@ -196,26 +208,31 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
             self._ui.io_export_platform_btngrp.setId(platform_radbtn, i)
         self._ui.io_export_platform_btngrp.button(1).setChecked(True)
 
-        self._ui.io_proj_name_lnedit.setText(self._project.name)
-        self._ui.io_proj_export_dir_lnedit.setText(
-            self._project_paths.get('models', self._project_path).as_posix()
-        )
+        for i, dir_radbtn in enumerate(
+            self._ui.io_proj_export_dir_frame.findChildren(QtWidgets.QRadioButton), 1
+        ):
+            self._ui.io_export_dir_btngrp.addButton(dir_radbtn)
+            self._ui.io_export_dir_btngrp.setId(dir_radbtn, i)
+        self._ui.io_export_dir_btngrp.button(1).setChecked(True)
+
+        self.ui_update_io_export_dir_proj()
 
         try:
             armature_msg = \
                 'Control mode for ue2rigify detected.' + \
-                f'Source Rig will be exported: {bpy.context.scene.ue2rigify.source_rig.name}'
+                f'Source Rig ({bpy.context.scene.ue2rigify.source_rig.name}) will be exported'
         except AttributeError:
             armature_msg = 'Armature objects modifying exported Mesh Object(s) will be exported.'
         self._ui.io_export_armature_detect.setText(armature_msg)
 
         #
         proj_data_dir_path = self._project_paths.get('data/addons/nft_blender')
-        export_platform = self._ui.io_export_platform_btngrp.checkedButton().text()
-        export_file_pattern = re.sub(r'\s', '*', export_platform.lower())
-        for export_json_file_path in proj_data_dir_path.glob(f'*{export_file_pattern}.json'):
-            self._ui.io_export_data_file_label.setText(export_json_file_path.as_posix())
-            break
+        if proj_data_dir_path is not None:
+            export_platform = self._ui.io_export_platform_btngrp.checkedButton().text()
+            export_file_pattern = re.sub(r'\s', '*', export_platform.lower())
+            for export_json_file_path in proj_data_dir_path.glob(f'*{export_file_pattern}.json'):
+                self._ui.io_export_data_file_label.setText(export_json_file_path.as_posix())
+                break
 
         self.ui_update()
 
@@ -225,40 +242,44 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
         (or all sections if called by the script).
         """
         if self.sender() == self._ui.io_export_reset_pshbtn:
-            self._ui.io_export_data_btngrp.button(1).setChecked(True)
+            self._ui.io_export_method_btngrp.button(1).setChecked(True)
             self._ui.io_export_data_file_label.setText('')
             self._ui.io_export_mdfr_end_frame_spbox.setValue(0)
             self._ui.io_export_mdfr_frame_step_spbox.setValue(1)
             self._ui.io_export_mdfr_name_lnedit.setText('')
             self._ui.io_export_mdfr_start_frame_spbox.setValue(0)
 
-        use_export_data_file = self._ui.io_export_data_btngrp.checkedId() == 1
+        export_requirements = [pathlib.Path(self._ui.io_proj_export_dir_lnedit.text()).is_dir()]
+        use_export_data_file = self._ui.io_export_method_btngrp.checkedId() == 1
         self._ui.io_export_data_file_pshbtn.setEnabled(use_export_data_file)
         self._ui.io_export_data_file_label.setEnabled(use_export_data_file)
+        if use_export_data_file:
+            export_requirements.append(
+                pathlib.Path(self._ui.io_export_data_file_label.text()).is_file()
+            )
+
+        self._ui.io_export_export_pshbtn.setEnabled(all(export_requirements))
 
         export_platform_name = self._ui.io_export_platform_btngrp.checkedButton().text()
         export_file_format = IO_CONFIG_DATA['export']['platforms'][export_platform_name]['format']
         self._ui.io_export_format_label.setText(export_file_format)
-        self._ui.io_export_export_pshbtn.setEnabled(
-            pathlib.Path(self._ui.io_export_data_file_label.text()).exists()
-        )
 
         if self.sender() is None:
-
             export_file_path = pathlib.Path(self._ui.io_export_data_file_label.text())
-            export_config_file_path = export_file_path.with_suffix('.config.json')
-            if export_config_file_path.is_file():
-                with export_config_file_path.open('r', encoding='UTF-8') as r_file:
-                    export_config_data = json.load(r_file)
+            if export_file_path.is_file():
+                export_config_file_path = export_file_path.with_suffix('.config.json')
+                if export_config_file_path.is_file():
+                    with export_config_file_path.open('r', encoding='UTF-8') as r_file:
+                        export_config_data = json.load(r_file)
 
-                for config_k, widget_func in {
-                    'mdfr_end_frame': self._ui.io_export_mdfr_end_frame_spbox.setValue,
-                    'mdfr_frame_step': self._ui.io_export_mdfr_frame_step_spbox.setValue,
-                    'mdfr_name': self._ui.io_export_mdfr_name_lnedit.setText,
-                    'mdfr_start_frame': self._ui.io_export_mdfr_start_frame_spbox.setValue
-                }.items():
-                    if config_k in export_config_data:
-                        widget_func(export_config_data[config_k])
+                    for config_k, widget_func in {
+                        'mdfr_end_frame': self._ui.io_export_mdfr_end_frame_spbox.setValue,
+                        'mdfr_frame_step': self._ui.io_export_mdfr_frame_step_spbox.setValue,
+                        'mdfr_name': self._ui.io_export_mdfr_name_lnedit.setText,
+                        'mdfr_start_frame': self._ui.io_export_mdfr_start_frame_spbox.setValue
+                    }.items():
+                        if config_k in export_config_data:
+                            widget_func(export_config_data[config_k])
 
     def ui_update_io_export_data_file(self) -> None:
         """TODO"""
@@ -272,7 +293,31 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
 
         self.ui_update()
 
-    def ui_update_io_export_mdfr(self, *args):
+    def ui_update_io_export_dir(self) -> None:
+        """TODO"""
+        if self._ui.io_export_dir_btngrp.checkedId() == 1:
+            self.ui_update_io_export_dir_proj()
+
+        elif self._ui.io_export_dir_btngrp.checkedId() == 2:
+            export_dir = qt_ui.ui_get_directory(
+                caption='Select Export Directory',
+                dir_str=bpy_io.io_get_current_file_path().parent.as_posix()
+            )
+            if export_dir is not None:
+                self._ui.io_proj_export_dir_lnedit.setText(export_dir.as_posix())
+            else:
+                self._ui.io_export_dir_btngrp.button(1).setChecked(True)
+
+        self.ui_update()
+
+    def ui_update_io_export_dir_proj(self) -> None:
+        """TODO"""
+        self._ui.io_proj_name_lnedit.setText(self._project.name)
+        self._ui.io_proj_export_dir_lnedit.setText(
+            self._project_paths.get('models', self._project_path).as_posix()
+        )
+
+    def ui_update_io_export_mdfr(self, *args) -> None:
         """TODO"""
         for mdfr_chbox in self._ui.io_export_mdfr_type_btngrp.buttons():
             mdfr_chbox.setChecked(args[0])
@@ -303,7 +348,7 @@ class IOExporter(object):
         #
         self.armature_obj = None
         self.control_rig = None
-        self.shape_key_meshes = {}
+        self.shape_key_objs = {}
         self.shape_key_modifier_types = set()
 
         ue2rigify_loaded = all((
@@ -321,30 +366,42 @@ class IOExporter(object):
                     ue2rigify.constants.Rigify.CONTROL_RIG_NAME
                 )
 
+    def _validate_for_shape_keys(
+        self,
+        object_to_validate: bpy.types.Object
+    ):
+        """TODO"""
+        try:
+            assert hasattr(object_to_validate, 'data')
+            assert hasattr(object_to_validate.data, 'shape_keys')
+        except AssertionError:
+            return False
+        return True
+
     def apply_modifiers(
         self,
-        mesh_object_names: list = typing.Iterable[str]
+        object_names: list = typing.Iterable[str]
     ):
         """
         TODO
-        A mesh object cannot be exported from Blender with Shape Keys if any modifiers are active.
-        Sadly, most modifiers cannot be applied to a mesh object if it has any shape keys.
+        An Object cannot be exported from Blender with Shape Keys if any modifiers are active.
+        Sadly, most modifiers cannot be applied to an Object if it has any shape keys.
         apply_modifiers() work-around:
-        1. Creates temporary mesh object duplicate(s) for each shape key on a mesh object.
-        2. Removes all shape keys from source mesh object so that modifiers can be applied.
-        3. Creates a new shape key from each temporary mesh duplicate.
+        1. Creates temporary Object duplicate(s) for each shape key on an Object.
+        2. Removes all shape keys from source Object so that modifiers can be applied.
+        3. Creates a new shape key from each temporary Object duplicate.
         """
-        # Iterate through each mesh object
-        for mesh_obj_name in mesh_object_names:
-            orig_mesh_obj = bpy.data.objects.get(mesh_obj_name)
-            if orig_mesh_obj is not None:
+        # Iterate through each Object
+        for obj_name in object_names:
+            orig_obj = bpy.data.objects.get(obj_name)
+            if self._validate_for_shape_keys(orig_obj):
 
-                bpy_scn.scn_set_all_hidden(orig_mesh_obj, False)
-                dup_mesh_objs = {}
+                bpy_scn.scn_set_all_hidden(orig_obj, False)
+                dup_objs = {}
 
-                if orig_mesh_obj.data.shape_keys:
+                if orig_obj.data.shape_keys:
                     # Clear drivers and/or keyframes driving shape keys and set their values to 0
-                    shape_key_data_name = orig_mesh_obj.active_shape_key.id_data.name
+                    shape_key_data_name = orig_obj.active_shape_key.id_data.name
                     anim_data = bpy.data.shape_keys[shape_key_data_name].animation_data
                     if anim_data:
                         action_fcrvs = anim_data.action.fcurves if anim_data.action else []
@@ -353,19 +410,19 @@ class IOExporter(object):
                         driver_fcrvs = anim_data.drivers
                         for _ in driver_fcrvs:
                             driver_fcrvs.remove(driver_fcrvs[0])
-                    orig_shape_keys = orig_mesh_obj.data.shape_keys.key_blocks
+                    orig_shape_keys = orig_obj.data.shape_keys.key_blocks
                     for shape_key in orig_shape_keys:
                         shape_key.value = 0
 
-                    # Create mesh object duplicate(s) for each shape key on the mesh object.
+                    # Create Object duplicate(s) for each shape key on the Object.
                     for shape_key in orig_shape_keys[1:]:
-                        bpy_scn.scn_select_items(items=[orig_mesh_obj])
+                        bpy_scn.scn_select_items(items=[orig_obj])
                         shape_key.value = 1
                         bpy.ops.object.duplicate(linked=False)
-                        dup_mesh_obj = bpy.context.object
-                        dup_mesh_objs[shape_key.name] = dup_mesh_obj
+                        dup_obj = bpy.context.object
+                        dup_objs[shape_key.name] = dup_obj
                         bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
-                        for dup_mod in dup_mesh_obj.modifiers:
+                        for dup_mod in dup_obj.modifiers:
                             if not isinstance(dup_mod, bpy.types.ArmatureModifier):
                                 if isinstance(dup_mod, tuple(self.shape_key_modifier_types)):
                                     bpy.ops.object.modifier_remove(modifier=dup_mod.name)
@@ -373,47 +430,47 @@ class IOExporter(object):
                                     bpy.ops.object.modifier_apply(modifier=dup_mod.name)
                         shape_key.value = 0
 
-                bpy_scn.scn_select_items(items=[orig_mesh_obj])
-                orig_mesh_obj.shape_key_clear()
-                for mod in orig_mesh_obj.modifiers:
+                bpy_scn.scn_select_items(items=[orig_obj])
+                orig_obj.shape_key_clear()
+                for mod in orig_obj.modifiers:
                     if not isinstance(mod, bpy.types.ArmatureModifier):
                         if isinstance(mod, tuple(self.shape_key_modifier_types)):
                             bpy.ops.object.modifier_remove(modifier=mod.name)
                         else:
                             bpy.ops.object.modifier_apply(modifier=mod.name)
 
-                for shape_key_name, dup_mesh_obj in dup_mesh_objs.items():
-                    bpy_scn.scn_select_items(items=[dup_mesh_obj, orig_mesh_obj])
+                for shape_key_name, dup_obj in dup_objs.items():
+                    bpy_scn.scn_select_items(items=[dup_obj, orig_obj])
                     bpy.ops.object.join_shapes()
-                    shape_key_index = len(orig_mesh_obj.data.shape_keys.key_blocks) - 1
-                    orig_mesh_obj.active_shape_key_index = shape_key_index
-                    orig_mesh_obj.active_shape_key.name = shape_key_name
-                    bpy_scn.scn_select_items(items=[dup_mesh_obj])
+                    shape_key_index = len(orig_obj.data.shape_keys.key_blocks) - 1
+                    orig_obj.active_shape_key_index = shape_key_index
+                    orig_obj.active_shape_key.name = shape_key_name
+                    bpy_scn.scn_select_items(items=[dup_obj])
                     bpy.ops.object.delete(use_global=False)
-                    bpy.context.view_layer.objects.active = orig_mesh_obj
-                orig_mesh_obj.active_shape_key_index = 0
+                    bpy.context.view_layer.objects.active = orig_obj
+                orig_obj.active_shape_key_index = 0
 
     def apply_shape_keys_from_modifiers(
         self,
         move_shape_keys_to_top: bool = False,
     ):
         """TODO"""
-        for orig_mesh_obj, shape_key_meshes in self.shape_key_meshes.items():
-            for i, (shape_key_name, shape_key_mesh) in enumerate(shape_key_meshes.items(), 1):
-                bpy_scn.scn_select_items(items=[shape_key_mesh, orig_mesh_obj])
+        for orig_obj, shape_key_objs in self.shape_key_objs.items():
+            for i, (shape_key_name, shape_key_obj) in enumerate(shape_key_objs.items(), 1):
+                bpy_scn.scn_select_items(items=[shape_key_obj, orig_obj])
                 bpy.ops.object.join_shapes()
-                bpy_scn.scn_select_items(items=[orig_mesh_obj])
-                shape_key_index = len(orig_mesh_obj.data.shape_keys.key_blocks) - 1
-                orig_mesh_obj.active_shape_key_index = shape_key_index
-                orig_mesh_obj.active_shape_key.name = shape_key_name
+                bpy_scn.scn_select_items(items=[orig_obj])
+                shape_key_index = len(orig_obj.data.shape_keys.key_blocks) - 1
+                orig_obj.active_shape_key_index = shape_key_index
+                orig_obj.active_shape_key.name = shape_key_name
                 if move_shape_keys_to_top:
                     bpy.ops.object.shape_key_move(type='TOP')
-                    while orig_mesh_obj.active_shape_key_index < i:
+                    while orig_obj.active_shape_key_index < i:
                         bpy.ops.object.shape_key_move(type='DOWN')
 
-                bpy_scn.scn_select_items(items=[shape_key_mesh])
+                bpy_scn.scn_select_items(items=[shape_key_obj])
                 bpy.ops.object.delete(use_global=False)
-            orig_mesh_obj.active_shape_key_index = 0
+            orig_obj.active_shape_key_index = 0
 
     def bake_ue2rigify_rig_to_source(self):
         """
@@ -454,12 +511,13 @@ class IOExporter(object):
             bpy.ops.ue2rigify.bake_from_rig_to_rig()
 
         # Clear current action and reset armature transforms
-        bpy_scn.scn_select_items(items=[self.armature_obj])
-        bpy_ani.ani_reset_armature_transforms(armature_obj=self.armature_obj)
+        if self.armature_obj:
+            bpy_scn.scn_select_items(items=[self.armature_obj])
+            bpy_ani.ani_reset_armature_transforms(armature_obj=self.armature_obj)
 
     def export_objects(
         self,
-        mesh_data: dict,
+        export_obj_data: dict,
         export_file_format: str = 'fbx',
         **export_settings
     ):
@@ -495,29 +553,32 @@ class IOExporter(object):
         export_function = getattr(bpy.ops.export_scene, export_file_format)
         export_file_suffix = IO_CONFIG_DATA['export']['file_formats'][export_file_format]
 
-        bpy_scn.scn_select_items(items=[self.armature_obj])
-        bpy_ani.ani_reset_armature_transforms(armature_obj=self.armature_obj)
+        if self.armature_obj:
+            bpy_scn.scn_select_items(items=[self.armature_obj])
+            bpy_ani.ani_reset_armature_transforms(armature_obj=self.armature_obj)
 
-        for mesh_name, mesh_export_data in mesh_data.items():
+        for obj_name, obj_data in export_obj_data.items():
 
-            export_file_path = export_dir_path.joinpath(mesh_name).with_suffix(export_file_suffix)
-            export_objs = [self.armature_obj] if self.armature_obj is not None else []
+            export_file_path = export_dir_path.joinpath(obj_name).with_suffix(export_file_suffix)
 
-            for mesh_obj_name in mesh_export_data['meshes']:
-                mesh_obj = bpy.data.objects.get(mesh_obj_name)
-                if mesh_obj is not None:
-                    export_objs.extend([
-                        mdfr.object for mdfr in mesh_obj.modifiers if isinstance(
-                            mdfr, bpy.types.ArmatureModifier
-                        )
-                    ])
-                    export_objs.append(mesh_obj)
+            if export_settings['use_selection']:
 
-            export_objs = list(set(export_objs))
-            bpy_scn.scn_select_items(items=export_objs)
+                export_objs = [self.armature_obj] if self.armature_obj is not None else []
+                for obj_name in obj_data['objects']:
+                    obj = bpy.data.objects.get(obj_name)
+                    if obj is not None:
+                        export_objs.extend([
+                            mdfr.object for mdfr in obj.modifiers if isinstance(
+                                mdfr, bpy.types.ArmatureModifier
+                            )
+                        ])
+                        export_objs.append(obj)
+
+                export_objs = list(set(export_objs))
+                bpy_scn.scn_select_items(items=export_objs)
 
             export_settings_copy = copy.deepcopy(export_settings)
-            for override_k, override_v in mesh_export_data['overrides'].items():
+            for override_k, override_v in obj_data['overrides'].items():
                 export_settings_copy[override_k] = override_v
 
             export_function(
@@ -529,22 +590,22 @@ class IOExporter(object):
         self,
         modifier_types: typing.Tuple[bpy.types.Modifier] = (bpy.types.Modifier,),
         keep_as_separate: bool = True,
-        mesh_object_names: list = typing.Iterable[str],
+        object_names: list = typing.Iterable[str],
         shape_key_name_prefix: str = '',
         modifier_frame_range: typing.Iterable[int] = (1, 2, 1)
     ):
         """
         Run this, then run apply_shape_keys_from_modifiers() after apply_modifiers().
         """
-        def _add_shape_key_mesh(
-            orig_mesh_obj: bpy.types.Object,
+        def _add_shape_key_obj(
+            orig_obj: bpy.types.Object,
             shape_key_name: str,
-            shape_key_mesh_obj: bpy.types.Object
+            shape_key_obj: bpy.types.Object
         ):
             """TODO"""
-            if orig_mesh_obj not in self.shape_key_meshes:
-                self.shape_key_meshes[orig_mesh_obj] = {}
-            self.shape_key_meshes[orig_mesh_obj][shape_key_name] = shape_key_mesh_obj
+            if orig_obj not in self.shape_key_objs:
+                self.shape_key_objs[orig_obj] = {}
+            self.shape_key_objs[orig_obj][shape_key_name] = shape_key_obj
 
         #
         for i in range(*modifier_frame_range):
@@ -554,46 +615,46 @@ class IOExporter(object):
             else:
                 shape_key_name = shape_key_name_prefix
 
-            for mesh_object_name in mesh_object_names:
-                orig_mesh_obj = bpy.data.objects.get(mesh_object_name)
-                if orig_mesh_obj is not None:
+            for obj_name in object_names:
+                orig_obj = bpy.data.objects.get(obj_name)
+                if self._validate_for_shape_keys(orig_obj):
 
-                    #
-                    if not any(
-                        (isinstance(mod, modifier_types) for mod in orig_mesh_obj.modifiers)
-                    ):
+                    # If the object does not have any modifiers of the given type(s), skip it
+                    if not any((
+                        isinstance(mod, modifier_types) for mod in orig_obj.modifiers
+                    )):
                         continue
 
                     # Force driver updates
                     bpy.context.scene.frame_set(i)
-                    anim_data = orig_mesh_obj.animation_data
+                    anim_data = orig_obj.animation_data
                     if anim_data:
-                        for fcrv in orig_mesh_obj.animation_data.drivers:
+                        for fcrv in orig_obj.animation_data.drivers:
                             fcrv.driver.expression = fcrv.driver.expression
                             fcrv.update()
 
                     # If a separate shape key is needed for each modifier of the given type(s),
-                    # create a duplicate mesh for each modifier.
+                    # create a duplicate object for each modifier.
                     if keep_as_separate:
-                        for j, mod in enumerate(orig_mesh_obj.modifiers):
+                        for j, mod in enumerate(orig_obj.modifiers):
                             if isinstance(mod, modifier_types):
-                                dup_mesh_name = \
+                                dup_obj_name = \
                                     f'{shape_key_name}_{j:03d}' if shape_key_name else mod.name
-                                bpy_scn.scn_select_items(items=[orig_mesh_obj])
-                                dup_mesh_obj = bpy_scn.scn_duplicate_object(
-                                    obj=orig_mesh_obj,
-                                    name=dup_mesh_name
+                                bpy_scn.scn_select_items(items=[orig_obj])
+                                dup_obj = bpy_scn.scn_duplicate_object(
+                                    obj=orig_obj,
+                                    name=dup_obj_name
                                 )
-                                if dup_mesh_obj.data.shape_keys:
+                                if dup_obj.data.shape_keys:
                                     bpy.ops.object.shape_key_clear()
                                     bpy.ops.object.shape_key_remove(all=True, apply_mix=False)
-                                _add_shape_key_mesh(
-                                    orig_mesh_obj=orig_mesh_obj,
-                                    shape_key_name=dup_mesh_name,
-                                    shape_key_mesh_obj=dup_mesh_obj
+                                _add_shape_key_obj(
+                                    orig_obj=orig_obj,
+                                    shape_key_name=dup_obj_name,
+                                    shape_key_obj=dup_obj
                                 )
 
-                                for dup_mod in dup_mesh_obj.modifiers:
+                                for dup_mod in dup_obj.modifiers:
                                     if isinstance(dup_mod, modifier_types):
                                         if dup_mod.name == mod.name:
                                             bpy_mdl.mdl_set_modifier_display(
@@ -607,23 +668,23 @@ class IOExporter(object):
                                         print(r_e)
 
                     # If a single shape key is needed for all the deformer(s),
-                    # create a single duplicate mesh from all modifiers of the given type(s).
+                    # create a single duplicate object from all modifiers of the given type(s).
                     else:
-                        bpy_scn.scn_select_items(items=[orig_mesh_obj])
-                        dup_mesh_obj = bpy_scn.scn_duplicate_object(
-                            obj=orig_mesh_obj,
+                        bpy_scn.scn_select_items(items=[orig_obj])
+                        dup_obj = bpy_scn.scn_duplicate_object(
+                            obj=orig_obj,
                             name=shape_key_name
                         )
-                        if dup_mesh_obj.data.shape_keys:
+                        if dup_obj.data.shape_keys:
                             bpy.ops.object.shape_key_clear()
                             bpy.ops.object.shape_key_remove(all=True, apply_mix=False)
-                        _add_shape_key_mesh(
-                            orig_mesh_obj=orig_mesh_obj,
+                        _add_shape_key_obj(
+                            orig_obj=orig_obj,
                             shape_key_name=shape_key_name,
-                            shape_key_mesh_obj=dup_mesh_obj
+                            shape_key_obj=dup_obj
                         )
 
-                        for dup_mod in dup_mesh_obj.modifiers:
+                        for dup_mod in dup_obj.modifiers:
                             if isinstance(dup_mod, modifier_types):
                                 bpy_mdl.mdl_set_modifier_display(modifier=dup_mod, visibility=True)
                             try:
@@ -657,23 +718,23 @@ class IOExporter(object):
         export_dir_path = self.export_dir_path.joinpath(export_subdir_name)
         export_dir_path.mkdir(parents=True, exist_ok=True)
 
-        for export_file_name, data in preview_image_data.items():
+        for export_file_name, export_data in preview_image_data.items():
             objects_to_render = [active_cam]
             objects_to_render.extend(light_objs)
 
-            for mesh_name, mesh_data in data['meshes'].items():
-                mesh_obj = bpy.data.objects.get(mesh_name)
-                if mesh_obj is not None:
-                    bpy_scn.scn_set_all_hidden(mesh_obj, False)
-                    objects_to_render.append(mesh_obj)
+            for obj_name, obj_data in export_data['objects'].items():
+                obj = bpy.data.objects.get(obj_name)
+                if obj is not None:
+                    bpy_scn.scn_set_all_hidden(obj, False)
+                    objects_to_render.append(obj)
 
-                    for mdfr_k, mdfr_v in mesh_data['Modifiers'].items():
+                    for mdfr_k, mdfr_v in obj_data['Modifiers'].items():
                         for input_k, input_v in mdfr_v.items():
-                            mesh_obj.modifiers[mdfr_k][input_k] = input_v
+                            obj.modifiers[mdfr_k][input_k] = input_v
 
-                    for shape_k, shape_v in mesh_data['ShapeKeys'].items():
+                    for shape_k, shape_v in obj_data['ShapeKeys'].items():
                         # break inputs, if any
-                        shape_key_data_name = mesh_obj.active_shape_key.id_data.name
+                        shape_key_data_name = obj.active_shape_key.id_data.name
                         anim_data = bpy.data.shape_keys[shape_key_data_name].animation_data
                         if anim_data:
                             action_fcrvs = anim_data.action.fcurves if anim_data.action else []
@@ -682,7 +743,7 @@ class IOExporter(object):
                             driver_fcrvs = anim_data.drivers
                             for _ in driver_fcrvs:
                                 driver_fcrvs.remove(driver_fcrvs[0])
-                        shape_keys = mesh_obj.data.shape_keys.key_blocks
+                        shape_keys = obj.data.shape_keys.key_blocks
                         shape_keys[shape_k].value = shape_v
 
             render_viewport_image(

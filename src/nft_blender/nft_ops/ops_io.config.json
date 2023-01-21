@@ -34,7 +34,7 @@
           "embed_textures": false,
           "filter_glob": "*.fbx",
           "global_scale": 1.0,
-          "object_types": ["ARMATURE", "MESH"],
+          "object_types": ["ARMATURE", "EMPTY", "MESH"],
           "mesh_smooth_type": "FACE",
           "path_mode": "AUTO",
           "primary_bone_axis": "Y",
@@ -55,10 +55,12 @@
         }
       },
       "Virtual Avatar": {
+        "convert": {},
         "format": "vrm",
         "settings": {}
       },
       "Web Browser": {
+        "convert": {},
         "format": "gltf",
         "settings": {
           "check_existing": false,

@@ -115,7 +115,7 @@ def ani_reset_armature_transforms(
     :param ks_name: The name of the Keying Set to load.
     """
     # Ensure it is an Armature Object.
-    if  isinstance(armature_obj.data, bpy.types.Armature):
+    if isinstance(armature_obj.data, bpy.types.Armature):
 
         bpy.context.scene.frame_set(reference_frame)
         armature_obj.animation_data.action = None
