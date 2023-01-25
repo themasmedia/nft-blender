@@ -9,6 +9,51 @@
       "DisplaceModifier"
     ],
     "platforms": {
+      "3D Paint": {
+        "convert": {
+          "object_types": "set"
+        },
+        "format": "fbx",
+        "settings": {
+          "add_leaf_bones": false,
+          "apply_scale_options": "FBX_SCALE_NONE",
+          "apply_unit_scale": true,
+          "armature_nodetype": "NULL",
+          "axis_forward": "-Z",
+          "axis_up": "Y",
+          "bake_anim": false,
+          "bake_anim_force_startend_keying": false,
+          "bake_anim_simplify_factor": 0.0,
+          "bake_anim_step": 1.0,
+          "bake_anim_use_all_bones": false,
+          "bake_anim_use_all_actions": false,
+          "bake_anim_use_nla_strips": false,
+          "bake_space_transform": false,
+          "batch_mode": "OFF",
+          "check_existing": false,
+          "embed_textures": true,
+          "filter_glob": "*.fbx",
+          "global_scale": 1.0,
+          "object_types": ["MESH"],
+          "mesh_smooth_type": "FACE",
+          "path_mode": "AUTO",
+          "primary_bone_axis": "Y",
+          "secondary_bone_axis": "X",
+          "use_active_collection": false,
+          "use_armature_deform_only": false,
+          "use_batch_own_dir": false,
+          "use_custom_props": false,
+          "use_mesh_edges": false,
+          "use_mesh_modifiers": true,
+          "use_metadata": true,
+          "use_selection": true,
+          "use_space_transform": true,
+          "use_subsurf": false,
+          "use_triangles": false,
+          "use_tspace": false,
+          "use_visible": true
+        }
+      },
       "Game Engine": {
         "convert": {
           "object_types": "set"

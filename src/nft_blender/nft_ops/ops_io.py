@@ -122,13 +122,15 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
 
             export_data = {
                 export_obj_name: {
-                    'objects': [obj.name for obj in objs if isinstance(obj.data, bpy.types.Mesh)],
+                    'objects': {
+                        obj.name: {} for obj in objs if isinstance(obj.data, bpy.types.Mesh)
+                    },
                     'overrides': {},
                 },
             }
 
         export_obj_names = sum(
-            [export_data['objects'] for export_data in export_data.values()],
+            [list(export_data['objects']) for export_data in export_data.values()],
             list()
         )
 
@@ -148,10 +150,7 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
             root_export_dir_path=export_dir_path
         )
         b3d_exporter.bake_ue2rigify_rig_to_source()
-        # b3d_exporter.render_preview_images(
-        #     preview_image_data=preview_image_data
-        # )
-        #
+
         if mdfrs_as_shape_keys:
             b3d_exporter.prepare_shape_keys_from_modifiers(
                 modifier_types=mdfr_types,
@@ -160,17 +159,17 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
                 shape_key_name_prefix=mdfr_name_prefix,
                 modifier_frame_range=mdfr_frame_range
             )
-        b3d_exporter.apply_modifiers(
-            object_names=export_obj_names
-        )
-        if mdfrs_as_shape_keys:
+            b3d_exporter.apply_modifiers(
+                object_names=export_obj_names
+            )
             b3d_exporter.apply_shape_keys_from_modifiers(
                 move_shape_keys_to_top=True
             )
         #
         b3d_exporter.export_objects(
-            export_obj_data=export_data,
+            export_object_data=export_data,
             export_file_format=export_file_format,
+            export_sub_dir=export_platform_name,
             **export_settings
         )
 
@@ -225,15 +224,6 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
             armature_msg = 'Armature objects modifying exported Mesh Object(s) will be exported.'
         self._ui.io_export_armature_detect.setText(armature_msg)
 
-        #
-        proj_data_dir_path = self._project_paths.get('data/addons/nft_blender')
-        if proj_data_dir_path is not None:
-            export_platform = self._ui.io_export_platform_btngrp.checkedButton().text()
-            export_file_pattern = re.sub(r'\s', '*', export_platform.lower())
-            for export_json_file_path in proj_data_dir_path.glob(f'*{export_file_pattern}.json'):
-                self._ui.io_export_data_file_label.setText(export_json_file_path.as_posix())
-                break
-
         self.ui_update()
 
     def ui_update(self) -> None:
@@ -249,6 +239,38 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
             self._ui.io_export_mdfr_name_lnedit.setText('')
             self._ui.io_export_mdfr_start_frame_spbox.setValue(0)
 
+        export_platform_name = self._ui.io_export_platform_btngrp.checkedButton().text()
+        export_file_format = IO_CONFIG_DATA['export']['platforms'][export_platform_name]['format']
+        self._ui.io_export_format_label.setText(export_file_format)
+
+        if self.sender() in (None, self._ui.io_export_platform_btngrp):
+
+            #
+            proj_data_dir_path = self._project_paths.get('data/addons/nft_blender')
+            if proj_data_dir_path is not None:
+                export_platform = self._ui.io_export_platform_btngrp.checkedButton().text()
+                file_pattern = re.sub(r'\s', '*', export_platform.lower())
+                for export_json_file_path in proj_data_dir_path.glob(f'*{file_pattern}.json'):
+                    self._ui.io_export_data_file_label.setText(export_json_file_path.as_posix())
+                    break
+
+            export_file_path = pathlib.Path(self._ui.io_export_data_file_label.text())
+            if export_file_path.is_file():
+                export_config_file_path = export_file_path.with_suffix('.config.json')
+                if export_config_file_path.is_file():
+                    with export_config_file_path.open('r', encoding='UTF-8') as r_file:
+                        export_config_data = json.load(r_file)
+
+                    for config_k, widget_func in {
+                        'mdfr_enable': self._ui.io_export_mdfr_grpbox.setChecked,
+                        'mdfr_end_frame': self._ui.io_export_mdfr_end_frame_spbox.setValue,
+                        'mdfr_frame_step': self._ui.io_export_mdfr_frame_step_spbox.setValue,
+                        'mdfr_name': self._ui.io_export_mdfr_name_lnedit.setText,
+                        'mdfr_start_frame': self._ui.io_export_mdfr_start_frame_spbox.setValue
+                    }.items():
+                        if config_k in export_config_data:
+                            widget_func(export_config_data[config_k])
+
         export_requirements = [pathlib.Path(self._ui.io_proj_export_dir_lnedit.text()).is_dir()]
         use_export_data_file = self._ui.io_export_method_btngrp.checkedId() == 1
         self._ui.io_export_data_file_pshbtn.setEnabled(use_export_data_file)
@@ -260,26 +282,6 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
 
         self._ui.io_export_export_pshbtn.setEnabled(all(export_requirements))
 
-        export_platform_name = self._ui.io_export_platform_btngrp.checkedButton().text()
-        export_file_format = IO_CONFIG_DATA['export']['platforms'][export_platform_name]['format']
-        self._ui.io_export_format_label.setText(export_file_format)
-
-        if self.sender() is None:
-            export_file_path = pathlib.Path(self._ui.io_export_data_file_label.text())
-            if export_file_path.is_file():
-                export_config_file_path = export_file_path.with_suffix('.config.json')
-                if export_config_file_path.is_file():
-                    with export_config_file_path.open('r', encoding='UTF-8') as r_file:
-                        export_config_data = json.load(r_file)
-
-                    for config_k, widget_func in {
-                        'mdfr_end_frame': self._ui.io_export_mdfr_end_frame_spbox.setValue,
-                        'mdfr_frame_step': self._ui.io_export_mdfr_frame_step_spbox.setValue,
-                        'mdfr_name': self._ui.io_export_mdfr_name_lnedit.setText,
-                        'mdfr_start_frame': self._ui.io_export_mdfr_start_frame_spbox.setValue
-                    }.items():
-                        if config_k in export_config_data:
-                            widget_func(export_config_data[config_k])
 
     def ui_update_io_export_data_file(self) -> None:
         """TODO"""
@@ -401,15 +403,20 @@ class IOExporter(object):
 
                 if orig_obj.data.shape_keys:
                     # Clear drivers and/or keyframes driving shape keys and set their values to 0
-                    shape_key_data_name = orig_obj.active_shape_key.id_data.name
-                    anim_data = bpy.data.shape_keys[shape_key_data_name].animation_data
-                    if anim_data:
-                        action_fcrvs = anim_data.action.fcurves if anim_data.action else []
-                        for _ in action_fcrvs:
-                            action_fcrvs.remove(action_fcrvs[0])
-                        driver_fcrvs = anim_data.drivers
-                        for _ in driver_fcrvs:
-                            driver_fcrvs.remove(driver_fcrvs[0])
+                    # shape_key_data_name = orig_obj.active_shape_key.id_data.name
+                    # anim_data = bpy.data.shape_keys[shape_key_data_name].animation_data
+                    # if anim_data:
+                    #     action_fcrvs = anim_data.action.fcurves if anim_data.action else []
+                    #     for _ in action_fcrvs:
+                    #         action_fcrvs.remove(action_fcrvs[0])
+                    #     driver_fcrvs = anim_data.drivers
+                    #     for _ in driver_fcrvs:
+                    #         driver_fcrvs.remove(driver_fcrvs[0])
+                    bpy_ani.ani_break_inputs(
+                        target_object=orig_obj,
+                        on_data=True
+                    )
+
                     orig_shape_keys = orig_obj.data.shape_keys.key_blocks
                     for shape_key in orig_shape_keys:
                         shape_key.value = 0
@@ -427,7 +434,10 @@ class IOExporter(object):
                                 if isinstance(dup_mod, tuple(self.shape_key_modifier_types)):
                                     bpy.ops.object.modifier_remove(modifier=dup_mod.name)
                                 else:
-                                    bpy.ops.object.modifier_apply(modifier=dup_mod.name)
+                                    try:
+                                        bpy.ops.object.modifier_apply(modifier=dup_mod.name)
+                                    except RuntimeError as r_e:
+                                        print(r_e)
                         shape_key.value = 0
 
                 bpy_scn.scn_select_items(items=[orig_obj])
@@ -437,7 +447,10 @@ class IOExporter(object):
                         if isinstance(mod, tuple(self.shape_key_modifier_types)):
                             bpy.ops.object.modifier_remove(modifier=mod.name)
                         else:
-                            bpy.ops.object.modifier_apply(modifier=mod.name)
+                            try:
+                                bpy.ops.object.modifier_apply(modifier=mod.name)
+                            except RuntimeError as r_e:
+                                print(r_e)
 
                 for shape_key_name, dup_obj in dup_objs.items():
                     bpy_scn.scn_select_items(items=[dup_obj, orig_obj])
@@ -517,8 +530,9 @@ class IOExporter(object):
 
     def export_objects(
         self,
-        export_obj_data: dict,
-        export_file_format: str = 'fbx',
+        export_object_data: dict,
+        export_file_format: str,
+        export_sub_dir: typing.Union[str, None] = None,
         **export_settings
     ):
         """
@@ -548,7 +562,9 @@ class IOExporter(object):
         UE5 requirements:
             -TODO
         """
-        export_dir_path = self.export_dir_path.joinpath(export_file_format)
+        export_dir_path = self.export_dir_path
+        if export_sub_dir is not None:
+            export_dir_path = export_dir_path.joinpath(export_sub_dir)
         export_dir_path.mkdir(parents=True, exist_ok=True)
         export_function = getattr(bpy.ops.export_scene, export_file_format)
         export_file_suffix = IO_CONFIG_DATA['export']['file_formats'][export_file_format]
@@ -557,14 +573,16 @@ class IOExporter(object):
             bpy_scn.scn_select_items(items=[self.armature_obj])
             bpy_ani.ani_reset_armature_transforms(armature_obj=self.armature_obj)
 
-        for obj_name, obj_data in export_obj_data.items():
+        for export_obj_name, export_obj_data in export_object_data.items():
 
-            export_file_path = export_dir_path.joinpath(obj_name).with_suffix(export_file_suffix)
+            export_file_path = \
+                export_dir_path.joinpath(export_obj_name).with_suffix(export_file_suffix)
 
+            orig_obj_data_path_data = {}
             if export_settings['use_selection']:
 
                 export_objs = [self.armature_obj] if self.armature_obj is not None else []
-                for obj_name in obj_data['objects']:
+                for obj_name, obj_data in export_obj_data['objects'].items():
                     obj = bpy.data.objects.get(obj_name)
                     if obj is not None:
                         export_objs.extend([
@@ -574,17 +592,42 @@ class IOExporter(object):
                         ])
                         export_objs.append(obj)
 
+                        bpy_ani.ani_break_inputs(
+                            target_object=obj,
+                            on_data=True,
+                            on_object=True
+                        )
+                        orig_obj_data_path_data[obj] = bpy_ani.ani_set_data_path_values(
+                            target_object=obj,
+                            modifier_data=obj_data.get('modifiers', {}),
+                            shape_key_data=obj_data.get('shape_keys', {})
+                        )
+
+                        bpy_scn.scn_select_items(items=[obj])
+                        bpy_mtl.mtl_assign_material(
+                            target_object=obj,
+                            material_name=obj_data.get('material', '')
+                        )
+
                 export_objs = list(set(export_objs))
                 bpy_scn.scn_select_items(items=export_objs)
 
             export_settings_copy = copy.deepcopy(export_settings)
-            for override_k, override_v in obj_data['overrides'].items():
+            for override_k, override_v in export_obj_data['overrides'].items():
                 export_settings_copy[override_k] = override_v
 
             export_function(
                 filepath=export_file_path.as_posix(),
                 **export_settings_copy
             )
+
+            # Reset data path values to pre-export settings
+            for obj, orig_data_path_data in orig_obj_data_path_data.items():
+                bpy_ani.ani_set_data_path_values(
+                    target_object=obj,
+                    modifier_data=orig_data_path_data[0],
+                    shape_key_data=orig_data_path_data[1]
+                )
 
     def prepare_shape_keys_from_modifiers(
         self,
@@ -695,117 +738,6 @@ class IOExporter(object):
             self.shape_key_modifier_types = self.shape_key_modifier_types.union(modifier_types)
 
         bpy.context.scene.frame_set(modifier_frame_range[0])
-
-    def render_preview_images(
-        self,
-        preview_image_data: dict,
-        export_file_format: str = 'png',
-    ):
-        """TODO"""
-        EXPORT_FILE_FORMAT_DATA = {
-            'png': {
-                'func': bpy.ops.render.opengl,
-                'subdir': 'images',
-                'suffix': '.png',
-            }
-        }
-        active_cam = bpy.context.scene.camera
-        light_objs = bpy_scn.scn_get_objects_of_type('LIGHT')
-
-        export_function = getattr(bpy.ops.render.opengl, export_file_format)
-        export_file_suffix = EXPORT_FILE_FORMAT_DATA[export_file_format]['suffix']
-        export_subdir_name = EXPORT_FILE_FORMAT_DATA[export_file_format]['subdir']
-        export_dir_path = self.export_dir_path.joinpath(export_subdir_name)
-        export_dir_path.mkdir(parents=True, exist_ok=True)
-
-        for export_file_name, export_data in preview_image_data.items():
-            objects_to_render = [active_cam]
-            objects_to_render.extend(light_objs)
-
-            for obj_name, obj_data in export_data['objects'].items():
-                obj = bpy.data.objects.get(obj_name)
-                if obj is not None:
-                    bpy_scn.scn_set_all_hidden(obj, False)
-                    objects_to_render.append(obj)
-
-                    for mdfr_k, mdfr_v in obj_data['Modifiers'].items():
-                        for input_k, input_v in mdfr_v.items():
-                            obj.modifiers[mdfr_k][input_k] = input_v
-
-                    for shape_k, shape_v in obj_data['ShapeKeys'].items():
-                        # break inputs, if any
-                        shape_key_data_name = obj.active_shape_key.id_data.name
-                        anim_data = bpy.data.shape_keys[shape_key_data_name].animation_data
-                        if anim_data:
-                            action_fcrvs = anim_data.action.fcurves if anim_data.action else []
-                            for _ in action_fcrvs:
-                                action_fcrvs.remove(action_fcrvs[0])
-                            driver_fcrvs = anim_data.drivers
-                            for _ in driver_fcrvs:
-                                driver_fcrvs.remove(driver_fcrvs[0])
-                        shape_keys = obj.data.shape_keys.key_blocks
-                        shape_keys[shape_k].value = shape_v
-
-            render_viewport_image(
-                output_path=export_dir_path.joinpath(f'{export_file_name}{export_file_suffix}'),
-                objects_to_render=objects_to_render,
-                render_cam=active_cam
-            )
-
-
-def render_viewport_image(
-    output_path: typing.Union[pathlib.Path, str],
-    objects_to_render: typing.Iterable,
-    render_cam: bpy.types.Camera,
-    color_depth: str = '8',
-    color_mode: str = 'RGBA',
-    compression: int = 100,
-    file_format: str = 'PNG',
-    resolution_percentage: int = 100,
-    viewport_shading_type: str = 'MATERIAL'
-):
-    """TODO"""
-    #Create temporary preview image render scene
-    scn = bpy_scn.scn_create_and_link_new_scene(
-        objects_to_link=objects_to_render
-    )
-    scn.camera = render_cam
-
-    screen_spaces = []
-    for area in bpy.context.screen.areas:
-        if area.type == 'VIEW_3D':
-            for space in area.spaces:
-                if space.type == 'VIEW_3D':
-                    screen_spaces.append(space)
-    for space in screen_spaces:
-        space.overlay.show_axis_x = False
-        space.overlay.show_axis_y = False
-        space.overlay.show_axis_z = False
-        space.overlay.show_cursor = False
-        space.overlay.show_extras = False
-        space.overlay.show_floor = False
-        space.overlay.show_outline_selected = False
-        space.region_3d.view_perspective = 'CAMERA'
-        space.shading.type = viewport_shading_type
-
-    #
-    scn.render.image_settings.file_format = file_format
-    scn.render.image_settings.color_mode = color_mode
-    scn.render.image_settings.color_depth = color_depth
-    scn.render.image_settings.compression = compression
-    scn.render.resolution_percentage = resolution_percentage
-
-    scn.render.filepath = pathlib.Path(output_path).as_posix()
-
-    bpy.ops.render.opengl(
-        animation=False,
-        render_keyed_only=False,
-        sequencer=False,
-        write_still=True,
-        view_context=True
-    )
-
-    bpy.ops.scene.delete()
 
 
 def io_launch_export_dialog_ui() -> None:
