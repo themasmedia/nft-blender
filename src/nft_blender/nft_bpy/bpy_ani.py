@@ -5,6 +5,7 @@ NFT Blender - BPY - ANI
 
 """
 
+import copy
 import pathlib
 import typing
 
@@ -102,6 +103,30 @@ class AniKeyingSetHelper(object):
         return False
 
 
+def ani_break_inputs(
+    target_object: bpy.types.Object,
+    on_data: bool = False,
+    on_object: bool = False,
+) -> None:
+    """TODO"""
+    obj_anim_data = target_object.animation_data if on_object else None
+    shape_key_anim_data = None
+
+    if target_object.active_shape_key is not None:
+        active_shape_key_name = target_object.active_shape_key.id_data.name
+        shape_key_anim_data = \
+            bpy.data.shape_keys[active_shape_key_name].animation_data if on_data else None
+
+    for anim_data in (obj_anim_data, shape_key_anim_data):
+        if anim_data is not None:
+            action_fcrvs = anim_data.action.fcurves if anim_data.action else []
+            for _ in action_fcrvs:
+                action_fcrvs.remove(action_fcrvs[0])
+            driver_fcrvs = anim_data.drivers
+            for _ in driver_fcrvs:
+                driver_fcrvs.remove(driver_fcrvs[0])
+
+
 def ani_reset_armature_transforms(
     armature_obj: bpy.types.Object,
     reference_frame: int = 1
@@ -188,3 +213,27 @@ def ani_rigify_for_ue(
                 pose_bone.scale = mathutils.Vector([1.0, 1.0, 1.0])
 
     return rigify_armature_obj
+
+
+def ani_set_data_path_values(
+    target_object: bpy.types.Object,
+    modifier_data: dict = None,
+    shape_key_data: dict = None
+) -> typing.Tuple[dict, dict]:
+    """TODO"""
+    modifier_data = modifier_data if isinstance(modifier_data, dict) else {}
+    shape_key_data = shape_key_data if isinstance(shape_key_data, dict) else {}
+    current_modifier_data = copy.deepcopy(modifier_data)
+    current_shape_key_data = copy.deepcopy(shape_key_data)
+
+    for mdfr_k, mdfr_v in modifier_data.items():
+        for input_k, input_v in mdfr_v.items():
+            current_modifier_data[mdfr_k][input_k] = target_object.modifiers[mdfr_k][input_k]
+            target_object.modifiers[mdfr_k][input_k] = input_v
+
+    for shape_k, shape_v in shape_key_data.items():
+        shape_keys = target_object.data.shape_keys.key_blocks
+        current_shape_key_data[shape_k] = shape_keys[shape_k].value
+        shape_keys[shape_k].value = shape_v
+
+    return (current_modifier_data, current_shape_key_data)

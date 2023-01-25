@@ -19,6 +19,29 @@ with bpy_mtl_config_file_path.open('r', encoding='UTF-8') as readfile:
     MTL_PBR_PREFS = json.load(readfile)
 
 
+def mtl_assign_material(
+    target_object: bpy.types.Object,
+    material_name: str = '',
+    set_as_active_material: bool = True
+):
+    """TODO"""
+    mtl_to_assign = bpy.data.materials.get(material_name)
+    if mtl_to_assign is None:
+        return None
+
+    try:
+        if material_name not in target_object.data.materials:
+            target_object.data.materials.append(mtl_to_assign)
+        if set_as_active_material:
+            target_object.material_slots[0].material = mtl_to_assign
+            bpy.ops.object.material_slot_remove_unused()
+        mtl_slot = target_object.material_slots.get(material_name)
+        target_object.active_material_index = mtl_slot.slot_index
+
+    except AttributeError:
+        return None
+
+
 def mtl_scale_image_textures(
     max_height: int = 2048,
     max_width: int = 2048,
