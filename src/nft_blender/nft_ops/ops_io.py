@@ -73,6 +73,16 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
         self._ui.io_export_dir_btngrp = QtWidgets.QButtonGroup()
         self._ui.io_export_dir_btngrp.setExclusive(True)
 
+        # Set properties
+        file_format_finder = re.compile(r'^(\w+).*$')
+        for grpbox in self._ui.io_export_options_frame.findChildren(QtWidgets.QGroupBox):
+            file_format_match = file_format_finder.match(grpbox.title())
+            grpbox.setProperty('file_format', file_format_match.group(1).lower())
+            for label in grpbox.findChildren(QtWidgets.QLabel):
+                setting_name = re.sub(r'[^\w\s]', '', label.text().lower())
+                setting_name = re.sub(r'\s', '_', setting_name)
+                label.setProperty('setting_name', setting_name)
+
         # Make connections
         self._ui.io_export_method_btngrp.buttonClicked[QtWidgets.QAbstractButton] \
             .connect(self.ui_update)
@@ -90,42 +100,64 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
 
         self.ui_init()
 
-    def io_export(self):
-        """TODO"""
+    def io_export(self) -> None:
+        """
+        Performs the export operation based on options set in the UI.
+        """
+        current_file_path = bpy_io.io_get_current_file_path()
+
         export_dir_path = self._ui.io_proj_export_dir_lnedit.text()
         export_platform_name = self._ui.io_export_platform_btngrp.checkedButton().text()
         export_platform_data = IO_CONFIG_DATA['export']['platforms'][export_platform_name]
-        export_file_format = export_platform_data['format']
         export_settings = export_platform_data['settings']
+        export_file_suffix = export_platform_data['suffix']
         for type_k, type_v in export_platform_data['convert'].items():
             # export_settings[type_k] = vars(__builtins__)[type_k](export_settings[type_v])
             export_settings[type_k] = dict(__builtins__)[type_v](export_settings[type_k])
 
-        export_method = self._ui.io_export_method_btngrp.checkedId()
-        export_settings['use_active_collection'] = export_method == 2
-        export_settings['use_selection'] = export_method in (1, 3)
+        # Override export settings, if directed.
+        for grpbox in self._ui.io_export_options_frame.findChildren(QtWidgets.QGroupBox):
+            if grpbox.isEnabled() and grpbox.isVisible():
+                for label in grpbox.findChildren(QtWidgets.QLabel):
+                    setting_name = label.property('setting_name')
+                    setting_value = label.buddy().text()
+                    export_settings[setting_name] = setting_value
 
+        # Customize the export based on method selected in by the user.
+        export_method = self._ui.io_export_method_btngrp.checkedId()
+
+        # Export based on customized JSON file (see ./ops_io_examples for template files).
         if export_method == 1:
             export_data_file_path_str = self._ui.io_export_data_file_label.text()
             export_data_file_path = pathlib.Path(export_data_file_path_str)
             with pathlib.Path(export_data_file_path).open('r', encoding='UTF-8') as r_file:
                 export_data = json.load(r_file)
 
-        else:
-            if export_method == 2:
-                export_obj_name = bpy.context.collection.name
-                objs = bpy.context.collection.all_objects
-
-            elif export_method == 3:
-                export_obj_name = re.sub(r'\W', '_', bpy_io.io_get_current_file_path().stem)
-                objs = bpy.context.selected_objects
-
+        # Export objects in active collection.
+        elif export_method == 2:
+            export_obj_name = bpy.context.collection.name
             export_data = {
                 export_obj_name: {
-                    'objects': {
-                        obj.name: {} for obj in objs if isinstance(obj.data, bpy.types.Mesh)
+                    'objects': {},
+                    'overrides': {
+                        'use_active_collection': True,
+                        'use_selection': False
                     },
-                    'overrides': {},
+                    'textures': []
+                }
+            }
+
+        # Export selected object(s).
+        elif export_method == 3:
+            export_obj_name = re.sub(r'\W', '_', bpy_io.io_get_current_file_path().stem)
+            export_data = {
+                export_obj_name: {
+                    'objects': {obj.name: {} for obj in bpy.context.selected_objects},
+                    'overrides': {
+                        'use_active_collection': False,
+                        'use_selection': True
+                    },
+                    'textures': []
                 },
             }
 
@@ -145,13 +177,13 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
         ]
         mdfr_types = tuple(getattr(bpy.types, mdfr_name) for mdfr_name in mdfr_names)
 
-        #
+        # Instanciate Exporter
         b3d_exporter = IOExporter(
             root_export_dir_path=export_dir_path
         )
         b3d_exporter.bake_ue2rigify_rig_to_source()
 
-        if mdfrs_as_shape_keys:
+        if export_obj_names and mdfrs_as_shape_keys:
             b3d_exporter.prepare_shape_keys_from_modifiers(
                 modifier_types=mdfr_types,
                 keep_as_separate=False,
@@ -165,20 +197,26 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
             b3d_exporter.apply_shape_keys_from_modifiers(
                 move_shape_keys_to_top=True
             )
-        #
+
+        # Call export function
         b3d_exporter.export_objects(
             export_object_data=export_data,
-            export_file_format=export_file_format,
+            export_file_suffix=export_file_suffix,
             export_sub_dir=export_platform_name,
             **export_settings
         )
 
-        #
-        qt_ui.ui_message_box(
+        # Prompt the user to reopen the original file used for the export, if desired.
+        open_original_file = qt_ui.ui_message_box(
             title='Export Complete',
-            text=f'{export_platform_name} export completed successfully.',
-            message_box_type='information'
+            text=f'{export_platform_name} export completed successfully.\n' + \
+                f'Reopen {current_file_path.name}?',
+            message_box_type='question'
         )
+        if open_original_file:
+            # Reopen original file
+            bpy.ops.wm.open_mainfile(filepath=current_file_path.as_posix())
+
         self.done(0)
 
     def ui_init(self) -> None:
@@ -240,8 +278,14 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
             self._ui.io_export_mdfr_start_frame_spbox.setValue(0)
 
         export_platform_name = self._ui.io_export_platform_btngrp.checkedButton().text()
-        export_file_format = IO_CONFIG_DATA['export']['platforms'][export_platform_name]['format']
-        self._ui.io_export_format_label.setText(export_file_format)
+        export_file_suffix = IO_CONFIG_DATA['export']['platforms'][export_platform_name]['suffix']
+        export_file_format = IO_CONFIG_DATA['export']['file_formats'][export_file_suffix]
+        self._ui.io_export_format_label.setText(f'{export_file_format} ({export_file_suffix})')
+
+        for grpbox in self._ui.io_export_options_frame.findChildren(QtWidgets.QGroupBox):
+            options_enabled = grpbox.property('file_format') == export_file_format
+            grpbox.setEnabled(options_enabled)
+            grpbox.setVisible(options_enabled)
 
         if self.sender() in (None, self._ui.io_export_platform_btngrp):
 
@@ -249,7 +293,7 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
             proj_data_dir_path = self._project_paths.get('data/addons/nft_blender')
             if proj_data_dir_path is not None:
                 export_platform = self._ui.io_export_platform_btngrp.checkedButton().text()
-                file_pattern = re.sub(r'\s', '*', export_platform.lower())
+                file_pattern = re.sub(r'\W+', '*', export_platform, count=0, flags=re.I)
                 for export_json_file_path in proj_data_dir_path.glob(f'*{file_pattern}.json'):
                     self._ui.io_export_data_file_label.setText(export_json_file_path.as_posix())
                     break
@@ -262,6 +306,7 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
                         export_config_data = json.load(r_file)
 
                     for config_k, widget_func in {
+                        'gltf_copyright': self._ui.io_export_gltf_copyright_lnedit.setText,
                         'mdfr_enable': self._ui.io_export_mdfr_grpbox.setChecked,
                         'mdfr_end_frame': self._ui.io_export_mdfr_end_frame_spbox.setValue,
                         'mdfr_frame_step': self._ui.io_export_mdfr_frame_step_spbox.setValue,
@@ -284,7 +329,9 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
 
 
     def ui_update_io_export_data_file(self) -> None:
-        """TODO"""
+        """
+        Sets the data file path to use for the export.
+        """
         export_file_path = qt_ui.ui_get_file(
             caption='Select export data file',
             dir_str=self._project_paths.get('data', self._project_path).as_posix(),
@@ -296,7 +343,9 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
         self.ui_update()
 
     def ui_update_io_export_dir(self) -> None:
-        """TODO"""
+        """
+        Sets the export directory based on either the project or explicitly by the user.
+        """
         if self._ui.io_export_dir_btngrp.checkedId() == 1:
             self.ui_update_io_export_dir_proj()
 
@@ -313,14 +362,18 @@ class IOExportDialogUI(qt_ui.UIDialogBase):
         self.ui_update()
 
     def ui_update_io_export_dir_proj(self) -> None:
-        """TODO"""
+        """
+        Sets the export directory to the "models" subdirectory of the proiect.
+        """
         self._ui.io_proj_name_lnedit.setText(self._project.name)
         self._ui.io_proj_export_dir_lnedit.setText(
             self._project_paths.get('models', self._project_path).as_posix()
         )
 
     def ui_update_io_export_mdfr(self, *args) -> None:
-        """TODO"""
+        """
+        Sets the modifier setting based on the sender's True or False argument.
+        """
         for mdfr_chbox in self._ui.io_export_mdfr_type_btngrp.buttons():
             mdfr_chbox.setChecked(args[0])
 
@@ -385,13 +438,18 @@ class IOExporter(object):
         object_names: list = typing.Iterable[str]
     ):
         """
-        TODO
+        Step 2 to apply deformation from modifier(a) as Shape Keys.
         An Object cannot be exported from Blender with Shape Keys if any modifiers are active.
         Sadly, most modifiers cannot be applied to an Object if it has any shape keys.
         apply_modifiers() work-around:
         1. Creates temporary Object duplicate(s) for each shape key on an Object.
         2. Removes all shape keys from source Object so that modifiers can be applied.
         3. Creates a new shape key from each temporary Object duplicate.
+        IMPORTANT:
+        To apply modifiers as Shape Keys, run the following methods in the following order:
+        1. prepare_shape_keys_from_modifiers()
+        2. apply_modifiers()
+        3. apply_shape_keys_from_modifiers()
         """
         # Iterate through each Object
         for obj_name in object_names:
@@ -467,7 +525,11 @@ class IOExporter(object):
         self,
         move_shape_keys_to_top: bool = False,
     ):
-        """TODO"""
+        """
+        Step 3 to apply deformation from modifier(a) as Shape Keys.
+        Creates Shape Keys from mesh duplicates created with prepare_shape_keys_from_modifiers().
+        See the apply_modifiers() method for more information.
+        """
         for orig_obj, shape_key_objs in self.shape_key_objs.items():
             for i, (shape_key_name, shape_key_obj) in enumerate(shape_key_objs.items(), 1):
                 bpy_scn.scn_select_items(items=[shape_key_obj, orig_obj])
@@ -531,7 +593,7 @@ class IOExporter(object):
     def export_objects(
         self,
         export_object_data: dict,
-        export_file_format: str,
+        export_file_suffix: str,
         export_sub_dir: typing.Union[str, None] = None,
         **export_settings
     ):
@@ -566,8 +628,8 @@ class IOExporter(object):
         if export_sub_dir is not None:
             export_dir_path = export_dir_path.joinpath(export_sub_dir)
         export_dir_path.mkdir(parents=True, exist_ok=True)
+        export_file_format = IO_CONFIG_DATA['export']['file_formats'][export_file_suffix]
         export_function = getattr(bpy.ops.export_scene, export_file_format)
-        export_file_suffix = IO_CONFIG_DATA['export']['file_formats'][export_file_format]
 
         if self.armature_obj:
             bpy_scn.scn_select_items(items=[self.armature_obj])
@@ -578,11 +640,39 @@ class IOExporter(object):
             export_file_path = \
                 export_dir_path.joinpath(export_obj_name).with_suffix(export_file_suffix)
 
+            export_settings_copy = copy.deepcopy(export_settings)
+            for override_k, override_v in export_obj_data['overrides'].items():
+                export_settings_copy[override_k] = override_v
+
+            #
+            for img_data in export_obj_data['textures']:
+                images = [
+                    bpy.data.images[img] for img in img_data['images'] if bpy.data.images.get(img)
+                ]
+                bpy_mtl.mtl_resize_image_textures(
+                    images=images,
+                    max_height=img_data['height'],
+                    max_width=img_data['width'],
+                )
+
             orig_obj_data_path_data = {}
-            if export_settings['use_selection']:
+
+            #
+            if export_settings_copy['use_active_collection'] \
+            and not export_settings_copy['use_selection']:
+
+                for lyr_col in bpy.context.view_layer.layer_collection.children:
+                    if lyr_col.name == export_obj_name:
+                        bpy.context.view_layer.active_layer_collection = lyr_col
+                        break
+
+            #
+            elif export_settings_copy['use_selection'] \
+            and not export_settings_copy['use_active_collection']:
 
                 export_objs = [self.armature_obj] if self.armature_obj is not None else []
                 for obj_name, obj_data in export_obj_data['objects'].items():
+
                     obj = bpy.data.objects.get(obj_name)
                     if obj is not None:
                         export_objs.extend([
@@ -592,30 +682,35 @@ class IOExporter(object):
                         ])
                         export_objs.append(obj)
 
-                        bpy_ani.ani_break_inputs(
-                            target_object=obj,
-                            on_data=True,
-                            on_object=True
-                        )
-                        orig_obj_data_path_data[obj] = bpy_ani.ani_set_data_path_values(
-                            target_object=obj,
-                            modifier_data=obj_data.get('modifiers', {}),
-                            shape_key_data=obj_data.get('shape_keys', {})
-                        )
+                        obj_data_modifiers = obj_data.get('modifiers', {})
+                        obj_data_shape_keys = obj_data.get('shape_keys', {})
+                        if obj_data_modifiers or obj_data_shape_keys:
+                            bpy_ani.ani_break_inputs(
+                                target_object=obj,
+                                on_data=True,
+                                on_object=True
+                            )
+                            orig_obj_data_path_data[obj] = bpy_ani.ani_set_data_path_values(
+                                target_object=obj,
+                                modifier_data=obj_data_modifiers,
+                                shape_key_data=obj_data_shape_keys
+                            )
 
-                        bpy_scn.scn_select_items(items=[obj])
-                        bpy_mtl.mtl_assign_material(
-                            target_object=obj,
-                            material_name=obj_data.get('material', '')
-                        )
+                        obj_data_material = obj_data.get('material', '')
+                        if obj_data_material:
+                            bpy_scn.scn_select_items(items=[obj])
+                            bpy_mtl.mtl_assign_material(
+                                target_object=obj,
+                                material_name=obj_data_material
+                            )
 
                 export_objs = list(set(export_objs))
                 bpy_scn.scn_select_items(items=export_objs)
 
-            export_settings_copy = copy.deepcopy(export_settings)
-            for override_k, override_v in export_obj_data['overrides'].items():
-                export_settings_copy[override_k] = override_v
+            else:
+                return
 
+            # Export the object(s)
             export_function(
                 filepath=export_file_path.as_posix(),
                 **export_settings_copy
@@ -629,6 +724,13 @@ class IOExporter(object):
                     shape_key_data=orig_data_path_data[1]
                 )
 
+            # Reset image texture sizes to pre-export sizes
+            for img_data in export_obj_data['textures']:
+                for img_name in img_data['images']:
+                    img = bpy.data.images.get(img_name)
+                    if img is not None:
+                        img.reload()
+
     def prepare_shape_keys_from_modifiers(
         self,
         modifier_types: typing.Tuple[bpy.types.Modifier] = (bpy.types.Modifier,),
@@ -638,14 +740,19 @@ class IOExporter(object):
         modifier_frame_range: typing.Iterable[int] = (1, 2, 1)
     ):
         """
-        Run this, then run apply_shape_keys_from_modifiers() after apply_modifiers().
+        Step 1 to apply deformation from modifier(a) as Shape Keys.
+        Duplicates the mesh with the speicified modifier(s) applied,
+        to be used as Shape Key source meshes in apply_shape_keys_from_modifiers().
+        See the apply_modifiers() method for more information.
         """
         def _add_shape_key_obj(
             orig_obj: bpy.types.Object,
             shape_key_name: str,
             shape_key_obj: bpy.types.Object
         ):
-            """TODO"""
+            """
+            Adds an entry for tracking temporary mesh(es) to be applied as Shape Key(s).
+            """
             if orig_obj not in self.shape_key_objs:
                 self.shape_key_objs[orig_obj] = {}
             self.shape_key_objs[orig_obj][shape_key_name] = shape_key_obj

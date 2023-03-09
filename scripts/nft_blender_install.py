@@ -32,6 +32,15 @@ MODULES = {
         'reinstall': False,
         'specifier': 'SQLAlchemy',
     },
+    #
+    'p4python': {
+        'reinstall': False,
+        'specifier': 'p4python',
+    },
+    'stable_diffusion': {
+        'reinstall': True,
+        'specifier': 'git+https://github.com/lstein/stable-diffusion.git@main#egg=stable-diffusion',
+    },
 }
 
 

@@ -1,19 +1,78 @@
 {
   "export": {
     "file_formats": {
-      "fbx": ".fbx",
-      "gltf": ".glb",
-      "vrm": ".vrm"
+      ".fbx": "fbx",
+      ".glb": "gltf",
+      ".gltf": "gltf",
+      ".vrm": "vrm"
     },
     "modifier_types": [
       "DisplaceModifier"
     ],
     "platforms": {
-      "3D Paint": {
+      "3D Paint (glTF)": {
+        "convert": {},
+        "settings": {
+          "check_existing": false,
+          "convert_lighting_mode": "SPEC",
+          "export_all_influences": false,
+          "export_anim_single_armature": false,
+          "export_animations": false,
+          "export_apply": false,
+          "export_attributes": true,
+          "export_cameras": false,
+          "export_colors": false,
+          "export_copyright": "",
+          "export_current_frame": true,
+          "export_def_bones": false,
+          "export_draco_color_quantization": 10,
+          "export_draco_generic_quantization": 12,
+          "export_draco_mesh_compression_enable": false,
+          "export_draco_mesh_compression_level": 6,
+          "export_draco_normal_quantization": 10,
+          "export_draco_position_quantization": 14,
+          "export_draco_texcoord_quantization": 12,
+          "export_extras": false,
+          "export_force_sampling": true,
+          "export_format": "GLTF_EMBEDDED",
+          "export_frame_range": false,
+          "export_frame_step": 1,
+          "export_image_format": "NONE",
+          "export_keep_originals": false,
+          "export_lights": false,
+          "export_materials": "EXPORT",
+          "export_morph": false,
+          "export_morph_normal": false,
+          "export_morph_tangent": false,
+          "export_nla_strips": false,
+          "export_nla_strips_merged_animation_name": "",
+          "export_normals": true,
+          "export_optimize_animation_size": false,
+          "export_original_specular": false,
+          "export_reset_pose_bones": false,
+          "export_skins": false,
+          "export_tangents": false,
+          "export_texcoords": true,
+          "export_texture_dir": "",
+          "export_yup": true,
+          "filter_glob": "*.glb;*.gltf",
+          "ui_tab": "GENERAL",
+          "use_active_collection_with_nested": false,
+          "use_active_collection": false,
+          "use_active_scene": false,
+          "use_mesh_edges": false,
+          "use_mesh_vertices": false,
+          "use_renderable": false,
+          "use_selection": true,
+          "use_visible": false,
+          "will_save_settings": false
+        },
+        "suffix": ".gltf"
+      },
+      "3D Paint (FBX)": {
         "convert": {
           "object_types": "set"
         },
-        "format": "fbx",
         "settings": {
           "add_leaf_bones": false,
           "apply_scale_options": "FBX_SCALE_NONE",
@@ -51,14 +110,14 @@
           "use_subsurf": false,
           "use_triangles": false,
           "use_tspace": false,
-          "use_visible": true
-        }
+          "use_visible": false
+        },
+        "suffix": ".fbx"
       },
       "Game Engine": {
         "convert": {
           "object_types": "set"
         },
-        "format": "fbx",
         "settings": {
           "add_leaf_bones": false,
           "apply_scale_options": "FBX_SCALE_NONE",
@@ -97,16 +156,16 @@
           "use_triangles": false,
           "use_tspace": false,
           "use_visible": true
-        }
+        },
+        "suffix": ".fbx"
       },
       "Virtual Avatar": {
         "convert": {},
-        "format": "vrm",
-        "settings": {}
+        "settings": {},
+        "suffix": ".vrm"
       },
       "Web Browser": {
         "convert": {},
-        "format": "gltf",
         "settings": {
           "check_existing": false,
           "convert_lighting_mode": "SPEC",
@@ -116,7 +175,7 @@
           "export_apply": true,
           "export_attributes": false,
           "export_cameras": false,
-          "export_colors": true,
+          "export_colors": false,
           "export_copyright": "",
           "export_current_frame": false,
           "export_def_bones": true,
@@ -161,7 +220,8 @@
           "use_selection": true,
           "use_visible": true,
           "will_save_settings": false
-        }
+        },
+        "suffix": ".glb"
       }
     }
   },

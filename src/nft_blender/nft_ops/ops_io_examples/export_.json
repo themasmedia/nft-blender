@@ -1,0 +1,22 @@
+{
+  "": {
+    "objects": {
+      "": {
+        "material": "",
+        "modifiers": {},
+        "shape_keys": {}
+      }
+    },
+    "overrides": {
+      "use_active_collection": false,
+      "use_selection": false
+    },
+    "textures": [
+      {
+        "height": 1024,
+        "images": [],
+        "width": 1024
+      }
+    ]
+  }
+}

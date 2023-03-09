@@ -42,7 +42,8 @@ def mtl_assign_material(
         return None
 
 
-def mtl_scale_image_textures(
+def mtl_resize_image_textures(
+    images: typing.Iterable[bpy.types.Image],
     max_height: int = 2048,
     max_width: int = 2048,
     proportional: bool = True
@@ -50,7 +51,7 @@ def mtl_scale_image_textures(
     """TODO"""
     resized_images = []
 
-    for image in bpy.data.images:
+    for image in images:
         if (image.size[0] > max_width) or (image.size[1] > max_height):
 
             if proportional:

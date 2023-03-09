@@ -89,6 +89,7 @@ def scn_get_selected_objects(
 
 def scn_get_objects_of_type(
     obj_type: str,
+    col_name: str = '',
 ) -> list:
     """
     Gets a list of allo objects of a specific data type in the current Blender Ccene.
@@ -96,12 +97,14 @@ def scn_get_objects_of_type(
     :param obj_type: Name of the data type (i.e. "ARMATURE").
     :returns: A list of objects.
     """
-    return [obj for obj in bpy.data.objects if obj.type == obj_type]
+    col = bpy.data.collections.get(col_name)
+    objs = col.all_objects if col is not None else bpy.data.objects
+    return [obj for obj in objs if obj.type == obj_type]
 
 
 def scn_select_items(
-    mode: str = 'OBJECT',
-    items: list = typing.Iterable
+    items: typing.Iterable,
+    mode: str = 'OBJECT'
 ) -> None:
     """TODO"""
     if bpy.context.mode != mode:
