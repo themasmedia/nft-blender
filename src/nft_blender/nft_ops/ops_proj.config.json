@@ -37,6 +37,7 @@
       },
       "edit": {},
       "models": {},
+      "renders": {},
       "scenes": {
         "ANIM": {
           "published": {},

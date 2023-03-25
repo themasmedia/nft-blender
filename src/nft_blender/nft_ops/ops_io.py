@@ -598,31 +598,7 @@ class IOExporter(object):
         **export_settings
     ):
         """
-        onCyber requirements:
-            - Url for testing "Spaces": https://oncyber.io/uploader
-            - Must be glTF Binary file format (*.glb).
-            - Preformance must support >60fps across devices.
-              Add ?stats=true to the end of your destination URL to get a sense for FPS.
-              Use https://gltf.report/ to get an in-browser performance report.
-            - Upload url: http://oncyber.io/uploader.
-              Uploaded spaces url: https://oncyber.io/destinations.
-            - Reference model: https://docs.oncyber.io/architects/starter-models
-              Note:
-              - All mesh is parented to specifically named Empty objects for functionality.
-              - Do not apply location/rotation transforms to objects.
-              - "Placeholder" objects must be named "placeholder_001,*_002,...etc".
-                Placeholders must contain at least one face and are created at the object's pivot.
-              - The usage of animation Actions in the NLE for certain objects.
-              - Reflective meshes are named with the suffix "_pbr".
-                Materials applied to these objects must only be applied to objects with this suffix.
-              - Portal doors must be named and parented to the display Empty.
-                The object must be named "Portal_Door_001".
-                In the NLE, the tracks must be namned "Portal_Open_001" and "Portal_Close_001".
-              - Lighting must be "baked" into textures.
-              - 1024x1024 textures with a maximum file size ~40mb is recommended
-
-        UE5 requirements:
-            -TODO
+        TODO
         """
         export_dir_path = self.export_dir_path
         if export_sub_dir is not None:
