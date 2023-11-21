@@ -42,31 +42,51 @@ def mtl_assign_material(
         return None
 
 
-def mtl_resize_image_textures(
-    images: typing.Iterable[bpy.types.Image],
-    max_height: int = 2048,
-    max_width: int = 2048,
-    proportional: bool = True
+def mtl_get_mtls_from_obj(
+    obj: bpy.types.Object,
+    active_mtl: bool = True,
+    all_mtls: bool = True,
 ) -> list:
-    """TODO"""
-    resized_images = []
+    """"""
+    
+    mtls = []
+        
+    if active_mtl:
+        mtls.append(obj.active_material)
 
-    for image in images:
-        if (image.size[0] > max_width) or (image.size[1] > max_height):
+    if all_mtls:
+        for mtl_slot in obj.material_slots:
+            if mtl_slot.material not in mtls:
+                mtls.append(mtl_slot.material)
 
-            if proportional:
-                scale_val = max(((image.size[0] / max_width), (image.size[1] / max_height)))
-                scale_width = int(image.size[0] / scale_val)
-                scale_height = int(image.size[1] / scale_val)
+    return mtls
 
-            else:
-                scale_width = int(image.size[0] / (image.size[0] / max_width))
-                scale_height = int(image.size[1] / (image.size[1] / max_height))
 
-            image.scale(scale_width, scale_height)
-            resized_images.append(image)
+# def mtl_resize_image_textures(
+#     images: typing.Iterable[bpy.types.Image],
+#     max_height: int = 2048,
+#     max_width: int = 2048,
+#     proportional: bool = True
+# ) -> list:
+#     """TODO depreciate"""
+#     resized_images = []
 
-    return resized_images
+#     for image in images:
+#         if (image.size[0] > max_width) or (image.size[1] > max_height):
+
+#             if proportional:
+#                 scale_val = max(((image.size[0] / max_width), (image.size[1] / max_height)))
+#                 scale_width = int(image.size[0] / scale_val)
+#                 scale_height = int(image.size[1] / scale_val)
+
+#             else:
+#                 scale_width = int(image.size[0] / (image.size[0] / max_width))
+#                 scale_height = int(image.size[1] / (image.size[1] / max_height))
+
+#             image.scale(scale_width, scale_height)
+#             resized_images.append(image)
+
+#     return resized_images
 
 
 def mtl_search_replace_image_dir_paths(
