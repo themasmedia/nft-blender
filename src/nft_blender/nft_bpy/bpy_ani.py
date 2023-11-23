@@ -129,24 +129,40 @@ def ani_break_inputs(
 
 def ani_reset_armature_transforms(
     armature_obj: bpy.types.Object,
-    reference_frame: int = 1
+    reference_frame: int = 1,
+    set_to_rest: bool = True,
 ) -> None:
     """
     Clears the current action and resets armature transforms for the given Armature Object.
     It is recommended to set the visibility of the Object to True beforehand with:
-    bpy_scn.scn_select_itemsitems=[armature_obj]).
+    bpy_scn.scn_select_items(items=[armature_obj]).
 
-    :param asset_name: The name of the asset.
-    :param ks_name: The name of the Keying Set to load.
+    :param armature_obj: The Armature Object.
+    :param reference_frame: The frame to set the Timeline to.
+    :param set_to_rest: Set the Armature to Rest Position upon completion.
     """
     # Ensure it is an Armature Object.
     if isinstance(armature_obj.data, bpy.types.Armature):
 
+        # Reset the Timeline and clear the current Action  on the Armature.
         bpy.context.scene.frame_set(reference_frame)
         armature_obj.animation_data.action = None
-        bpy.ops.object.mode_set(mode='POSE')
-        bpy.ops.pose.select_all(action='SELECT')
-        bpy.ops.pose.transforms_clear()
+
+        # Reset transforms on Pose Bones
+        for bone in armature_obj.pose.bones:
+            bone.location = (0, 0, 0)
+            bone.rotation_quaternion = (1, 0, 0, 0)
+            bone.rotation_axis_angle = (0, 0, 1, 0)
+            bone.rotation_euler = (0, 0, 0)
+            bone.scale = (1, 1, 1)
+        # bpy.ops.object.mode_set(mode='POSE')
+        # bpy.ops.pose.select_all(action='SELECT')
+        # bpy.ops.pose.transforms_clear()
+
+        # Reset the Armature to rest pose (reset to t-pose for character rigs).
+        if set_to_rest:
+            armature_obj.data.pose_position = 'REST'
+
         bpy.ops.object.mode_set(mode='OBJECT')
 
 
