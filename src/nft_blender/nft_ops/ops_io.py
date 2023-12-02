@@ -17,7 +17,8 @@ from PySide6 import QtCore, QtWidgets
 
 import bpy
 
-from nft_blender.nft_bpy import bpy_ani, bpy_ctx, bpy_io, bpy_mdl, bpy_mtl, bpy_scn
+from nft_blender.nft_bpy._bpy_core import bpy_ctx, bpy_io, bpy_scn
+from nft_blender.nft_bpy import bpy_ani, bpy_mdl, bpy_mtl
 from nft_blender.nft_qt import qt_ui
 from nft_blender.nft_ops import OpsSessionData
 
@@ -605,7 +606,7 @@ class IOExporter(object):
             export_dir_path = export_dir_path.joinpath(export_sub_dir)
         export_dir_path.mkdir(parents=True, exist_ok=True)
         export_file_format = IO_CONFIG_DATA['export']['file_formats'][export_file_suffix]
-        export_function = getattr(bpy.ops.export_scene, export_file_format)
+        export_function = getattr(bpy.ops.export_scene, export_file_format) #TODO develop solution for vrm
 
         if self.armature_obj:
             bpy_scn.scn_select_items(items=[self.armature_obj])
