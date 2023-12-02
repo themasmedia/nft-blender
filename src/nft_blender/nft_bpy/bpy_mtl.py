@@ -12,6 +12,9 @@ import typing
 
 import bpy
 
+from nft_blender.nft_bpy._bpy_core import bpy_scn
+from nft_blender.nft_py import py_util
+
 
 # Load default data from config file.
 bpy_mtl_config_file_path = pathlib.Path(__file__).parent.joinpath('bpy_mtl.config.json')
@@ -44,22 +47,56 @@ def mtl_assign_material(
 
 def mtl_get_mtls_from_obj(
     obj: bpy.types.Object,
-    active_mtl: bool = True,
-    all_mtls: bool = True,
+    active_mtl_only: bool = False,
+    in_use_mtls_only: bool = False,
 ) -> list:
     """"""
     
-    mtls = []
-        
-    if active_mtl:
-        mtls.append(obj.active_material)
+    if active_mtl_only:
+        return [obj.active_material]
 
-    if all_mtls:
-        for mtl_slot in obj.material_slots:
-            if mtl_slot.material not in mtls:
-                mtls.append(mtl_slot.material)
+    elif in_use_mtls_only:
+        mtls = []
+        for f in obj.data.polygons:
+            f_mtl = obj.material_slots[f.material_index].material
+            if f_mtl not in mtls:
+                mtls.append(f_mtl)
+        return mtls
 
-    return mtls
+    else:
+        return [mtl_slot.material for mtl_slot in obj.material_slots]
+
+
+def mtl_remove_unused_material_slots(
+    obj: bpy.types.Object
+) -> dict:
+    """"""
+
+    # 
+    in_use_mtls = mtl_get_mtls_from_obj(
+        obj=obj,
+        in_use_mtls_only=True
+    )
+
+    #
+    removed_mtl_slots = {}
+    for mtl_slot in obj.material_slots:
+        mtl = mtl_slot.material
+        if mtl not in in_use_mtls:
+            removed_mtl_slots[mtl_slot.slot_index] = mtl
+            mtl_slot.material = None
+    
+    # 
+    current_sl = bpy_scn.scn_select_items(
+        items=[obj]
+    )
+    bpy.ops.object.material_slot_remove_unused()
+    bpy_scn.scn_select_items(
+        items=current_sl[0],
+        active_obj=current_sl[1]
+    )
+
+    return removed_mtl_slots
 
 
 # def mtl_resize_image_textures(
@@ -144,6 +181,49 @@ def mtl_search_replace_image_dir_paths(
     return updated_img_nodes
 
 
+def mtl_set_material_at_index(
+    obj: bpy.types.Object,
+    mtl_index: int = -1,
+    mtl_name: str = '',
+    replace_existing: bool = True,
+    set_as_active_mtl: bool = True,
+) -> bool:
+    """
+    Sets the active Material for the given Mesh objects.
+
+    :param obj: The affected Object.
+    :param mtl_index: The Material Slot index to affect.
+    :param mtl_name: The name of the Material to set as the active Material.
+    :param replace_existing: Replace the current Material set for the Material Slot.
+    :param set_as_active_mtl: Set the affected Material Slot as active.
+
+    :returns: True if the Material was assigned; otherwise False.
+    """
+    mtl = bpy.data.materials.get(mtl_name)
+    if mtl is None:
+        return False
+
+    if py_util.util_get_attr_recur(obj, 'data.materials') is None:
+        return False
+
+    if mtl_index < 0:
+        mtl_index = obj.active_material_index
+
+    bpy_scn.scn_select_items(items=[obj])
+
+    if (not replace_existing) or (len(obj.material_slots) == 0):
+        bpy.ops.object.material_slot_add()
+        for _ in range(len(obj.material_slots) - mtl_index - 1):
+            bpy.ops.object.material_slot_move(direction='UP')
+    
+    obj.material_slots[mtl_index].material = mtl
+    
+    if set_as_active_mtl:
+        obj.active_material_index = mtl_index
+
+    return True
+
+
 def mtl_set_material_data(
     mtl_name: str = '',
     mesh_objs: typing.Iterable = (),
@@ -164,3 +244,46 @@ def mtl_set_material_data(
         mtl_assigned = True
 
     return mtl_assigned
+
+
+def mtl_set_material_properties(
+    mtls: typing.Iterable[bpy.types.Material],
+    props: dict,
+) -> None:
+    """"""
+    for mtl in mtls:
+        for prop_k, prop_v in props.items():
+            py_util.util_set_attr_recur(mtl, prop_k, prop_v)
+
+
+def mtl_swap_materials_at_indexes(
+    obj: bpy.types.Object,
+    index1: int = -1,
+    index2: int = -1,
+) -> bool:
+    """"""
+    total_mtl_slots = len(obj.material_slots)
+    
+    if total_mtl_slots < 2:
+        return False
+        
+    if index1 < 0:
+        index1 = obj.active_material_index
+    
+    if index2 < 0:
+        index2 = total_mtl_slots - 1
+
+    index1_mtl = obj.material_slots[index1].material
+    index2_mtl = obj.material_slots[index2].material
+    
+    for index, mtl in ((index1, index2_mtl), (index2, index1_mtl)):
+        mtl_set_material_at_index(
+            obj,
+            mtl_index=index,
+            mtl_name=mtl.name,
+            set_as_active_mtl=False,
+        )
+
+    obj.active_material_index = index1
+
+    return True

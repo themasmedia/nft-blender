@@ -13,6 +13,8 @@ import mathutils
 
 import bpy
 
+from nft_blender.nft_bpy._bpy_core import bpy_scn
+
 
 class AniKeyingSetHelper(object):
     """
@@ -130,12 +132,10 @@ def ani_break_inputs(
 def ani_reset_armature_transforms(
     armature_obj: bpy.types.Object,
     reference_frame: int = 1,
-    set_to_rest: bool = True,
+    set_to_rest: bool = False,
 ) -> None:
     """
     Clears the current action and resets armature transforms for the given Armature Object.
-    It is recommended to set the visibility of the Object to True beforehand with:
-    bpy_scn.scn_select_items(items=[armature_obj]).
 
     :param armature_obj: The Armature Object.
     :param reference_frame: The frame to set the Timeline to.
@@ -143,6 +143,9 @@ def ani_reset_armature_transforms(
     """
     # Ensure it is an Armature Object.
     if isinstance(armature_obj.data, bpy.types.Armature):
+
+        # Select the Armature Object for operator functions.
+        bpy_scn.scn_select_items(items=[armature_obj])
 
         # Reset the Timeline and clear the current Action  on the Armature.
         bpy.context.scene.frame_set(reference_frame)

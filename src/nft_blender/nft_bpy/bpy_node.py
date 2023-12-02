@@ -5,14 +5,12 @@ NFT Blender - BPY - MDL
 
 """
 
-import typing
-
 import bpy
 
 
 def node_get_nodes_from_node_tree(
-    node_tree,
-    node_types: typing.Iterable = (bpy.types.Node),
+    node_tree: bpy.types.NodeTree,
+    node_types: tuple = (bpy.types.Node,),
     sub_grps: bool = True,
 ) -> list:
     """Works for any tree of nodes, including Materials, Groups, and NodeTrees"""
@@ -33,8 +31,8 @@ def node_get_nodes_from_node_tree(
         )):
             nodes.extend(node_get_nodes_from_node_tree(
                 n.node_tree,
+                node_types,
                 sub_grps,
-                node_types
             ))
     
     return nodes
