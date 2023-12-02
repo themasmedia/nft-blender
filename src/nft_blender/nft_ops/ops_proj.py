@@ -14,7 +14,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 # from __feature__ import snake_case, true_property
 import sqlalchemy
 
-from nft_blender.nft_bpy import bpy_io
+from nft_blender.nft_bpy._bpy_core import bpy_io
 from nft_blender.nft_db import db_sql
 from nft_blender.nft_qt import qt_ui
 

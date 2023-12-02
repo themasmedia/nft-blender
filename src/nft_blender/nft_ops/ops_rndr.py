@@ -10,7 +10,7 @@ import typing
 
 import bpy
 
-from nft_blender.nft_bpy import bpy_scn
+from nft_blender.nft_bpy._bpy_core import bpy_scn
 from nft_blender.nft_qt import qt_os, qt_ui
 
 # from nft_blender.nft_ops import OpsSessionData
