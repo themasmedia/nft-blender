@@ -12,12 +12,13 @@ import bpy
 
 def scn_copy_object(
     obj: bpy.types.Object,
+    cols: typing.Iterable[bpy.types.Collection] = (),
     times: int = 1,
     offset: float = 0.0
-) -> list:
+) -> typing.Union[typing.List[bpy.types.Object], bpy.types.Object]:
     """"""
 
-    objs = []
+    copied_objs = []
     for i in range(times):
         copy_obj = obj.copy()
         copy_obj.data = obj.data.copy()
@@ -25,11 +26,12 @@ def scn_copy_object(
         copy_obj.location.x += offset * (i + 1)
 
         #
-        for usr_col in obj.users_collection:
+        cols = cols or obj.users_collection
+        for usr_col in cols:
             usr_col.objects.link(copy_obj)
-        objs.append(copy_obj)
+        copied_objs.append(copy_obj)
 
-    return objs
+    return copied_objs if len(copied_objs) > 1 else copied_objs[0]
 
 
 def scn_create_and_link_new_scene(

@@ -51,39 +51,39 @@ def mdl_apply_modifiers_to_object(
         shp_key_names.append(block.name)
 
     # create receiving object that will contain all collapsed shapekeys
-    obj_copy = bpy_scn.scn_copy_object(obj, times=1, offset=0)[0]
+    obj_copy = bpy_scn.scn_copy_object(obj=obj)
     # bake in the shapekey
     mdl_apply_shape_key(obj_copy, 0)
     # apply the selected modifiers
     for entry in mdfr_list:
         mdl_apply_modifier(obj_copy, entry)
     # get the number of shapekeys on the original mesh
-    num_shapes = len(obj.data.shape_keys.key_blocks)
+    num_shps = len(obj.data.shape_keys.key_blocks)
 
     # create a copy for each blendshape and transfer it to the obj_copy one after the other
     # start the loop at 1 so we skip the base shapekey
-    for i in range(1, num_shapes):
+    for i in range(1, num_shps):
         # copy of baseobject / blendshape donor
-        blendshape = bpy_scn.scn_copy_object(obj, times=1, offset=0)[0]
+        bs = bpy_scn.scn_copy_object(obj=obj)
         # bake shapekey
-        mdl_apply_shape_key(blendshape, i)
+        mdl_apply_shape_key(bs, i)
         # # apply the selected modifiers
         for entry in mdfr_list:
-            mdl_apply_modifier(blendshape, entry)
+            mdl_apply_modifier(bs, entry)
 
         # remove all the other modifiers
         # they are not needed the obj_copy object has them
-        mdl_remove_modifiers(blendshape)
+        mdl_remove_modifiers(bs)
 
         # add the copy as a blendshape to the obj_copy
-        mdl_add_objects_as_shape_keys(obj_copy, [blendshape])
+        mdl_add_objects_as_shape_keys(obj_copy, [bs])
 
         # restore the shapekey name
         obj_copy.data.shape_keys.key_blocks[i].name = shp_key_names[i]
 
         # delete the blendshape donor and its mesh datablock (save memory)
-        mesh_data = blendshape.data
-        bpy.data.objects.remove(blendshape)
+        mesh_data = bs.data
+        bpy.data.objects.remove(bs)
         bpy.data.meshes.remove(mesh_data)
 
     # delete the original and its mesh data
