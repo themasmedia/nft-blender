@@ -5,8 +5,17 @@ NFT Blender - PY - UTIL
 
 """
 
+import copy
 import functools
 import logging
+
+
+def util_copy(
+    compound_obj: object,
+    deep: bool = False,
+):
+    """"""
+    return copy.deepcopy(compound_obj) if deep else copy.copy(compound_obj)
 
 
 def util_get_attr_recur(obj, attr, *args):
