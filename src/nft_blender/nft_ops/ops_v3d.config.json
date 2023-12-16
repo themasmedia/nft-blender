@@ -1,0 +1,62 @@
+{
+  "annotation": {
+    "annotation": {
+      "description": "Use as annotation",
+      "default": true
+    },
+    "contents": {
+      "description": "Annotation text contents shown when clicked",
+      "default": ""
+    },
+    "id": {
+      "description": "HTML annotation element ID",
+      "default": ""
+    },
+    "index": {
+      "description": "Slide index to enable annotation visibility",
+      "default": 0,
+      "min": 0,
+      "max": 10,
+      "soft_min": 0,
+      "soft_max": 10,
+      "step": 1
+    },
+    "persistTo": {
+      "description": "Slide index to persist to for annotation visibility",
+      "default": 0,
+      "min": 0,
+      "max": 10,
+      "soft_min": 0,
+      "soft_max": 10,
+      "step": 1
+    },
+    "symbol": {
+      "description": "Annotation symbol text",
+      "default": ""
+    }
+  },
+  "material": {
+    "index": {
+      "description": "Slide index to enable material visibility",
+      "default": 0,
+      "min": 0,
+      "max": 10,
+      "soft_min": 0,
+      "soft_max": 10,
+      "step": 1
+    },
+    "persistTo": {
+      "description": "Slide index to persist to for material visibility",
+      "default": 0,
+      "min": 0,
+      "max": 10,
+      "soft_min": 0,
+      "soft_max": 10,
+      "step": 1
+    },
+    "toggle": {
+      "description": "Material can be toggled",
+      "default": false
+    }
+  }
+}
