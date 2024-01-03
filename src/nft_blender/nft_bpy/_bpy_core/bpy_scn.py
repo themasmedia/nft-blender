@@ -8,6 +8,7 @@ NFT Blender - BPY - SCN
 import typing
 
 import bpy
+import idprop
 
 
 def scn_copy_object(
@@ -64,6 +65,33 @@ def scn_duplicate_object(
     scn_select_items(items=[dup_obj])
 
     return dup_obj
+
+
+def scn_edit_custom_props(
+    target,
+    prop_data: dict = {},
+    remove_extra: bool = True,
+    update_existing: bool = True,
+) -> None:
+    """TODO"""
+    if remove_extra:
+        target_keys = list(target.keys())
+        extra_keys = (
+            k for k in target_keys if k not in prop_data and \
+            not isinstance(target[k], idprop.types.IDPropertyGroup)
+        )
+        for extra_k in extra_keys:
+            target.pop(extra_k)
+
+    for prop_k, prop_v in prop_data.items():
+        if prop_k not in target:
+            target[prop_k] = prop_v['default']
+
+        target.id_properties_ensure()  # Make sure the manager is updated
+        prop_manager = target.id_properties_ui(prop_k)
+
+        if update_existing:
+            prop_manager.update(**prop_v)
 
 
 def scn_link_objects_to_collection(

@@ -10,8 +10,8 @@ import pathlib
 import typing
 
 import bpy
-import idprop
 
+from nft_blender.nft_bpy._bpy_core import bpy_scn
 from nft_blender.nft_py import py_util
 
 
@@ -29,35 +29,15 @@ def v3d_add_custom_props(
     """TODO"""
     
     for obj in objs:
-        targets = []
+
+        obj_prop_data = V3D_CONFIG_DATA['object']
         obj_data = py_util.util_get_attr_recur(obj, 'data')
-        obj_mtls = py_util.util_get_attr_recur(obj, 'data.materials')
-        
         if obj_data is None:
-            target_prop_data = V3D_CONFIG_DATA['annotation']
-            targets.append(obj)
+            obj_prop_data.update(V3D_CONFIG_DATA['annotation'])
+        bpy_scn.scn_edit_custom_props(obj, obj_prop_data, remove_extra, update_existing)
         
-        elif obj_mtls is not None:
-            target_prop_data = V3D_CONFIG_DATA['material']
-            targets.extend(list(obj_mtls))
-            
-        for target in targets:
-
-            if remove_extra:
-                extra_keys = (
-                    k for k in target.keys() if k not in target_prop_data and \
-                    not isinstance(target[k], idprop.types.IDPropertyGroup)
-                )
-                for extra_k in extra_keys:
-                    target.pop(extra_k)
-
-            for prop_k, prop_v in target_prop_data.items():
-                if prop_k not in target:
-                    target[prop_k] = prop_v['default']
-
-                target.id_properties_ensure()  # Make sure the manager is updated
-                prop_manager = target.id_properties_ui(prop_k)
-
-                if update_existing:
-                    prop_manager.update(**prop_v)
-
+        obj_mtls = py_util.util_get_attr_recur(obj, 'data.materials')
+        if obj_mtls is not None:
+            mtl_prop_data = V3D_CONFIG_DATA['material']
+            for mtl in obj_mtls:
+                bpy_scn.scn_edit_custom_props(mtl, mtl_prop_data, remove_extra, update_existing)

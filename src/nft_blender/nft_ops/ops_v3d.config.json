@@ -4,18 +4,14 @@
       "description": "Use as annotation",
       "default": true
     },
-    "contents": {
-      "description": "Annotation text contents shown when clicked",
-      "default": ""
-    },
     "id": {
       "description": "HTML annotation element ID",
-      "default": ""
+      "default": "annotation-"
     },
     "index": {
       "description": "Slide index to enable annotation visibility",
       "default": 0,
-      "min": 0,
+      "min": -1,
       "max": 10,
       "soft_min": 0,
       "soft_max": 10,
@@ -24,22 +20,26 @@
     "persistTo": {
       "description": "Slide index to persist to for annotation visibility",
       "default": 0,
-      "min": 0,
+      "min": -1,
       "max": 10,
       "soft_min": 0,
       "soft_max": 10,
       "step": 1
-    },
-    "symbol": {
-      "description": "Annotation symbol text",
-      "default": ""
     }
   },
   "material": {
+    "default": {
+      "description": "Use as default Material if swappable",
+      "default": false
+    },
+    "id": {
+      "description": "Associated HTML element ID",
+      "default": ""
+    },
     "index": {
       "description": "Slide index to enable material visibility",
       "default": 0,
-      "min": 0,
+      "min": -1,
       "max": 10,
       "soft_min": 0,
       "soft_max": 10,
@@ -48,15 +48,29 @@
     "persistTo": {
       "description": "Slide index to persist to for material visibility",
       "default": 0,
-      "min": 0,
+      "min": -1,
       "max": 10,
       "soft_min": 0,
       "soft_max": 10,
       "step": 1
     },
-    "toggle": {
-      "description": "Material can be toggled",
+    "swap": {
+      "description": "Material can be swapped with default Material",
       "default": false
+    },
+    "toggle": {
+      "description": "Material can be toggled on and off",
+      "default": false
+    }
+  },
+  "object": {
+    "animationDuration": {
+      "description": "Animation frame durations (order: on-enter, on-demand, on-idle, on-exit)",
+      "default": [0, 0, 0, 0]
+    },
+    "animationObject": {
+      "description": "Object to source animation from",
+      "default": ""
     }
   }
 }
