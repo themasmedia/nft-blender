@@ -186,7 +186,7 @@
           "global_scale": 1.0,
           "object_types": ["ARMATURE", "EMPTY", "MESH"],
           "mesh_smooth_type": "FACE",
-          "path_mode": "AUTO",
+          "path_mode": "COPY",
           "primary_bone_axis": "Y",
           "secondary_bone_axis": "X",
           "use_active_collection": true,

@@ -68,8 +68,8 @@
       "description": "Animation frame durations (order: on-enter, on-demand, on-idle, on-exit)",
       "default": [0, 0, 0, 0]
     },
-    "animationObject": {
-      "description": "Object to source animation from",
+    "animationName": {
+      "description": "Name of the animated object to source animation from",
       "default": ""
     }
   }
