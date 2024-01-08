@@ -2,11 +2,11 @@
   "annotation": {
     "annotation": {
       "description": "Use as annotation",
-      "default": true
+      "default": false
     },
     "id": {
       "description": "HTML annotation element ID",
-      "default": "annotation-"
+      "default": ""
     },
     "index": {
       "description": "Slide index to enable annotation visibility",
@@ -64,13 +64,17 @@
     }
   },
   "object": {
-    "animationDuration": {
-      "description": "Animation frame durations (order: on-enter, on-demand, on-idle, on-exit)",
-      "default": [0, 0, 0, 0]
+    "animationSubClips": {
+      "description": "Animation sub-clip frame durations (order: rest-pose, on-enter, on-demand, on-idle, on-exit)",
+      "default": [1, 0, 0, 0, 0]
     },
     "animationName": {
       "description": "Name of the animated object to source animation from",
       "default": ""
+    },
+    "scaleToCam": {
+      "description": "Object size will appear the same, regardless of distance from camera",
+      "default": false
     }
   }
 }

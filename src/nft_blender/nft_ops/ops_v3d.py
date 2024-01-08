@@ -5,6 +5,7 @@ NFT Blender - OPS - Verge3D
 
 """
 
+import copy
 import json
 import pathlib
 import typing
@@ -30,14 +31,14 @@ def v3d_add_custom_props(
     
     for obj in objs:
 
-        obj_prop_data = V3D_CONFIG_DATA['object']
+        obj_prop_data = copy.copy(V3D_CONFIG_DATA['object'])
         obj_data = py_util.util_get_attr_recur(obj, 'data')
         if obj_data is None:
-            obj_prop_data.update(V3D_CONFIG_DATA['annotation'])
+            obj_prop_data.update(copy.copy(V3D_CONFIG_DATA['annotation']))
         bpy_scn.scn_edit_custom_props(obj, obj_prop_data, remove_extra, update_existing)
         
         obj_mtls = py_util.util_get_attr_recur(obj, 'data.materials')
         if obj_mtls is not None:
-            mtl_prop_data = V3D_CONFIG_DATA['material']
+            mtl_prop_data = copy.copy(V3D_CONFIG_DATA['material'])
             for mtl in obj_mtls:
                 bpy_scn.scn_edit_custom_props(mtl, mtl_prop_data, remove_extra, update_existing)
