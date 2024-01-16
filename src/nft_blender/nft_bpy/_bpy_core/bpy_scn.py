@@ -114,7 +114,7 @@ def scn_link_objects_to_collection(
             usr_cols = [usr_col for usr_col in obj.users_collection if usr_col != col]
             for usr_col in usr_cols:
                 if obj.name in usr_col.objects:
-                    col.objects.unlink(obj)
+                    usr_col.objects.unlink(obj)
 
 
 def scn_get_child_layer_collections(
@@ -197,7 +197,7 @@ def scn_get_view_layer_collections(
 
 
 def scn_select_items(
-    items: typing.Iterable,
+    items: typing.Iterable = (),
     active_obj: bpy.types.Object = None,
     mode: str = 'OBJECT'
 ) -> typing.Tuple[list, bpy.types.Object]:
