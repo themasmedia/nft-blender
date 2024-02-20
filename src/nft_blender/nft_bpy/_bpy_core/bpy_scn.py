@@ -54,14 +54,20 @@ def scn_create_and_link_new_scene(
 
 def scn_duplicate_object(
     obj: bpy.types.Object,
-    name:str = ''
+    name: str = '',
+    instance: bool = False
 ) -> bpy.types.Object:
     """TODO"""
     scn_select_items(items=[obj])
     bpy.ops.object.duplicate(linked=False)
     dup_obj = bpy.context.object
+
     if name:
         dup_obj.name = name
+
+    if instance:
+        dup_obj.data = obj.data
+
     scn_select_items(items=[dup_obj])
 
     return dup_obj
