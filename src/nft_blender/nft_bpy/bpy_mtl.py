@@ -271,7 +271,7 @@ def mtl_swap_materials_at_indexes(
         index1 = obj.active_material_index
     
     if index2 < 0:
-        index2 = total_mtl_slots - 1
+        index2 = index1
 
     index1_mtl = obj.material_slots[index1].material
     index2_mtl = obj.material_slots[index2].material

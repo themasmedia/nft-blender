@@ -33,13 +33,16 @@ with ops_io_config_file_path.open('r', encoding='UTF-8') as readfile:
 
 def io_resize_images_for_object(
     obj: bpy.types.Object,
-    dimensions: tuple = (0, 0),
-    rename_with_suffix: str = '',
+    scale_factor: float = 1.0,
+    minimum_dimensions: tuple = (0, 0),
+    # rename_format: str = '<name>_<width>x<height>',
     reset: bool = False,
-) -> None:
+) -> list:
     """"""
+    #
     images = []
 
+    #
     mtls = bpy_mtl.mtl_get_mtls_from_obj(obj=obj)
     for mtl in mtls:
 
@@ -53,29 +56,35 @@ def io_resize_images_for_object(
         obj=obj,
         input_types=(bpy.types.ImageTexture,)
     ).values()
-    images.extend(img_tex.image for img_tex in img_texs if img_tex.image is not None)
 
+    images.extend(img_tex.image for img_tex in img_texs if img_tex.image is not None)
     images = list(set(images))
 
+    #
     for img in images:
 
         if reset:
             img.reload()
         
         # 
-        else:
+        elif scale_factor != 1.0:
+            scale_w, scale_h = int(img.size[0] * scale_factor), int(img.size[1] * scale_factor)
+            dimensions = (max((scale_w, minimum_dimensions[0])), max((scale_h, minimum_dimensions[1])))
             if dimensions[0] != img.size[0] or dimensions[1] != img.size[1]:
+                # Set image width & height scale.
                 img.scale(dimensions[0], dimensions[1])
+    
+    return images
 
-        # Rename image file
-        if rename_with_suffix:
+    # Rename image file
+    if rename_with_suffix:
 
-            # Factor in Image names that have file suffixes before renaming.
-            img_file_name = pathlib.Path(img.name)
+        # Factor in Image names that have file suffixes before renaming.
+        img_file_name = pathlib.Path(img.name)
 
-            # Rename the Node if the Node's name doesn't already end with the given suffix.
-            if not img_file_name.stem.endswith(rename_with_suffix):
-                img.name = f'{img_file_name.stem}{rename_with_suffix}{img_file_name.suffix}'
+        # Rename the Node if the Node's name doesn't already end with the given suffix.
+        if not img_file_name.stem.endswith(rename_with_suffix):
+            img.name = f'{img_file_name.stem}{rename_with_suffix}{img_file_name.suffix}'
 
 
 def io_save_mtl_images(
@@ -368,7 +377,7 @@ class IOExporter(object):
     def optimize(
         self,
         lyr_col_names: typing.Iterable[str] = (),
-        opt_img_size: typing.Tuple[bool, typing.Tuple[int, int]] = (True, (0, 0)),
+        opt_img_size: typing.Tuple[float, typing.Tuple[int, int]] = (1.0, (0, 0)),
         opt_mtl_slots: typing.Tuple[bool, None] = (True, None),
         opt_num_objs: typing.Tuple[bool, str] = (True, ''),
     ) -> None:
@@ -394,17 +403,22 @@ class IOExporter(object):
                     bpy_mtl.mtl_remove_unused_material_slots(obj=mesh_obj)
 
                 # Resize image(s).
-                if opt_img_size[0]:
+                if opt_img_size[0] != 1.0:
 
-                    name_suffix = ''
-                    if opt_img_size[1][0] and opt_img_size[1][1]:
-                        name_suffix = f'_{opt_img_size[1][0]}x{opt_img_size[1][1]}'
-
-                    io_resize_images_for_object(
+                    images = io_resize_images_for_object(
                         obj=mesh_obj,
-                        dimensions=opt_img_size[1],
-                        rename_with_suffix=name_suffix,
+                        scale_factor=opt_img_size[0],
+                        minimum_dimensions=opt_img_size[1]
                     )
+
+                    for img in images:
+                        # Factor in Image names that have file suffixes before renaming.
+                        img_file_path = pathlib.Path(img.name)
+                        img_file_name = f'{img_file_path.stem}_{img.size[0]}x{img.size[1]}{img_file_path.suffix}'
+
+                        # Rename the Node if the Node's name doesn't already end with the given suffix.
+                        img.name = img_file_name if img.name != img_file_name else img.name
+
 
                 # Copy each Mesh Object in the Layer Collection.
                 if opt_num_objs[0]:
@@ -455,8 +469,8 @@ EXPORT_ARGS_OPTIONS = {
             'mtl_index_pairs': (),
             # Material property value overrides for all Materials applied to Mesh Objects in the Collection.
             'mtl_props': {},
-            # Scale multiplier to apply to image dimensions in the Object's Material(s) node(s).
-            'opt_img_size': (False, (0, 0)),
+            # Scale multiplier to apply to image dimensions (width, height) in the Object's Material(s) node(s).
+            'opt_img_size': (1.0, (0, 0)),
             #
             'opt_mtl_slots': (False, None),
             #
@@ -480,7 +494,7 @@ EXPORT_ARGS_OPTIONS = {
             'mdfr_types': (
                 bpy.types.TriangulateModifier,
             ),
-            'opt_img_size': (True, (1024, 1024)),
+            'opt_img_size': (0.5, (1024, 1024)),
             'opt_mtl_slots': (True, None),
             'opt_num_objs': (True, 'GEO_BlueCat_001'),
             'shp_keys': False,
@@ -500,7 +514,7 @@ EXPORT_ARGS_OPTIONS = {
             ),
             'mtl_index_pairs': ((1, 5)),
             'mtl_props': {},
-            'opt_img_size': (True, (2048, 2048)),
+            'opt_img_size': (1.0, (2048, 2048)),
             'opt_mtl_slots': (True, None),
             'opt_num_objs': (False, ''),
             'shp_keys': True,
@@ -519,7 +533,7 @@ EXPORT_ARGS_OPTIONS = {
             'mtl_props': {
                 'vrm_addon_extension.mtoon1.extensions.vrmc_materials_mtoon.outline_width_mode': 'worldCoordinates',
             },
-            'opt_img_size': (True, (1024, 1024)),
+            'opt_img_size': (0.5, (1024, 1024)),
             'opt_mtl_slots': (True, None),
             'opt_num_objs': (True, 'GEO_BlueCat_001'),
             'shp_keys': False,
@@ -538,7 +552,7 @@ EXPORT_ARGS_OPTIONS = {
             'mtl_props': {
                 'vrm_addon_extension.mtoon1.extensions.vrmc_materials_mtoon.outline_width_mode': 'worldCoordinates',
             },
-            'opt_img_size': (True, (1024, 1024)),
+            'opt_img_size': (0.5, (1024, 1024)),
             'opt_mtl_slots': (True, None),
             'opt_num_objs': (True, 'GEO_BlueCat_001'),
             'shp_keys': False,
@@ -558,7 +572,7 @@ EXPORT_ARGS_OPTIONS = {
             'mtl_props': {
                 'vrm_addon_extension.mtoon1.extensions.vrmc_materials_mtoon.outline_width_mode': 'worldCoordinates',
             },
-            'opt_img_size': (True, (2048, 2048)),
+            'opt_img_size': (1.0, (2048, 2048)),
             'opt_mtl_slots': (True, None),
             'opt_num_objs': (False, ''),
             'shp_keys': True,
@@ -578,7 +592,7 @@ EXPORT_ARGS_OPTIONS = {
             'mtl_props': {
                 'vrm_addon_extension.mtoon1.extensions.vrmc_materials_mtoon.outline_width_mode': 'worldCoordinates',
             },
-            'opt_img_size': (True, (2048, 2048)),
+            'opt_img_size': (1.0, (2048, 2048)),
             'opt_mtl_slots': (True, None),
             'opt_num_objs': (False, ''),
             'shp_keys': True,
@@ -609,6 +623,22 @@ EXPORT_ARGS_OPTIONS = {
     'LD3D': {
 
         #
+        'Virtual Avatar (Lo-Res Nifty Island)': {
+            'copy_imgs': False,
+            'lyr_cols': [],
+            'mdfr_types': (
+                bpy.types.DisplaceModifier,
+                bpy.types.TriangulateModifier,
+            ),
+            'mtl_index_pairs': (),
+            'mtl_props': {},
+            'opt_img_size': (0.25, (1024, 1024)),
+            'opt_mtl_slots': (True, None),
+            'opt_num_objs': (True, 'GEO_Lucky_001'),
+            'shp_keys': False,
+        },
+
+        #
         'Virtual Avatar (Hi-Res Nifty Island)': {
             'copy_imgs': False,
             'lyr_cols': [],
@@ -619,10 +649,10 @@ EXPORT_ARGS_OPTIONS = {
             ),
             'mtl_index_pairs': (),
             'mtl_props': {},
-            'opt_img_size': (True, (2048, 2048), 0.5),
+            'opt_img_size': (0.5, (1024, 1024)),
             'opt_mtl_slots': (True, None),
-            'opt_num_objs': (False, ''),
-            'shp_keys': True,
+            'opt_num_objs': (True, 'GEO_Lucky_001'),
+            'shp_keys': False,
         },
 
     },

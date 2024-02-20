@@ -4,13 +4,21 @@
       "description": "Use as annotation",
       "default": false
     },
+    "cameraAim": {
+      "description": "Use as camera aim target",
+      "default": false
+    },
+    "cameraPosition": {
+      "description": "Use as camera position target",
+      "default": false
+    },
     "id": {
       "description": "HTML annotation element ID",
       "default": ""
     },
     "index": {
-      "description": "Slide index to enable annotation visibility",
-      "default": 0,
+      "description": "Slide index to enable annotation visibility or camera aim/position",
+      "default": -1,
       "min": -1,
       "max": 10,
       "soft_min": 0,
@@ -18,8 +26,8 @@
       "step": 1
     },
     "persistTo": {
-      "description": "Slide index to persist to for annotation visibility",
-      "default": 0,
+      "description": "Slide index to persist to for annotation visibility or camera aim/position",
+      "default": -1,
       "min": -1,
       "max": 10,
       "soft_min": 0,
@@ -38,7 +46,7 @@
     },
     "index": {
       "description": "Slide index to enable material visibility",
-      "default": 0,
+      "default": -1,
       "min": -1,
       "max": 10,
       "soft_min": 0,
@@ -47,7 +55,7 @@
     },
     "persistTo": {
       "description": "Slide index to persist to for material visibility",
-      "default": 0,
+      "default": -1,
       "min": -1,
       "max": 10,
       "soft_min": 0,
