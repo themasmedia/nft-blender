@@ -149,12 +149,17 @@ class IOExporter(object):
     def _set_layer_collections(self, lyr_cols: typing.Sequence = ()) -> dict:
         """"""
         _lyr_cols = {lyr_col.name: {} for lyr_col in lyr_cols}
+        col_name_pattern = re.compile('^(?P<prefix>[A-Z1-9]{3,4})?_?(?P<descriptor>\w+)$')
 
         for lyr_col in lyr_cols:
 
             #
             _lyr_cols[lyr_col.name]['lyr_col'] = lyr_col
             _lyr_cols[lyr_col.name]['col'] = lyr_col.collection
+
+            #
+            col_name_match = col_name_pattern.match(lyr_col.name)
+            _lyr_cols[lyr_col.name]['name_grps'] = col_name_match.groups()
 
             # Detect the Armature Object for the Layer Collection, if there is one (and only one).
             armature_objs = [obj for obj in lyr_col.collection.objects if isinstance(obj.data, bpy.types.Armature)]
@@ -221,8 +226,8 @@ class IOExporter(object):
             lyr_col = self.layer_collections[lyr_col_name]['lyr_col']
             lyr_col.exclude = False
 
-            # Assign the VRM add-on Blendshaoe Proxy data to the shape_key_master variable.
-            armature_obj = self.layer_collections[lyr_col_name]['armature_obj']
+            # Get VRM shape key data.
+            vrm_shape_key_data = self.get_vrm_shape_key_data(lyr_col_name=lyr_col_name)
                 
             #
             mesh_objs = self.layer_collections[lyr_col_name]['mesh_objs']
@@ -251,23 +256,6 @@ class IOExporter(object):
                 # Recreate Shape Keys after Modifiers are applied.
                 if keep_shp_keys:
 
-                    shape_key_master = None
-                    if armature_obj is not None:
-                        shape_key_master = py_util.util_get_attr_recur(
-                            armature_obj, 'data.vrm_addon_extension.vrm0.blend_shape_master'
-                        )
-
-                    # Iterate through the VRM Blendshape groups and record the bind data, which becomes lost after the Modifiers are applied.
-                    shape_key_data = {}
-                    if shape_key_master is not None:
-                        for i, shape_key_grp in enumerate(shape_key_master.blend_shape_groups):
-                            for j, bind in enumerate(shape_key_grp.binds):
-                                if bind.mesh.mesh_object_name == mesh_obj_name:
-                                    shape_key_data[i] = {
-                                        'index': j,
-                                        'value': bind.index
-                                    }
-
                     #
                     mesh_obj_index = self.layer_collections[lyr_col_name]['mesh_objs'].index(mesh_obj)
                     self.layer_collections[lyr_col_name]['mesh_objs'].pop(mesh_obj_index)
@@ -282,18 +270,23 @@ class IOExporter(object):
                     self.layer_collections[lyr_col_name]['mesh_objs'].insert(mesh_obj_index, mesh_obj)
                     
                     # Reconnect the Shape Keys to the VRM Blendshape groups with the same bind data.
-                    for shape_key_grp_index, shape_key_grp_data in shape_key_data.items():
-                        shape_key_bind = shape_key_master.blend_shape_groups[shape_key_grp_index].binds[shape_key_grp_data['index']]
-                        shape_key_bind.mesh.mesh_object_name = mesh_obj_name
-                        shape_key_bind.index = shape_key_grp_data['value']
+                    for shape_key_grp_index, shape_key_grp_data in vrm_shape_key_data['groups'].items():
+                        if shape_key_grp_data['mesh_obj_name'] == mesh_obj_name:
+                            shape_key_bind = vrm_shape_key_data['master'].blend_shape_groups[shape_key_grp_index].binds[shape_key_grp_data['index']]
+                            shape_key_bind.mesh.mesh_object_name = mesh_obj_name
+                            shape_key_bind.index = shape_key_grp_data['value']
 
                 # Remove Shape Keys before applying Modifiers.
                 else:
+
+                    # Get the Armature Object for the Collection, if it has one.
+                    armature_obj = self.layer_collections[lyr_col_name]['armature_obj']
+                    vrm_armature = armature_obj.data if armature_obj else None
                     
                     #  Clear all Shape Keys for the Mesh Object.
                     bpy_mdl.mdl_clear_shape_keys(
                         obj=mesh_obj,
-                        vrm_armature=armature_obj.data,
+                        vrm_armature=vrm_armature,
                     )
                     
                     # Apply the Modifiers in mdfr_list
@@ -323,7 +316,8 @@ class IOExporter(object):
         for lyr_col_name, lyr_col_data in self.layer_collections.items():
 
             #
-            export_file_stem = f'{export_file_prefix}_{lyr_col_name}'.strip('_')
+            export_file_descriptor = lyr_col_data['name_grps'][1]
+            export_file_stem = f'{export_file_prefix}_{export_file_descriptor}'.strip('_')
             export_file_path = self.export_dir_path.joinpath(export_file_stem).with_suffix(export_file_suffix)
             export_file_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -372,6 +366,41 @@ class IOExporter(object):
 
             # Exclude the current child Layer Collection.
             lyr_col_data['lyr_col'].exclude = True
+    
+    def get_vrm_shape_key_data(
+            self,
+            lyr_col_name: str
+        ):
+        """TODO"""
+
+        # Initialize the VRM shape key data object.
+        vrm_shape_key_data = {
+            'groups': {},
+            'master': None
+        }
+
+        # Assign the VRM add-on Blendshaoe Proxy data to the shape_key_master variable.
+        armature_obj = self.layer_collections[lyr_col_name]['armature_obj']
+        mesh_obj_names = [
+            mesh_obj.name for mesh_obj in self.layer_collections[lyr_col_name]['mesh_objs']
+        ]
+        if armature_obj is not None:
+            vrm_shape_key_data['master'] = py_util.util_get_attr_recur(
+                armature_obj, 'data.vrm_addon_extension.vrm0.blend_shape_master'
+            )
+
+        # Iterate through the VRM Blendshape groups and record the bind data, which becomes lost after the Modifiers are applied.
+        if vrm_shape_key_data['master'] is not None:
+            for i, shape_key_grp in enumerate(vrm_shape_key_data['master'].blend_shape_groups):
+                for j, bind in enumerate(shape_key_grp.binds):
+                    if bind.mesh.mesh_object_name in mesh_obj_names:
+                        vrm_shape_key_data['groups'][i] = {
+                            'index': j,
+                            'mesh_obj_name': bind.mesh.mesh_object_name,
+                            'value': bind.index
+                        }
+        
+        return vrm_shape_key_data
 
 
     def optimize(
@@ -380,6 +409,7 @@ class IOExporter(object):
         opt_img_size: typing.Tuple[float, typing.Tuple[int, int]] = (1.0, (0, 0)),
         opt_mtl_slots: typing.Tuple[bool, None] = (True, None),
         opt_num_objs: typing.Tuple[bool, str] = (True, ''),
+        opt_objs_name_prefix: str = 'GEO_',
     ) -> None:
         """TODO"""
 
@@ -435,10 +465,19 @@ class IOExporter(object):
             #
             if copied_objs:
 
+                # Get VRM shape key data.
+                vrm_shape_key_data = self.get_vrm_shape_key_data(lyr_col_name=lyr_col_name)
+
+                # If no name for the joined object is given, use the descriptor from the Collection name.
+                joined_obj_name = opt_num_objs[1]
+                if not opt_num_objs[1]:
+                    name_descriptor = self.layer_collections[lyr_col_name]['name_grps'][1]
+                    joined_obj_name = f'{opt_objs_name_prefix}{name_descriptor}'
+
                 # Join copied Mesh(es) into a single Mesh Object.
                 joined_obj = bpy_mdl.mdl_join_objects(
                     objects=copied_objs,
-                    new_name=opt_num_objs[1],
+                    new_name=joined_obj_name,
                 )
                 bpy_scn.scn_link_objects_to_collection(
                     col=col,
@@ -449,6 +488,12 @@ class IOExporter(object):
 
                 # Update self.layer_collections
                 self.layer_collections[lyr_col_name]['mesh_objs'] = [joined_obj]
+
+                # Reconnect the Shape Keys of the new single Mesh Object to the VRM Blendshape groups with the same bind data.
+                for shape_key_grp_index, shape_key_grp_data in vrm_shape_key_data['groups'].items():
+                    shape_key_bind = vrm_shape_key_data['master'].blend_shape_groups[shape_key_grp_index].binds[shape_key_grp_data['index']]
+                    shape_key_bind.mesh.mesh_object_name = joined_obj.name
+                    shape_key_bind.index = shape_key_grp_data['value']
 
 
 #
@@ -619,6 +664,80 @@ EXPORT_ARGS_OPTIONS = {
 
     },
 
+    'EDSN': {
+
+        # GLB: Multiple PBR BDSF material(s). Multiple lo-res texture(s). Single triangulated mesh.
+        # Apps: MSquared.
+        # Software: Unreal Engine 5.
+        'M2 Character (Lo-Res)': {
+            'copy_imgs': False,
+            'lyr_cols': [],
+            'mdfr_types': (
+                bpy.types.TriangulateModifier,
+            ),
+            'mtl_index_pairs': (),
+            'mtl_props': {},
+            'opt_img_size': (0.5, (1024, 1024)),
+            'opt_mtl_slots': (True, None),
+            'opt_num_objs': (True, None),
+            'shp_keys': True,
+        },
+
+        # GLB: Multiple PBR BDSF material(s). Multiple lo-res texture(s). Single triangulated mesh.
+        # Apps: MSquared.
+        # Software: Unreal Engine 5.
+        'M2 Model (Lo-Res)': {
+            'copy_imgs': False,
+            'lyr_cols': [],
+            'mdfr_types': (
+                bpy.types.TriangulateModifier,
+            ),
+            'mtl_index_pairs': (),
+            'mtl_props': {},
+            'opt_img_size': (0.5, (1024, 1024)),
+            'opt_mtl_slots': (True, None),
+            'opt_num_objs': (True, None),
+            'shp_keys': False,
+        },
+
+        # GLB: Multiple PBR BDSF material(s). Multiple hi-res texture(s). Single smoothed/triangulated meshes. Blend Shapes.
+        # Apps: MSquared.
+        # Software: Unreal Engine 5.
+        'M2 Character (Hi-Res)': {
+            'copy_imgs': False,
+            'lyr_cols': [],
+            'mdfr_types': (
+                bpy.types.SubsurfModifier,
+                bpy.types.TriangulateModifier,
+            ),
+            'mtl_index_pairs': (),
+            'mtl_props': {},
+            'opt_img_size': (1.0, (2048, 2048)),
+            'opt_mtl_slots': (True, None),
+            'opt_num_objs': (True, None),
+            'shp_keys': True,
+        },
+
+        # GLB: Multiple PBR BDSF material(s). Multiple hi-res texture(s). Single smoothed/triangulated meshes. Blend Shapes.
+        # Apps: MSquared.
+        # Software: Unreal Engine 5.
+        'M2 Model (Hi-Res)': {
+            'copy_imgs': False,
+            'lyr_cols': [],
+            'mdfr_types': (
+                bpy.types.SubsurfModifier,
+                bpy.types.TriangulateModifier,
+            ),
+            'mtl_index_pairs': (),
+            'mtl_props': {},
+            'opt_img_size': (1.0, (2048, 2048)),
+            'opt_mtl_slots': (True, None),
+            'opt_num_objs': (True, None),
+            'shp_keys': False,
+        },
+
+    },
+
     # VRM: Multiple diffuse BDSF/MToon material(s). Multiple hi-res texture(s). Single smoothed/triangulated meshe. Outline (via MToon, where supported).
     'LD3D': {
 
@@ -636,6 +755,23 @@ EXPORT_ARGS_OPTIONS = {
             'opt_mtl_slots': (True, None),
             'opt_num_objs': (True, 'GEO_Lucky_001'),
             'shp_keys': False,
+        },
+
+        #
+        'Virtual Avatar (Hi-Res)': {
+            'copy_imgs': False,
+            'lyr_cols': [],
+            'mdfr_types': (
+                bpy.types.DisplaceModifier,
+                bpy.types.SubsurfModifier,
+                bpy.types.TriangulateModifier,
+            ),
+            'mtl_index_pairs': (),
+            'mtl_props': {},
+            'opt_img_size': (0.5, (1024, 1024)),
+            'opt_mtl_slots': (True, None),
+            'opt_num_objs': (True, 'GEO_Lucky_001'),
+            'shp_keys': True,
         },
 
         #
