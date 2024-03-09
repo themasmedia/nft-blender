@@ -37,6 +37,10 @@ MODULES = {
         'reinstall': False,
         'specifier': 'p4python',
     },
+    'requests': {
+        'reinstall': False,
+        'specifier': 'requests',
+    },
     'stable_diffusion': {
         'reinstall': True,
         'specifier': 'git+https://github.com/lstein/stable-diffusion.git@main#egg=stable-diffusion',
