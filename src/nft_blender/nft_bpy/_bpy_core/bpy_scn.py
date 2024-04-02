@@ -100,6 +100,26 @@ def scn_edit_custom_props(
             prop_manager.update(**prop_v)
 
 
+def scn_get_instance_objects(
+    objs: typing.Iterable[bpy.types.Object] = ()
+):
+    """
+    Gets all instanced Curve and Mesh Objects in a given an array of Objects (defaults to all Objects in the active view layer).
+    """
+    obj_data_types = (bpy.types.Curve, bpy.types.Mesh)
+    objs = objs or (obj for obj in bpy.context.view_layer.objects if isinstance(obj.data, obj_data_types))
+    inst_objs = {}
+
+    for obj in objs:
+        scn_select_items(items=[obj])
+        bpy.ops.object.select_linked(type='OBDATA')
+        if len(bpy.context.selected_objects) > 1 and obj.data.name not in inst_objs:
+            inst_objs[obj.data.name] = sorted(bpy.context.selected_objects, key=lambda obj: obj.name)
+        scn_select_items(items=[])
+
+    return inst_objs
+
+
 def scn_link_objects_to_collection(
     col: bpy.types.Collection,
     objs: typing.Iterable[bpy.types.Object],
