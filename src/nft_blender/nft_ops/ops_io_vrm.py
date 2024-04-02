@@ -409,6 +409,7 @@ class IOExporter(object):
         opt_img_size: typing.Tuple[float, typing.Tuple[int, int]] = (1.0, (0, 0)),
         opt_mtl_slots: typing.Tuple[bool, None] = (True, None),
         opt_num_objs: typing.Tuple[bool, str] = (True, ''),
+        opt_objs_incl_instances: bool= False,
         opt_objs_name_prefix: str = 'GEO_',
     ) -> None:
         """TODO"""
@@ -424,6 +425,11 @@ class IOExporter(object):
             mesh_objs = py_util.util_copy(
                 compound_obj = self.layer_collections[lyr_col_name]['mesh_objs'],
             )
+
+            # If instanced Object(s) are to be exclusded from the optimization,
+            # get a list of all instanced Mesh Objects in the collection (use an empty list otherwise).
+            inst_obj_data = {} if opt_objs_incl_instances else bpy_scn.scn_get_instance_objects(mesh_objs) 
+            inst_objs = sum(inst_obj_data.values(), [])
 
             # Remove unused Material Slots from Object(s).
             for mesh_obj in mesh_objs:
@@ -452,6 +458,10 @@ class IOExporter(object):
 
                 # Copy each Mesh Object in the Layer Collection.
                 if opt_num_objs[0]:
+
+                    # Omit if instanced Object(s) are to be exclusded from the optimization,
+                    if (not opt_objs_incl_instances) and (mesh_obj in inst_objs):
+                        continue
 
                     copied_obj = bpy_scn.scn_copy_object(
                         obj=mesh_obj,
