@@ -102,7 +102,7 @@ def scn_edit_custom_props(
 
 def scn_get_instance_objects(
     objs: typing.Iterable[bpy.types.Object] = ()
-):
+) -> dict:
     """
     Gets all instanced Curve and Mesh Objects in a given an array of Objects (defaults to all Objects in the active view layer).
     """
@@ -114,33 +114,10 @@ def scn_get_instance_objects(
         scn_select_items(items=[obj])
         bpy.ops.object.select_linked(type='OBDATA')
         if len(bpy.context.selected_objects) > 1 and obj.data.name not in inst_objs:
-            inst_objs[obj.data.name] = sorted(bpy.context.selected_objects, key=lambda obj: obj.name)
+            inst_objs[obj.data.name] = sorted(bpy.context.selected_objects, key=lambda obj: (len(scn_get_hierarchy(obj)), obj.name))
         scn_select_items(items=[])
 
     return inst_objs
-
-
-def scn_link_objects_to_collection(
-    col: bpy.types.Collection,
-    objs: typing.Iterable[bpy.types.Object],
-    exclusive: bool = False,
-) -> None:
-    """
-    Links the given Object(s) to the given Collection.
-    """
-    # Iterate through the Objects
-    for obj in objs:
-
-        # Link the Object to the given Collection.
-        if obj.name not in col.objects:
-            col.objects.link(obj)
-
-        # If exclusive, unlink the Object from other Collections, if necessary.
-        if exclusive:
-            usr_cols = [usr_col for usr_col in obj.users_collection if usr_col != col]
-            for usr_col in usr_cols:
-                if obj.name in usr_col.objects:
-                    usr_col.objects.unlink(obj)
 
 
 def scn_get_child_layer_collections(
@@ -169,6 +146,22 @@ def scn_get_child_layer_collections(
     return child_layer_collections
 
 
+def scn_get_hierarchy(
+    obj: bpy.types.Object
+) -> typing.Tuple[bpy.types.Object]:
+    """
+    Generates a key that represents the object's hierarchy position.
+    The key is a tuple of parent names, starting from the root parent.
+    """
+    if obj.parent is None:
+        return (obj,)
+
+    #
+    else:
+        parent_key = scn_get_hierarchy(obj.parent)
+        return parent_key + (obj,)
+
+
 def scn_get_objects_of_type(
     obj_type: str,
     col_name: str = '',
@@ -181,7 +174,9 @@ def scn_get_objects_of_type(
     """
     col = bpy.data.collections.get(col_name)
     objs = col.all_objects if col is not None else bpy.data.objects
-    return [obj for obj in objs if obj.type == obj_type]
+    objs_of_type = [obj for obj in objs if obj.type == obj_type]
+
+    return sorted(objs_of_type, key=lambda obj: (len(scn_get_hierarchy(obj)), obj.name))
 
 
 def scn_get_selected_objects(
@@ -220,6 +215,29 @@ def scn_get_view_layer_collections(
     view_lyr_cols = _get_children(view_lyr.layer_collection)
 
     return view_lyr_cols
+
+
+def scn_link_objects_to_collection(
+    col: bpy.types.Collection,
+    objs: typing.Iterable[bpy.types.Object],
+    exclusive: bool = False,
+) -> None:
+    """
+    Links the given Object(s) to the given Collection.
+    """
+    # Iterate through the Objects
+    for obj in objs:
+
+        # Link the Object to the given Collection.
+        if obj.name not in col.objects:
+            col.objects.link(obj)
+
+        # If exclusive, unlink the Object from other Collections, if necessary.
+        if exclusive:
+            usr_cols = [usr_col for usr_col in obj.users_collection if usr_col != col]
+            for usr_col in usr_cols:
+                if obj.name in usr_col.objects:
+                    usr_col.objects.unlink(obj)
 
 
 def scn_select_items(

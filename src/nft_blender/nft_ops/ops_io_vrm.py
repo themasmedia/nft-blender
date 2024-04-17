@@ -303,7 +303,7 @@ class IOExporter(object):
         copy_imgs: bool = False,
         **export_settings
     ) -> None:
-        """"""
+        """TODO export each action as a separate glb"""
         #
         export_file_format = IO_CONFIG_DATA['export']['file_formats'][export_file_suffix]
         export_function = getattr(bpy.ops.export_scene, export_file_format)
