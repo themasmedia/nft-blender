@@ -26,22 +26,40 @@ def mdl_add_objects_as_shape_keys(
 def mdl_apply_modifier(
     obj: bpy.types.Object,
     mdfr: bpy.types.Modifier,
+    all_users: bool = False,
 ):
-    """ applies a specific modifier """
+    """ applies a specific modifier TODO: instanced data... """
+
+    if not obj.data:
+        return
+    
+    single_user = True if obj.data.users > 1 else False
+    inst_objs = bpy_scn.scn_get_instance_objects([obj]).get(obj.data.name, [])
 
     bpy_scn.scn_select_items(items=[obj])
-    bpy.ops.object.modifier_apply(modifier=mdfr.name)
+    bpy.ops.object.modifier_apply(
+        modifier=mdfr.name,
+        single_user=single_user
+    )
+
+    if all_users:
+        for inst_obj in inst_objs:
+            inst_obj.data = obj.data
 
 
 def mdl_apply_modifiers_to_object(
     obj,
     mdfr_list: typing.Iterable[bpy.types.Modifier],
+    all_users: bool = False,
 ) -> bpy.types.Object:
     """"""
 
+    if not mdfr_list:
+        return obj
+
     if not mdl_has_shape_keys(obj):
         for mdfr in mdfr_list:
-            mdl_apply_modifier(obj, mdfr)
+            mdl_apply_modifier(obj, mdfr, all_users)
 
         return obj
     
@@ -56,7 +74,7 @@ def mdl_apply_modifiers_to_object(
     mdl_apply_shape_key(obj_copy, 0)
     # apply the selected modifiers
     for entry in mdfr_list:
-        mdl_apply_modifier(obj_copy, entry)
+        mdl_apply_modifier(obj_copy, entry, all_users)
     # get the number of shapekeys on the original mesh
     num_shps = len(obj.data.shape_keys.key_blocks)
 
@@ -69,7 +87,7 @@ def mdl_apply_modifiers_to_object(
         mdl_apply_shape_key(bs, i)
         # # apply the selected modifiers
         for entry in mdfr_list:
-            mdl_apply_modifier(bs, entry)
+            mdl_apply_modifier(bs, entry, all_users)
 
         # remove all the other modifiers
         # they are not needed the obj_copy object has them

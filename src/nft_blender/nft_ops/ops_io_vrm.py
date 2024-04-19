@@ -167,7 +167,8 @@ class IOExporter(object):
             _lyr_cols[lyr_col.name]['armature_obj'] = armature_objs[0] if armature_objs else None
 
             # Create a list of all Mesh Objects in the Layer Collection.
-            mesh_objs = [obj for obj in lyr_col.collection.objects if isinstance(obj.data, bpy.types.Mesh)]
+            # mesh_objs = [obj for obj in lyr_col.collection.objects if isinstance(obj.data, bpy.types.Mesh)]
+            mesh_objs = bpy_scn.scn_get_objects_of_type('MESH', lyr_col.collection.name)
             _lyr_cols[lyr_col.name]['mesh_objs'] = mesh_objs
         
         return _lyr_cols
@@ -264,6 +265,7 @@ class IOExporter(object):
                     mesh_obj = bpy_mdl.mdl_apply_modifiers_to_object(
                         obj=mesh_obj,
                         mdfr_list=mdfr_list,
+                        all_users=mesh_obj.data.users > 1
                     )
 
                     # Update self.layer_collections to point to the new mesh_obj
@@ -288,10 +290,13 @@ class IOExporter(object):
                         obj=mesh_obj,
                         vrm_armature=vrm_armature,
                     )
-                    
+
                     # Apply the Modifiers in mdfr_list
-                    for mdfr in mdfr_list:
-                        bpy_mdl.mdl_apply_modifier(obj=mesh_obj, mdfr=mdfr)
+                    bpy_mdl.mdl_apply_modifiers_to_object(
+                        obj=mesh_obj,
+                        mdfr_list=mdfr_list,
+                        all_users=mesh_obj.data.users > 1
+                    )
 
             lyr_col.exclude = lyr_col_state
 
@@ -411,6 +416,8 @@ class IOExporter(object):
         opt_num_objs: typing.Tuple[bool, str] = (True, ''),
         opt_objs_incl_instances: bool= False,
         opt_objs_name_prefix: str = 'GEO_',
+        flatten_hierarchy: bool = True,
+        keep_inst_hierarchy: bool = True
     ) -> None:
         """TODO"""
 
@@ -423,7 +430,7 @@ class IOExporter(object):
             col = self.layer_collections[lyr_col_name]['col']
             copied_objs = []
             mesh_objs = py_util.util_copy(
-                compound_obj = self.layer_collections[lyr_col_name]['mesh_objs'],
+                compound_obj=self.layer_collections[lyr_col_name]['mesh_objs'],
             )
 
             # If instanced Object(s) are to be exclusded from the optimization,
@@ -455,7 +462,6 @@ class IOExporter(object):
                         # Rename the Node if the Node's name doesn't already end with the given suffix.
                         img.name = img_file_name if img.name != img_file_name else img.name
 
-
                 # Copy each Mesh Object in the Layer Collection.
                 if opt_num_objs[0]:
 
@@ -469,8 +475,9 @@ class IOExporter(object):
                     )
                     copied_objs.append(copied_obj)
 
-                    # Unlink the original Mesh Object(s) from the Layer Collection.
+                    # Unlink the original Mesh Object(s) from the Layer Collection and update self.layer_collections.
                     col.objects.unlink(mesh_obj)
+                    self.layer_collections[lyr_col_name]['mesh_objs'].remove(mesh_obj)
 
             #
             if copied_objs:
@@ -497,14 +504,36 @@ class IOExporter(object):
                 new_objs.append(joined_obj)
 
                 # Update self.layer_collections
-                self.layer_collections[lyr_col_name]['mesh_objs'] = [joined_obj]
+                self.layer_collections[lyr_col_name]['mesh_objs'].append(joined_obj)
 
                 # Reconnect the Shape Keys of the new single Mesh Object to the VRM Blendshape groups with the same bind data.
                 for shape_key_grp_index, shape_key_grp_data in vrm_shape_key_data['groups'].items():
                     shape_key_bind = vrm_shape_key_data['master'].blend_shape_groups[shape_key_grp_index].binds[shape_key_grp_data['index']]
                     shape_key_bind.mesh.mesh_object_name = joined_obj.name
                     shape_key_bind.index = shape_key_grp_data['value']
+            
+            # 
+            if flatten_hierarchy:
 
+                # Clear parent(s) for the Armature Object.
+                if self.layer_collections[lyr_col_name]['armature_obj']:
+                    bpy_scn.scn_clear_object_parent(self.layer_collections[lyr_col_name]['armature_obj'])
+
+                # Clear parent(s) for Mesh Objects (including/excluding instanced Object(s)).
+                if keep_inst_hierarchy:
+                    mesh_objs = (
+                        mesh_obj for mesh_obj in self.layer_collections[lyr_col_name]['mesh_objs'] if mesh_obj.data.users == 1
+                    )
+                else:
+                    mesh_objs = self.layer_collections[lyr_col_name]['mesh_objs']
+                for mesh_obj in mesh_objs:
+                    bpy_scn.scn_clear_object_parent(mesh_obj)
+
+                # Unlink Empty Object(s) that no longer have child Object(s).
+                for null_obj in bpy_scn.scn_get_objects_of_type('EMPTY', col.name):
+                    child_objs = [obj for obj in null_obj.children if col in obj.users_collection]
+                    if len(child_objs) < 1:
+                        col.objects.unlink(null_obj)
 
 #
 EXPORT_ARGS_OPTIONS = {
@@ -705,6 +734,24 @@ EXPORT_ARGS_OPTIONS = {
             'mtl_index_pairs': (),
             'mtl_props': {},
             'opt_img_size': (0.5, (1024, 1024)),
+            'opt_mtl_slots': (True, None),
+            'opt_num_objs': (True, None),
+            'shp_keys': False,
+        },
+
+        # GLB: Multiple PBR BDSF material(s). Multiple lo-res texture(s). Single triangulated mesh.
+        # Apps: MSquared.
+        # Software: Unreal Engine 5.
+        'M2 Model (Lo-Res Proxy)': {
+            'copy_imgs': False,
+            'lyr_cols': [],
+            'mdfr_types': (
+                bpy.types.DecimateModifier,
+                bpy.types.TriangulateModifier,
+            ),
+            'mtl_index_pairs': (),
+            'mtl_props': {},
+            'opt_img_size': (0.25, (1024, 1024)),
             'opt_mtl_slots': (True, None),
             'opt_num_objs': (True, None),
             'shp_keys': False,

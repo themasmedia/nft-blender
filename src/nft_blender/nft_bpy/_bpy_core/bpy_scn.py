@@ -5,10 +5,48 @@ NFT Blender - BPY - SCN
 
 """
 
+import mathutils
 import typing
 
 import bpy
 import idprop
+
+
+def scn_clear_object_parent(
+    obj: bpy.types.Object,
+    keep_transforms: bool = True,
+    skip_armature: bool = True
+):
+    """
+    Clears the parent of the given object, while keeping its visible transforms.
+    This operation is only performed if the object is not parented to an armature.
+    """
+    # Check if the object is parented
+    if not obj.parent:
+        return
+    
+    # Check if the parent is an armature
+    if skip_armature and isinstance(obj.parent.type, bpy.types.Armature):
+        return
+        
+    # Store the current visible transform
+    if keep_transforms:
+        loc = obj.matrix_world.translation.copy()
+        rot = obj.rotation_quaternion.copy() if obj.rotation_mode == 'QUATERNION' else obj.rotation_euler.copy()
+        scale = obj.scale.copy()
+    
+    # Clear the parent
+    obj.parent = None
+    obj.matrix_world = obj.matrix_parent_inverse @ obj.matrix_world
+    
+    # Restore the visible transform
+    if keep_transforms:
+        obj.location = loc
+        if obj.rotation_mode == 'QUATERNION':
+            obj.rotation_quaternion = rot
+        else:
+            obj.rotation_euler = rot
+        obj.scale = scale
 
 
 def scn_copy_object(
@@ -100,26 +138,6 @@ def scn_edit_custom_props(
             prop_manager.update(**prop_v)
 
 
-def scn_get_instance_objects(
-    objs: typing.Iterable[bpy.types.Object] = ()
-) -> dict:
-    """
-    Gets all instanced Curve and Mesh Objects in a given an array of Objects (defaults to all Objects in the active view layer).
-    """
-    obj_data_types = (bpy.types.Curve, bpy.types.Mesh)
-    objs = objs or (obj for obj in bpy.context.view_layer.objects if isinstance(obj.data, obj_data_types))
-    inst_objs = {}
-
-    for obj in objs:
-        scn_select_items(items=[obj])
-        bpy.ops.object.select_linked(type='OBDATA')
-        if len(bpy.context.selected_objects) > 1 and obj.data.name not in inst_objs:
-            inst_objs[obj.data.name] = sorted(bpy.context.selected_objects, key=lambda obj: (len(scn_get_hierarchy(obj)), obj.name))
-        scn_select_items(items=[])
-
-    return inst_objs
-
-
 def scn_get_child_layer_collections(
     root_layer_collection: bpy.types.Collection,
     recursive: bool = False,
@@ -162,12 +180,33 @@ def scn_get_hierarchy(
         return parent_key + (obj,)
 
 
+def scn_get_instance_objects(
+    objs: typing.Iterable[bpy.types.Object] = ()
+) -> dict:
+    """
+    Gets all instanced Curve and Mesh Objects in a given an array of Objects (defaults to all Objects in the active view layer).
+    """
+    obj_data_types = (bpy.types.Curve, bpy.types.Mesh)
+    objs = objs or (obj for obj in bpy.context.view_layer.objects if isinstance(obj.data, obj_data_types))
+    inst_objs = {}
+
+    for obj in objs:
+        if obj.data.users > 1:
+            scn_select_items(items=[obj])
+            bpy.ops.object.select_linked(type='OBDATA')
+            if len(bpy.context.selected_objects) > 1 and obj.data.name not in inst_objs:
+                inst_objs[obj.data.name] = sorted(bpy.context.selected_objects, key=lambda obj: (len(scn_get_hierarchy(obj)), obj.name))
+            scn_select_items(items=[])
+
+    return inst_objs
+
+
 def scn_get_objects_of_type(
     obj_type: str,
     col_name: str = '',
 ) -> list:
     """
-    Gets a list of allo objects of a specific data type in the current Blender Ccene.
+    Gets a list of all objects of a specific data type in the current Blender Ccene.
 
     :param obj_type: Name of the data type (i.e. "ARMATURE").
     :returns: A list of objects.
