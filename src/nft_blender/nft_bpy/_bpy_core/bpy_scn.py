@@ -187,7 +187,8 @@ def scn_get_instance_objects(
     Gets all instanced Curve and Mesh Objects in a given an array of Objects (defaults to all Objects in the active view layer).
     """
     obj_data_types = (bpy.types.Curve, bpy.types.Mesh)
-    objs = objs or (obj for obj in bpy.context.view_layer.objects if isinstance(obj.data, obj_data_types))
+    objs = objs or bpy.context.view_layer.objects
+    objs = (obj for obj in objs if isinstance(obj.data, obj_data_types))
     inst_objs = {}
 
     for obj in objs:
@@ -277,6 +278,17 @@ def scn_link_objects_to_collection(
             for usr_col in usr_cols:
                 if obj.name in usr_col.objects:
                     usr_col.objects.unlink(obj)
+
+
+def scn_remove_custom_properties(
+    obj: bpy.types.Object,
+    prop_names: typing.Iterable = ()
+):
+    """"""
+    prop_keys = [prop_key for prop_key in obj.keys() if prop_key not in {*bpy.types.Object.bl_rna.properties.keys()}]
+    prop_keys = [prop_key for prop_key in prop_keys if prop_key in prop_names] if prop_names else prop_keys
+    for prop_key in prop_keys:
+        obj.pop(prop_key)
 
 
 def scn_select_items(

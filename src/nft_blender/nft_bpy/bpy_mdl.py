@@ -218,6 +218,18 @@ def mdl_remove_modifiers(
         obj.modifiers.remove(modifier)
 
 
+def mdl_toggle_modifiers(
+        obj: bpy.types.Object,
+        state: bool = None,
+        modifier_types: typing.Tuple = (bpy.types.Modifier,)
+):
+    """"""
+    for mdfr in obj.modifiers:
+        if isinstance(mdfr, modifier_types):
+            mdfr.show_viewport = state if state is not None else not mdfr.show_viewport
+            mdfr.show_render  = state if state is not None else not mdfr.show_render
+
+
 def mdl_set_modifier_display(
     modifier: bpy.types.Modifier,
     visibility: bool = True
