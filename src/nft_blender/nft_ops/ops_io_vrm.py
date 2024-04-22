@@ -58,7 +58,7 @@ def io_resize_images_for_object(
     ).values()
 
     images.extend(img_tex.image for img_tex in img_texs if img_tex.image is not None)
-    images = list(set(images))
+    images = list({img for img in images if not img.is_dirty})
 
     #
     for img in images:
@@ -716,7 +716,7 @@ EXPORT_ARGS_OPTIONS = {
             ),
             'mtl_index_pairs': (),
             'mtl_props': {},
-            'opt_img_size': (0.5, (1024, 1024)),
+            'opt_img_size': (0.25, (1024, 1024)),
             'opt_mtl_slots': (True, None),
             'opt_num_objs': (True, None),
             'shp_keys': True,
@@ -733,7 +733,7 @@ EXPORT_ARGS_OPTIONS = {
             ),
             'mtl_index_pairs': (),
             'mtl_props': {},
-            'opt_img_size': (0.5, (1024, 1024)),
+            'opt_img_size': (0.25, (1024, 1024)),
             'opt_mtl_slots': (True, None),
             'opt_num_objs': (True, None),
             'shp_keys': False,
@@ -751,7 +751,7 @@ EXPORT_ARGS_OPTIONS = {
             ),
             'mtl_index_pairs': (),
             'mtl_props': {},
-            'opt_img_size': (0.25, (1024, 1024)),
+            'opt_img_size': (0.125, (512, 512)),
             'opt_mtl_slots': (True, None),
             'opt_num_objs': (True, None),
             'shp_keys': False,
@@ -769,7 +769,7 @@ EXPORT_ARGS_OPTIONS = {
             ),
             'mtl_index_pairs': (),
             'mtl_props': {},
-            'opt_img_size': (1.0, (2048, 2048)),
+            'opt_img_size': (0.5, (2048, 2048)),
             'opt_mtl_slots': (True, None),
             'opt_num_objs': (True, None),
             'shp_keys': True,
@@ -787,7 +787,7 @@ EXPORT_ARGS_OPTIONS = {
             ),
             'mtl_index_pairs': (),
             'mtl_props': {},
-            'opt_img_size': (1.0, (2048, 2048)),
+            'opt_img_size': (0.5, (2048, 2048)),
             'opt_mtl_slots': (True, None),
             'opt_num_objs': (True, None),
             'shp_keys': False,
