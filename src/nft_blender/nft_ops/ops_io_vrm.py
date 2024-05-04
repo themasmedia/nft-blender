@@ -257,19 +257,26 @@ class IOExporter(object):
                 # Recreate Shape Keys after Modifiers are applied.
                 if keep_shp_keys:
 
-                    #
-                    mesh_obj_index = self.layer_collections[lyr_col_name]['mesh_objs'].index(mesh_obj)
-                    self.layer_collections[lyr_col_name]['mesh_objs'].pop(mesh_obj_index)
+                    # Pop the Mesh Object from all Collections in self.layer_collections it is associated with.
+                    # Save its position in each collection in self.layer_collections.
+                    mesh_obj_cols = {
+                        col: 0 for col in mesh_obj.users_collection if col.name in self.layer_collections
+                    }
+                    for mesh_obj_col in mesh_obj_cols:
+                        mesh_obj_index = self.layer_collections[mesh_obj_col.name]['mesh_objs'].index(mesh_obj)
+                        self.layer_collections[mesh_obj_col.name]['mesh_objs'].pop(mesh_obj_index)
+                        mesh_obj_cols[mesh_obj_col] = mesh_obj_index
 
-                    #
+                    # The process that applies modifiers to the mesh creates a new Mesh Object.
                     mesh_obj = bpy_mdl.mdl_apply_modifiers_to_object(
                         obj=mesh_obj,
                         mdfr_list=mdfr_list,
                         all_users=mesh_obj.data.users > 1
                     )
 
-                    # Update self.layer_collections to point to the new mesh_obj
-                    self.layer_collections[lyr_col_name]['mesh_objs'].insert(mesh_obj_index, mesh_obj)
+                    # Update self.layer_collections to point to the new Mesh Object.
+                    for mesh_obj_col, mesh_obj_index in mesh_obj_cols.items():
+                        self.layer_collections[mesh_obj_col.name]['mesh_objs'].insert(mesh_obj_index, mesh_obj)
                     
                     # Reconnect the Shape Keys to the VRM Blendshape groups with the same bind data.
                     for shape_key_grp_index, shape_key_grp_data in vrm_shape_key_data['groups'].items():
@@ -926,6 +933,7 @@ def io_export(
     if open_original_file:
         # Reopen original file
         bpy.ops.wm.open_mainfile(filepath=current_file_path.as_posix())
+        #TODO clean up unused nodes that were generated in prev code
 
 
 if __name__ == '__main__':
