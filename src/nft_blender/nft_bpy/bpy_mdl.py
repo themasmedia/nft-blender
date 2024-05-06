@@ -7,7 +7,9 @@ NFT Blender - BPY - MDL
 
 import typing
 
+import bmesh
 import bpy
+import mathutils
 
 from nft_blender.nft_bpy._bpy_core import bpy_ctx, bpy_scn
 from nft_blender.nft_py import py_util
@@ -198,7 +200,7 @@ def mdl_join_objects(
     objects: typing.Iterable[bpy.types.Object],
     new_name: str = '',
 ) -> bpy.types.Object:
-    """"""
+    """TODO"""
     objects = [obj for obj in objects if obj.data]
     bpy_scn.scn_select_items(items=objects)
     bpy.ops.object.join()
@@ -206,6 +208,29 @@ def mdl_join_objects(
     new_obj.name = new_name or bpy.context.active_object.name
 
     return new_obj
+
+
+def mdl_set_origin(
+    obj: bpy.types.Object,
+    origin_vec: mathutils.Vector = mathutils.Vector((0, 0, 0))
+) -> None:
+    """ Set the origin of the given Object. Currently only works for Mesh Objects. """
+
+    origin_vec = mathutils.Vector((0, 0, 0))
+    local_vec = obj.matrix_world.inverted() @ origin_vec
+
+    translate_mat = mathutils.Matrix.Translation(-local_vec)
+
+    if obj.data.is_editmode:
+        obj.data = bmesh.from_edit_mesh(obj.data)
+        obj.data.transform(translate_mat)
+        bmesh.update_edit_mesh(obj.data, False, False)
+    else:
+        obj.data.transform(translate_mat)
+
+    obj.data.update()
+
+    obj.matrix_world.translation = origin_vec
 
 
 def mdl_remove_modifiers(
@@ -218,6 +243,17 @@ def mdl_remove_modifiers(
         obj.modifiers.remove(modifier)
 
 
+def mdl_set_modifier_display(
+    modifier: bpy.types.Modifier,
+    visibility: bool = True
+) -> None:
+    """TODO"""
+    modifier.show_in_editmode = visibility
+    modifier.show_on_cage = visibility
+    modifier.show_render = visibility
+    modifier.show_viewport = visibility
+
+
 def mdl_toggle_modifiers(
         obj: bpy.types.Object,
         state: bool = None,
@@ -228,14 +264,3 @@ def mdl_toggle_modifiers(
         if isinstance(mdfr, modifier_types):
             mdfr.show_viewport = state if state is not None else not mdfr.show_viewport
             mdfr.show_render  = state if state is not None else not mdfr.show_render
-
-
-def mdl_set_modifier_display(
-    modifier: bpy.types.Modifier,
-    visibility: bool = True
-) -> None:
-    """TODO"""
-    modifier.show_in_editmode = visibility
-    modifier.show_on_cage = visibility
-    modifier.show_render = visibility
-    modifier.show_viewport = visibility

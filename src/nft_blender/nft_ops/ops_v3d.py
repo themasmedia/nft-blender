@@ -13,6 +13,7 @@ import typing
 import bpy
 
 from nft_blender.nft_bpy._bpy_core import bpy_ctx, bpy_scn
+from nft_blender.nft_bpy import bpy_mdl
 from nft_blender.nft_py import py_util
 
 
@@ -77,11 +78,10 @@ def v3d_import_shapefile(
     )
 
     shp_obj = bpy.context.active_object
+    bpy_scn.scn_select_items()
 
-    bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+    bpy_mdl.mdl_set_origin(shp_obj)
     shp_obj.scale *= scaler
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-
-    bpy_scn.scn_select_items()
 
     return shp_obj
