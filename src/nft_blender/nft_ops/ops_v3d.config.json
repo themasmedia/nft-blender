@@ -12,6 +12,10 @@
       "description": "Use as camera position target",
       "default": false
     },
+    "clickable": {
+      "description": "Denotes whether action should be taken on user interaction",
+      "default": true
+    },
     "id": {
       "description": "HTML annotation element ID",
       "default": ""
@@ -36,6 +40,10 @@
     }
   },
   "material": {
+    "animationSubClips": {
+      "description": "Animation sub-clip frame durations (order: rest-pose, on-enter, on-demand, on-idle, on-exit)",
+      "default": [1, 0, 0, 0, 0]
+    },
     "default": {
       "description": "Use as default Material if swappable",
       "default": false

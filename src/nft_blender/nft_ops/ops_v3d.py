@@ -5,7 +5,6 @@ NFT Blender - OPS - Verge3D
 
 """
 
-import copy
 import json
 import pathlib
 import typing
@@ -23,24 +22,28 @@ with ops_v3d_config_file_path.open('r', encoding='UTF-8') as readfile:
     V3D_CONFIG_DATA = json.load(readfile)
 
 
-def v3d_add_custom_props(
+def v3d_edit_custom_props(
     objs: typing.Iterable[bpy.types.Object] = (),
     remove_extra: bool = True,
     update_existing: bool = True,
 ) -> None:
     """TODO"""
     
+    # Iterate through the object(s), and edit custom properties based the Object's data
     for obj in objs:
-
-        obj_prop_data = copy.copy(V3D_CONFIG_DATA['object'])
         obj_data = py_util.util_get_attr_recur(obj, 'data')
-        if obj_data is None:
-            obj_prop_data.update(copy.copy(V3D_CONFIG_DATA['annotation']))
+        # Renderable Objects.
+        if isinstance(obj_data, (bpy.types.Curve, bpy.types.Mesh)):
+            obj_prop_data = py_util.util_copy(V3D_CONFIG_DATA['object'])
+        # Locators used for annotations and camera aiming/positioning.
+        elif obj_data is None:
+            obj_prop_data = py_util.util_copy(V3D_CONFIG_DATA['annotation'])
+        # Edit custom properties for the Object.
         bpy_scn.scn_edit_custom_props(obj, obj_prop_data, remove_extra, update_existing)
-        
+        # Edit custom properties for the Object's Material(s).
         obj_mtls = py_util.util_get_attr_recur(obj, 'data.materials')
         if obj_mtls is not None:
-            mtl_prop_data = copy.copy(V3D_CONFIG_DATA['material'])
+            mtl_prop_data = py_util.util_copy(V3D_CONFIG_DATA['material'])
             for mtl in obj_mtls:
                 bpy_scn.scn_edit_custom_props(mtl, mtl_prop_data, remove_extra, update_existing)
 
