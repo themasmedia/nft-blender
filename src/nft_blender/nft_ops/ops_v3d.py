@@ -11,7 +11,7 @@ import typing
 
 import bpy
 
-from nft_blender.nft_bpy._bpy_core import bpy_ctx, bpy_scn
+from nft_blender.nft_bpy._bpy_core import bpy_ctx, bpy_obj, bpy_scn
 from nft_blender.nft_bpy import bpy_mdl
 from nft_blender.nft_py import py_util
 
@@ -85,6 +85,6 @@ def v3d_import_shapefile(
 
     bpy_mdl.mdl_set_origin(shp_obj)
     shp_obj.scale *= scaler
-    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    bpy_obj.obj_apply_transforms(shp_obj)
 
     return shp_obj
