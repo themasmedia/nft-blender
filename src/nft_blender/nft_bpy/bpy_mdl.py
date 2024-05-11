@@ -54,7 +54,7 @@ def mdl_apply_modifiers_to_object(
     mdfr_list: typing.Iterable[bpy.types.Modifier],
     all_users: bool = False,
 ) -> bpy.types.Object:
-    """"""
+    """TODO"""
 
     if not mdfr_list:
         return obj
@@ -171,7 +171,7 @@ def mdl_get_inputs_from_modifiers(
     input_types: tuple = (bpy.types.bpy_struct,),
     mdfrs: typing.Iterable = (),
 ) -> dict:
-    """"""
+    """TODO"""
     inputs = {}
     mdfrs = mdfrs if mdfrs else obj.modifiers
 
@@ -186,7 +186,7 @@ def mdl_get_inputs_from_modifiers(
 
 
 def mdl_has_shape_keys(obj: bpy.types.Object):
-    """"""
+    """TODO"""
     # Check that the Object is not an Empty.
     if obj.data is not None:
         # Check that it has Shape Keys.
@@ -206,6 +206,7 @@ def mdl_join_objects(
     bpy.ops.object.join()
     new_obj = bpy.context.active_object
     new_obj.name = new_name or bpy.context.active_object.name
+    new_obj.data.name = new_obj.name
 
     return new_obj
 
@@ -255,11 +256,11 @@ def mdl_set_modifier_display(
 
 
 def mdl_toggle_modifiers(
-        obj: bpy.types.Object,
-        state: bool = None,
-        modifier_types: typing.Tuple = (bpy.types.Modifier,)
+    obj: bpy.types.Object,
+    state: bool = None,
+    modifier_types: typing.Tuple = (bpy.types.Modifier,)
 ):
-    """"""
+    """TODO"""
     for mdfr in obj.modifiers:
         if isinstance(mdfr, modifier_types):
             mdfr.show_viewport = state if state is not None else not mdfr.show_viewport
