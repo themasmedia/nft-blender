@@ -88,6 +88,10 @@
       "description": "Name of the animated object to source animation from",
       "default": ""
     },
+    "outline": {
+      "description": "Object will be rendered with the outline post-processing effect (child objects of camera only",
+      "default": false
+    },
     "scaleToCam": {
       "description": "Object size will appear the same, regardless of distance from camera",
       "default": false

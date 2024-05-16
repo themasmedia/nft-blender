@@ -28,13 +28,15 @@ def v3d_edit_custom_props(
     update_existing: bool = True,
 ) -> None:
     """TODO"""
-    
-    # Iterate through the object(s), and edit custom properties based the Object's data
+    # Iterate through the object(s), and edit custom properties based the Object's data.
     for obj in objs:
         obj_data = py_util.util_get_attr_recur(obj, 'data')
         # Renderable Objects.
         if isinstance(obj_data, (bpy.types.Curve, bpy.types.Mesh)):
             obj_prop_data = py_util.util_copy(V3D_CONFIG_DATA['object'])
+            # Remove the "outline" property unless the object is a child of the scene camera.
+            if obj.parent != bpy.context.scene.camera:
+                obj_prop_data.pop('outline')
         # Locators used for annotations and camera aiming/positioning.
         elif obj_data is None:
             obj_prop_data = py_util.util_copy(V3D_CONFIG_DATA['annotation'])
