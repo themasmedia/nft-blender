@@ -166,6 +166,39 @@ def mdl_clear_shape_keys(
         obj.shape_key_clear()
 
 
+def mdl_delete_vertex_groups(obj, threshold=0.001):
+    """
+    Removes all empty vertex groups or vertex groups with vertices below the specified weight threshold
+    from the given object.
+
+    Args:
+        obj (bpy.types.Object): The object from which to remove low-weight vertex groups.
+        threshold (float, optional): The weight threshold below which vertex groups will be removed.
+            Default is 0.001.
+    TODO: normalize
+    """
+    if obj.vertex_groups is not None:
+
+        # Create a list of vertex groups to remove
+        vtx_grps_to_remove = []
+
+        # Iterate over all vertex groups
+        for vtx_grp in obj.vertex_groups:
+
+            # Check if the group is empty or has low-weight vertices
+            if isinstance(obj.data, bpy.types.Mesh):
+                vtx_weights = [
+                    weight.weight for vtx in obj.data.vertices for weight in vtx.groups if weight.group == vtx_grp.index
+                ]
+                if vtx_weights:
+                    if max(vtx_weights) >= threshold:
+                        continue
+            vtx_grps_to_remove.append(vtx_grp)
+        
+        for vtx_grp in vtx_grps_to_remove:
+            obj.vertex_groups.remove(vtx_grp)
+
+
 def mdl_get_inputs_from_modifiers(
     obj: bpy.types.Object,
     input_types: tuple = (bpy.types.bpy_struct,),

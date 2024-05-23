@@ -149,7 +149,8 @@ def ani_reset_armature_transforms(
 
         # Reset the Timeline and clear the current Action  on the Armature.
         bpy.context.scene.frame_set(reference_frame)
-        armature_obj.animation_data.action = None
+        if armature_obj.animation_data is not None:
+            armature_obj.animation_data.action = None
 
         # Reset transforms on Pose Bones
         for bone in armature_obj.pose.bones:
