@@ -149,7 +149,7 @@ class IOExporter(object):
     def _set_layer_collections(self, lyr_cols: typing.Sequence = ()) -> dict:
         """"""
         _lyr_cols = {lyr_col.name: {} for lyr_col in lyr_cols}
-        col_name_pattern = re.compile('^(?P<prefix>[A-Z1-9]{3,4})?_?(?P<descriptor>\w+)$')
+        col_name_pattern = re.compile('^(?P<prefix>[A-Z][A-Z1-9]{2,3})??_?(?P<descriptor>\w+)$')
 
         for lyr_col in lyr_cols:
 
@@ -252,6 +252,8 @@ class IOExporter(object):
                         
                     #
                     elif isinstance(mdfr, mdfr_types):
+                        mdfr.show_render = True
+                        mdfr.show_viewport = True
                         mdfr_list.append(mdfr)
                 
                 # Recreate Shape Keys after Modifiers are applied.
@@ -423,6 +425,7 @@ class IOExporter(object):
         opt_num_objs: typing.Tuple[bool, str] = (True, ''),
         opt_objs_incl_instances: bool= False,
         opt_objs_name_prefix: str = 'GEO_',
+        opt_vtx_grps: typing.Tuple[bool, float] = (True, 0.001, ('', '')),
         flatten_hierarchy: bool = True,
         keep_inst_hierarchy: bool = True
     ) -> None:
@@ -451,6 +454,16 @@ class IOExporter(object):
                 #
                 if opt_mtl_slots[0]:
                     bpy_mtl.mtl_remove_unused_material_slots(obj=mesh_obj)
+
+                #Remove vertex groups, first by name, then by weight threshold.
+                if opt_vtx_grps[0]:
+                    # TODO Buggy
+                    # bpy_mdl.mdl_delete_vertex_groups_by_weight(obj=mesh_obj, threshold=opt_vtx_grps[1])
+                    bpy_mdl.mdl_delete_vertex_groups_by_name(
+                        obj=mesh_obj,
+                        prefix=opt_vtx_grps[2][0],
+                        suffix=opt_vtx_grps[2][1]
+                    )
 
                 # Resize image(s).
                 if opt_img_size[0] != 1.0:
@@ -567,6 +580,8 @@ EXPORT_ARGS_OPTIONS = {
             #
             'opt_num_objs': (False, ''),
             #
+            'opt_vtx_grps': (True, 0.001, ('', '')),
+            #
             'shp_keys': False,
         },
     },
@@ -580,14 +595,15 @@ EXPORT_ARGS_OPTIONS = {
         'Humanoid Avatar (Lo-Res)': {
             'copy_imgs': True,
             'lyr_cols': [],
-            'mtl_index_pairs': ((1, 6)),
+            'mtl_index_pairs': ((1, 6),),
             'mtl_props': {},
             'mdfr_types': (
                 bpy.types.TriangulateModifier,
             ),
             'opt_img_size': (0.5, (1024, 1024)),
             'opt_mtl_slots': (True, None),
-            'opt_num_objs': (True, 'GEO_BlueCat_001'),
+            'opt_num_objs': (True, None),
+            'opt_vtx_grps': (True, 0.001, ('', '')),
             'shp_keys': False,
         },
 
@@ -603,11 +619,12 @@ EXPORT_ARGS_OPTIONS = {
                 bpy.types.TriangulateModifier,
                 bpy.types.VertexWeightMixModifier,
             ),
-            'mtl_index_pairs': ((1, 5)),
+            'mtl_index_pairs': ((1, 5),),
             'mtl_props': {},
             'opt_img_size': (1.0, (2048, 2048)),
             'opt_mtl_slots': (True, None),
             'opt_num_objs': (False, ''),
+            'opt_vtx_grps': (True, 0.001, ('', '')),
             'shp_keys': True,
         },
 
@@ -620,13 +637,14 @@ EXPORT_ARGS_OPTIONS = {
             'mdfr_types': (
                 bpy.types.TriangulateModifier,
             ),
-            'mtl_index_pairs': ((1, 3)),
+            'mtl_index_pairs': ((1, 3),),
             'mtl_props': {
                 'vrm_addon_extension.mtoon1.extensions.vrmc_materials_mtoon.outline_width_mode': 'worldCoordinates',
             },
             'opt_img_size': (0.5, (1024, 1024)),
             'opt_mtl_slots': (True, None),
-            'opt_num_objs': (True, 'GEO_BlueCat_001'),
+            'opt_num_objs': (True, None),
+            'opt_vtx_grps': (True, 0.001, ('', '')),
             'shp_keys': False,
         },
 
@@ -639,13 +657,14 @@ EXPORT_ARGS_OPTIONS = {
             'mdfr_types': (
                 bpy.types.TriangulateModifier,
             ),
-            'mtl_index_pairs': ((1, 4)),
+            'mtl_index_pairs': ((1, 4),),
             'mtl_props': {
                 'vrm_addon_extension.mtoon1.extensions.vrmc_materials_mtoon.outline_width_mode': 'worldCoordinates',
             },
             'opt_img_size': (0.5, (1024, 1024)),
             'opt_mtl_slots': (True, None),
-            'opt_num_objs': (True, 'GEO_BlueCat_001'),
+            'opt_num_objs': (True, None),
+            'opt_vtx_grps': (True, 0.001, ('', '')),
             'shp_keys': False,
         },
 
@@ -656,16 +675,19 @@ EXPORT_ARGS_OPTIONS = {
             'copy_imgs': False,
             'lyr_cols': [],
             'mdfr_types': (
+                bpy.types.SolidifyModifier,
                 bpy.types.SubsurfModifier,
                 bpy.types.TriangulateModifier,
+                bpy.types.VertexWeightMixModifier,
             ),
-            'mtl_index_pairs': ((1, 1)),
+            'mtl_index_pairs': (),
             'mtl_props': {
-                'vrm_addon_extension.mtoon1.extensions.vrmc_materials_mtoon.outline_width_mode': 'worldCoordinates',
+                # 'vrm_addon_extension.mtoon1.extensions.vrmc_materials_mtoon.outline_width_mode': 'worldCoordinates',
             },
             'opt_img_size': (1.0, (2048, 2048)),
             'opt_mtl_slots': (True, None),
             'opt_num_objs': (False, ''),
+            'opt_vtx_grps': (True, 0.001, ('', '')),
             'shp_keys': True,
         },
 
@@ -679,13 +701,14 @@ EXPORT_ARGS_OPTIONS = {
                 bpy.types.SubsurfModifier,
                 bpy.types.TriangulateModifier,
             ),
-            'mtl_index_pairs': ((1, 2)),
+            'mtl_index_pairs': ((1, 2),),
             'mtl_props': {
                 'vrm_addon_extension.mtoon1.extensions.vrmc_materials_mtoon.outline_width_mode': 'worldCoordinates',
             },
             'opt_img_size': (1.0, (2048, 2048)),
             'opt_mtl_slots': (True, None),
             'opt_num_objs': (False, ''),
+            'opt_vtx_grps': (True, 0.001, ('', '')),
             'shp_keys': True,
         },
 
@@ -698,13 +721,14 @@ EXPORT_ARGS_OPTIONS = {
         #         bpy.types.SubsurfModifier,
         #         bpy.types.TriangulateModifier,
         #     ),
-        #     'mtl_index_pairs': (1, 2),
+        #     'mtl_index_pairs': ((1, 2),),
         #     'mtl_props': {
         #         'vrm_addon_extension.mtoon1.extensions.vrmc_materials_mtoon.outline_width_mode': 'worldCoordinates',
         #     },
         #     'opt_img_size': (True, (2048, 2048)),
         #     'opt_mtl_slots': (True, None),
         #     'opt_num_objs': (True, ''),
+        #     'opt_vtx_grps': (True, 0.001, ('', '')),
         #     'shp_keys': False,
         # },
 
@@ -726,6 +750,7 @@ EXPORT_ARGS_OPTIONS = {
             'opt_img_size': (0.25, (1024, 1024)),
             'opt_mtl_slots': (True, None),
             'opt_num_objs': (True, None),
+            'opt_vtx_grps': (True, 0.001, ('', '')),
             'shp_keys': True,
         },
 
@@ -743,6 +768,7 @@ EXPORT_ARGS_OPTIONS = {
             'opt_img_size': (0.25, (1024, 1024)),
             'opt_mtl_slots': (True, None),
             'opt_num_objs': (True, None),
+            'opt_vtx_grps': (True, 0.001, ('', '')),
             'shp_keys': False,
         },
 
@@ -761,6 +787,7 @@ EXPORT_ARGS_OPTIONS = {
             'opt_img_size': (0.125, (512, 512)),
             'opt_mtl_slots': (True, None),
             'opt_num_objs': (True, None),
+            'opt_vtx_grps': (True, 0.001, ('', '')),
             'shp_keys': False,
         },
 
@@ -779,6 +806,7 @@ EXPORT_ARGS_OPTIONS = {
             'opt_img_size': (0.5, (2048, 2048)),
             'opt_mtl_slots': (True, None),
             'opt_num_objs': (True, None),
+            'opt_vtx_grps': (True, 0.001, ('', '')),
             'shp_keys': True,
         },
 
@@ -797,6 +825,7 @@ EXPORT_ARGS_OPTIONS = {
             'opt_img_size': (0.5, (2048, 2048)),
             'opt_mtl_slots': (True, None),
             'opt_num_objs': (True, None),
+            'opt_vtx_grps': (True, 0.001, ('', '')),
             'shp_keys': False,
         },
 
@@ -818,6 +847,7 @@ EXPORT_ARGS_OPTIONS = {
             'opt_img_size': (0.25, (1024, 1024)),
             'opt_mtl_slots': (True, None),
             'opt_num_objs': (True, 'GEO_Lucky_001'),
+            'opt_vtx_grps': (True, 0.001, ('', '')),
             'shp_keys': False,
         },
 
@@ -835,6 +865,7 @@ EXPORT_ARGS_OPTIONS = {
             'opt_img_size': (0.5, (1024, 1024)),
             'opt_mtl_slots': (True, None),
             'opt_num_objs': (True, 'GEO_Lucky_001'),
+            'opt_vtx_grps': (True, 0.001, ('', '')),
             'shp_keys': True,
         },
 
@@ -852,6 +883,7 @@ EXPORT_ARGS_OPTIONS = {
             'opt_img_size': (0.5, (1024, 1024)),
             'opt_mtl_slots': (True, None),
             'opt_num_objs': (True, 'GEO_Lucky_001'),
+            'opt_vtx_grps': (True, 0.001, ('', '')),
             'shp_keys': False,
         },
 
@@ -913,6 +945,7 @@ def io_export(
         opt_img_size=export_args['opt_img_size'],
         opt_mtl_slots=export_args['opt_mtl_slots'],
         opt_num_objs=export_args['opt_num_objs'],
+        opt_vtx_grps=export_args['opt_vtx_grps']
     )
 
     #

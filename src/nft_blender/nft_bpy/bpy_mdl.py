@@ -5,6 +5,7 @@ NFT Blender - BPY - MDL
 
 """
 
+import re
 import typing
 
 import bmesh
@@ -166,7 +167,24 @@ def mdl_clear_shape_keys(
         obj.shape_key_clear()
 
 
-def mdl_delete_vertex_groups(obj, threshold=0.001):
+def mdl_delete_vertex_groups_by_name(obj, prefix='', suffix=''):
+    """"""
+    if obj.vertex_groups is not None:
+        vtx_grp_name_pattern = re.compile(f'^({prefix}).+({suffix})$')
+
+        # Create a list of vertex groups to remove
+        vtx_grps_to_remove = []
+
+        # Iterate over all vertex groups
+        for vtx_grp in obj.vertex_groups:
+            if vtx_grp_name_pattern.match(vtx_grp.name):
+                vtx_grps_to_remove.append(vtx_grp)
+
+        for vtx_grp in vtx_grps_to_remove:
+            obj.vertex_groups.remove(vtx_grp)
+
+
+def mdl_delete_vertex_groups_by_weight(obj, threshold=0.001):
     """
     Removes all empty vertex groups or vertex groups with vertices below the specified weight threshold
     from the given object.
@@ -175,7 +193,7 @@ def mdl_delete_vertex_groups(obj, threshold=0.001):
         obj (bpy.types.Object): The object from which to remove low-weight vertex groups.
         threshold (float, optional): The weight threshold below which vertex groups will be removed.
             Default is 0.001.
-    TODO: normalize
+    TODO: normalize, buggy
     """
     if obj.vertex_groups is not None:
 
