@@ -132,6 +132,7 @@ def ani_break_inputs(
 def ani_reset_armature_transforms(
     armature_obj: bpy.types.Object,
     reference_frame: int = 1,
+    reset_pose: bool = True,
     set_to_rest: bool = False,
 ) -> None:
     """
@@ -151,17 +152,22 @@ def ani_reset_armature_transforms(
         bpy.context.scene.frame_set(reference_frame)
         if armature_obj.animation_data is not None:
             armature_obj.animation_data.action = None
+        
+        # Clear transforms on the Armature Object itself.
+        armature_obj.location = (0, 0, 0)
+        armature_obj.rotation_quaternion = (1, 0, 0, 0)
+        armature_obj.rotation_axis_angle = (0, 0, 1, 0)
+        armature_obj.rotation_euler = (0, 0, 0)
+        armature_obj.scale = (1, 1, 1)
 
         # Reset transforms on Pose Bones
-        for bone in armature_obj.pose.bones:
-            bone.location = (0, 0, 0)
-            bone.rotation_quaternion = (1, 0, 0, 0)
-            bone.rotation_axis_angle = (0, 0, 1, 0)
-            bone.rotation_euler = (0, 0, 0)
-            bone.scale = (1, 1, 1)
-        # bpy.ops.object.mode_set(mode='POSE')
-        # bpy.ops.pose.select_all(action='SELECT')
-        # bpy.ops.pose.transforms_clear()
+        if reset_pose:
+            for bone in armature_obj.pose.bones:
+                bone.location = (0, 0, 0)
+                bone.rotation_quaternion = (1, 0, 0, 0)
+                bone.rotation_axis_angle = (0, 0, 1, 0)
+                bone.rotation_euler = (0, 0, 0)
+                bone.scale = (1, 1, 1)
 
         # Reset the Armature to rest pose (reset to t-pose for character rigs).
         if set_to_rest:

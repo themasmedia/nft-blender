@@ -8,6 +8,7 @@ mathutils = "*"
 nft-blender = {editable = true, path = "."}
 pyside6 = "*"
 sqlalchemy = "*"
+requests = "*"
 
 [dev-packages]
 pylint = "*"
