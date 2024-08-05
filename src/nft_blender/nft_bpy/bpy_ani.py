@@ -7,6 +7,7 @@ NFT Blender - BPY - ANI
 
 import copy
 import pathlib
+import re
 import typing
 
 import mathutils
@@ -263,3 +264,39 @@ def ani_set_data_path_values(
         shape_keys[shape_k].value = shape_v
 
     return (current_modifier_data, current_shape_key_data)
+
+
+def ani_swap_armatures(
+    objects: typing.Iterable[bpy.types.Object],
+    old_armature_obj: bpy.types.Object,
+    new_armature_obj: bpy.types.Object,
+    rename_for_rigify: bool = False,
+    rigify_prefix: str = 'DEF-'
+):
+    assert(isinstance(old_armature_obj.data, bpy.types.Armature))
+    assert(isinstance(new_armature_obj.data, bpy.types.Armature))
+
+    for obj in objects:
+
+        if not hasattr(obj, 'data'):
+            pass
+        if obj.data is None:
+            pass
+
+        if obj.parent == old_armature_obj and obj.parent_type == 'ARMATURE':
+            obj.parent = new_armature_obj
+        elif obj.parent_type == 'OBJECT':
+            if obj.parent == old_armature_obj:
+                obj.parent = new_armature_obj
+            for mdfr in obj.modifiers:
+                if isinstance(mdfr, bpy.types.ArmatureModifier):
+                    mdfr.object = new_armature_obj
+
+        if rename_for_rigify:
+            for vtx_grp in obj.vertex_groups:
+                rigify_match = re.match(f'^({rigify_prefix})(.+)', vtx_grp.name)
+                if rigify_match is None:
+                    vtx_grp_name = f'{rigify_prefix}{vtx_grp.name}'
+                else:
+                    vtx_grp_name = re.sub(rigify_prefix, '', vtx_grp.name, count=1)
+                vtx_grp.name = vtx_grp_name
