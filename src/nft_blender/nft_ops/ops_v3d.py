@@ -37,6 +37,8 @@ def v3d_edit_custom_props(
             # Remove the "outline" property unless the object is a child of the scene camera.
             if obj.parent != bpy.context.scene.camera:
                 obj_prop_data.pop('outline')
+        elif isinstance(obj_data, bpy.types.Light):
+            obj_prop_data = py_util.util_copy(V3D_CONFIG_DATA['light'])
         # Locators used for annotations and camera aiming/positioning.
         elif obj_data is None:
             obj_prop_data = py_util.util_copy(V3D_CONFIG_DATA['annotation'])

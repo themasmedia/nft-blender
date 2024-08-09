@@ -33,18 +33,18 @@ MODULES = {
         'specifier': 'SQLAlchemy',
     },
     #
-    'p4python': {
-        'reinstall': False,
-        'specifier': 'p4python',
-    },
+    # 'p4python': {
+    #     'reinstall': False,
+    #     'specifier': 'p4python',
+    # },
     'requests': {
         'reinstall': False,
         'specifier': 'requests',
     },
-    'stable_diffusion': {
-        'reinstall': True,
-        'specifier': 'git+https://github.com/lstein/stable-diffusion.git@main#egg=stable-diffusion',
-    },
+    # 'stable_diffusion': {
+    #     'reinstall': True,
+    #     'specifier': 'git+https://github.com/lstein/stable-diffusion.git@main#egg=stable-diffusion',
+    # },
 }
 
 

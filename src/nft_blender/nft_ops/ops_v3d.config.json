@@ -39,6 +39,35 @@
       "step": 1
     }
   },
+  "light": {
+    "index": {
+      "description": "Slide index to enable light visibility",
+      "default": -1,
+      "min": -1,
+      "max": 10,
+      "soft_min": 0,
+      "soft_max": 10,
+      "step": 1
+    },
+    "intensity": {
+      "description": "Default light intensity when light is visible",
+      "default": 0,
+      "min": 0,
+      "max": 10000,
+      "soft_min": 0,
+      "soft_max": 10000,
+      "step": 1
+    },
+    "persistTo": {
+      "description": "Slide index to persist to for light visibility",
+      "default": -1,
+      "min": -1,
+      "max": 10,
+      "soft_min": 0,
+      "soft_max": 10,
+      "step": 1
+    }
+  },
   "material": {
     "animationSubClips": {
       "description": "Animation sub-clip frame durations (order: rest-pose, on-enter, on-demand, on-idle, on-exit)",
