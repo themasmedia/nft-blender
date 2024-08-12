@@ -39,9 +39,9 @@ def v3d_edit_custom_props(
                 obj_prop_data.pop('outline')
         elif isinstance(obj_data, bpy.types.Light):
             obj_prop_data = py_util.util_copy(V3D_CONFIG_DATA['light'])
-        # Locators used for annotations and camera aiming/positioning.
+        # Empty Objects used for annotations and camera aiming/positioning.
         elif obj_data is None:
-            obj_prop_data = py_util.util_copy(V3D_CONFIG_DATA['annotation'])
+            obj_prop_data = py_util.util_copy(V3D_CONFIG_DATA['empty'])
         # Edit custom properties for the Object.
         bpy_scn.scn_edit_custom_props(obj, obj_prop_data, remove_extra, update_existing)
         # Edit custom properties for the Object's Material(s).

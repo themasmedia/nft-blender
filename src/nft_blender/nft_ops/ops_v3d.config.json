@@ -1,5 +1,5 @@
 {
-  "annotation": {
+  "empty": {
     "annotation": {
       "description": "Use as annotation",
       "default": false
@@ -13,7 +13,11 @@
       "default": false
     },
     "clickable": {
-      "description": "Denotes whether action should be taken on user interaction",
+      "description": "Denotes whether action should be taken on a user click event",
+      "default": true
+    },
+    "hoverable": {
+      "description": "Denotes whether action should be taken on a user hover event",
       "default": true
     },
     "id": {
