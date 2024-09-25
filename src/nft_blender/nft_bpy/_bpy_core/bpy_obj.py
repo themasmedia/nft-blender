@@ -67,3 +67,23 @@ def obj_apply_transforms(
 
     # Update the object's basis matrix
     obj.matrix_basis = basis[0] @ basis[1] @ basis[2]
+
+
+def obj_remove_custom_props(
+    struct: bpy.types.bpy_struct,
+    data: bool = False,
+    materials: bool = False,
+    exclude: list = []
+):
+    custom_prop_keys = [k for k in struct.keys() if k not in exclude]
+    for k in custom_prop_keys:
+        struct.pop(k)
+    if data:
+        custom_prop_keys = [k for k in struct.data.keys() if k not in exclude]
+        for k in custom_prop_keys:
+            struct.data.pop(k)
+    if materials:
+        for mtl in struct.data.materials:
+            custom_prop_keys = [k for k in mtl.keys() if k not in exclude]
+            for k in custom_prop_keys:
+                mtl.pop(k)

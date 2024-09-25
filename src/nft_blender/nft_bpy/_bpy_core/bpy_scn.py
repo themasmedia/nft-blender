@@ -139,15 +139,15 @@ def scn_edit_custom_props(
 
 
 def scn_get_child_layer_collections(
-    root_layer_collection: bpy.types.Collection,
+    root_layer_collection: bpy.types.LayerCollection,
     recursive: bool = False,
 ) -> list:
     """
-    Gets a list of child Collections in the given Collection.
+    Gets a list of child Layer Collections in the given Collection.
 
-    :param root_layer_collection: The top-level Collection to get child Collection(s) from.
-    :param recursive: If True, recursively add child Collections for all Collections.
-    :returns: A list of Collections.
+    :param root_layer_collection: The top-level Layer Collection to get child Collection(s) from.
+    :param recursive: If True, recursively add child Layer Collections for all Layer Collections.
+    :returns: A list of Layer Collections.
     """
     child_layer_collections = []
 
@@ -217,6 +217,16 @@ def scn_get_objects_of_type(
     objs_of_type = [obj for obj in objs if obj.type == obj_type]
 
     return sorted(objs_of_type, key=lambda obj: (len(scn_get_hierarchy(obj)), obj.name))
+
+
+def scn_get_parent_collection(
+    child_col: bpy.types.Collection
+) -> bpy.types.Collection:
+    """TODO A reutrn value of None = scene collection"""
+    for col in bpy.data.collections:
+        if child_col in col.children.values():
+            return col
+    return None
 
 
 def scn_get_selected_objects(
