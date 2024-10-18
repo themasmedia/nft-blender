@@ -9,7 +9,7 @@ import typing
 
 import bpy
 
-from nft_blender.nft_bpy._bpy_core import bpy_io, bpy_scn
+from nft_blender.nft_bpy._bpy_core import bpy_io, bpy_obj, bpy_scn
 from nft_blender.nft_bpy import bpy_ani, bpy_mdl, bpy_mtl, bpy_node
 from nft_blender.nft_py import py_util
 from nft_blender.nft_qt import qt_ui
@@ -149,7 +149,7 @@ class IOExporter(object):
     def _set_layer_collections(self, lyr_cols: typing.Sequence = ()) -> dict:
         """"""
         _lyr_cols = {lyr_col.name: {} for lyr_col in lyr_cols}
-        col_name_pattern = re.compile('^(COL_)?(?P<descriptor>(?P<prefix>[A-Z1-9]{3,4})?_?\w+)$')
+        col_name_pattern = re.compile('^(COL_)?(?P<descriptor>(?P<prefix>[A-Z1-9]+)?_?\w+)$')
 
         for lyr_col in lyr_cols:
 
@@ -511,6 +511,14 @@ class IOExporter(object):
                 if opt_mtl_slots[0]:
                     bpy_mtl.mtl_remove_unused_material_slots(obj=mesh_obj)
 
+                #
+                bpy_obj.obj_remove_custom_props(
+                    mesh_obj,
+                    data=True,
+                    materials=True,
+                    exclude=['vrm_addon_extension']
+                )
+
                 #Remove vertex groups, first by name, then by weight threshold.
                 # if opt_vtx_grps[0]:
                     # TODO Buggy
@@ -531,6 +539,7 @@ class IOExporter(object):
                     )
 
                     for img in images:
+                        # TODO breaks for some textures for some reason. See EDSN Game Engine Character export
                         # Factor in Image names that have file suffixes before renaming.
                         img_file_path = pathlib.Path(img.name)
                         img_file_name = f'{img_file_path.stem}_{img.size[0]}x{img.size[1]}{img_file_path.suffix}'
@@ -705,7 +714,7 @@ EXPORT_ARGS_OPTIONS = {
         # VRM: Multiple emissive BDSF/MToon material(s). Multiple hi-res texture(s). Multiple smoothed/triangulated meshes. Blend Shapes. Outline (via MToon, where supported).
         # Apps: Hologram, HyperFy, Monaverse, Upstreet, VRoid Hub, VSeeFace.
         # Software: Blender (w/ add-on), Unity (w/ UniVRM package), Unreal (w/ VRM4U plug-in).
-        'Virtual Avatar (VTube Shaded)': {
+        'Virtual Avatar (VTube Toon Shaded)': {
             'copy_imgs': False,
             'current_pose': False,
             'lyr_cols': [],
@@ -741,7 +750,7 @@ EXPORT_ARGS_OPTIONS = {
 
         # VRM: Multiple diffuse BDSF/MToon material(s). Multiple hi-res texture(s). Multiple smoothed/triangulated meshes. Blend Shapes. Outline (via MToon, where supported).
         # Apps: HyperFy, Monaverse, Upstreet, VRoid Hub, VSeeFace.
-        'Virtual Avatar (VTube Unshaded)': {
+        'Virtual Avatar (VTube Toon Unshaded)': {
             'copy_imgs': False,
             'current_pose': False,
             'lyr_cols': [],
@@ -753,6 +762,78 @@ EXPORT_ARGS_OPTIONS = {
             'mtl_props': {
                 'vrm_addon_extension.mtoon1.extensions.vrmc_materials_mtoon.outline_width_mode': 'worldCoordinates',
             },
+            'opt_img_size': (1.0, (2048, 2048)),
+            'opt_mtl_slots': (True, None),
+            'opt_num_objs': (False, ''),
+            'opt_vtx_grps': (True, 0.001, ('', '')),
+            'shp_keys': True,
+            'vrm_meta': {
+                'allowed_user_name': 'ExplicitlyLicensedPerson',
+                'author': 'm a s',
+                'commercial_ussage_name': 'Allow',
+                'contact_information': 'masangri.art@gmail.com',
+                'license_name': 'Redistribution_Prohibited',
+                'other_license_url': 'https://coolcats.com/terms-and-conditions',
+                'other_permission_url': 'https://coolcats.com',
+                'reference': 'https://x.com/masangri_art',
+                'sexual_ussage_name': 'Disallow',
+                'texture': None,
+                'title': 'Cool Cats 3D Avatar',
+                'version': '0.1.0',
+                'violent_ussage_name': 'Disallow'
+            },
+        },
+
+        # VRM: Multiple diffuse BDSF/MToon material(s). Multiple hi-res texture(s). Multiple smoothed/triangulated meshes. Blend Shapes. Outline (via mesh).
+        # Apps: 3tene.
+        'Virtual Avatar (VTube Shaded)': {
+            'copy_imgs': False,
+            'current_pose': False,
+            'lyr_cols': [],
+            'mdfr_types': (
+                bpy.types.SolidifyModifier,
+                bpy.types.SubsurfModifier,
+                bpy.types.TriangulateModifier,
+                bpy.types.VertexWeightMixModifier,
+            ),
+            'mtl_index_pairs': ((0, 3), (1, 4),),
+            'mtl_props': {},
+            'opt_img_size': (1.0, (2048, 2048)),
+            'opt_mtl_slots': (True, None),
+            'opt_num_objs': (False, ''),
+            'opt_vtx_grps': (True, 0.001, ('', '')),
+            'shp_keys': True,
+            'vrm_meta': {
+                'allowed_user_name': 'ExplicitlyLicensedPerson',
+                'author': 'm a s',
+                'commercial_ussage_name': 'Allow',
+                'contact_information': 'masangri.art@gmail.com',
+                'license_name': 'Redistribution_Prohibited',
+                'other_license_url': 'https://coolcats.com/terms-and-conditions',
+                'other_permission_url': 'https://coolcats.com',
+                'reference': 'https://x.com/masangri_art',
+                'sexual_ussage_name': 'Disallow',
+                'texture': None,
+                'title': 'Cool Cats 3D Avatar',
+                'version': '0.1.0',
+                'violent_ussage_name': 'Disallow'
+            },
+        },
+
+        # VRM: Multiple diffuse BDSF/MToon material(s). Multiple hi-res texture(s). Multiple smoothed/triangulated meshes. Blend Shapes. Outline (via mesh).
+        # Apps: 3tene.
+        'Virtual Avatar (VTube Unshaded)': {
+            'copy_imgs': False,
+            'current_pose': False,
+            'lyr_cols': [],
+            'mdfr_types': (
+                bpy.types.SolidifyModifier,
+                bpy.types.SubsurfModifier,
+                bpy.types.TriangulateModifier,
+                bpy.types.VertexWeightMixModifier,
+            ),
+            'mtl_index_pairs': (),
+            'mtl_props': {},
             'opt_img_size': (1.0, (2048, 2048)),
             'opt_mtl_slots': (True, None),
             'opt_num_objs': (False, ''),
@@ -854,7 +935,7 @@ EXPORT_ARGS_OPTIONS = {
         # FBX: Multiple PBR BDSF material(s). Multiple lo-res texture. Single triangulated mesh.
         # Apps: Maya, Unreal Engine.
         'Game Engine Character (Lo-Res)': {
-            'copy_imgs': False,
+            'copy_imgs': True,
             'current_pose': False,
             'lyr_cols': [],
             'mtl_index_pairs': (),
@@ -873,7 +954,7 @@ EXPORT_ARGS_OPTIONS = {
         # FBX: Multiple PBR BDSF material(s). Multiple hi-res texture. Single triangulated mesh.
         # Apps: Maya, Unreal Engine.
         'Game Engine Character (Hi-Res)': {
-            'copy_imgs': False,
+            'copy_imgs': True,
             'current_pose': False,
             'lyr_cols': [],
             'mdfr_types': (
