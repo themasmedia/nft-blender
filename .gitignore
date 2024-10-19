@@ -5,6 +5,9 @@
 __pycache__/*
 .DS_Store
 
+# Transition files
+src/mas_blender/mas_*/_*.*
+
 # Project files
 .pylintrc
 .vscode
