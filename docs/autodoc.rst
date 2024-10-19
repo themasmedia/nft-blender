@@ -1,115 +1,115 @@
 .. _autodoc:
 
-NFT Blender 
+MAS Blender 
 ===========
  
-.. automodule:: nft_blender
+.. automodule:: mas_blender
   :members:
   :undoc-members:
 
 .. contents::
 
-NFT Blender - BPY (Blender Python)
+MAS Blender - BPY (Blender Python)
 ----------------------------------
 
-.. automodule:: nft_bpy
+.. automodule:: mas_bpy
   :members:
   :undoc-members:
 
 BPY - Animation
 ~~~~~~~~~~~~~~~
 
-.. automodule:: nft_bpy.bpy_ani
+.. automodule:: mas_bpy.bpy_ani
   :members:
   :undoc-members:
 
 BPY - Context
 ~~~~~~~~~~~~~
 
-.. automodule:: nft_bpy.bpy_ctx
+.. automodule:: mas_bpy.bpy_ctx
   :members:
   :undoc-members:
 
 BPY - Input/Output
 ~~~~~~~~~~~~~~~~~~
 
-.. automodule:: nft_bpy.bpy_io
+.. automodule:: mas_bpy.bpy_io
   :members:
   :undoc-members:
 
 BPY - Material
 ~~~~~~~~~~~~~~
 
-.. automodule:: nft_bpy.bpy_mtl
+.. automodule:: mas_bpy.bpy_mtl
   :members:
   :undoc-members:
 
 BPY - Scene
 ~~~~~~~~~~~
 
-.. automodule:: nft_bpy.bpy_scn
+.. automodule:: mas_bpy.bpy_scn
   :members:
   :undoc-members:
 
-NFT Blender - DB (Database)
+MAS Blender - DB (Database)
 ---------------------------
 
-.. automodule:: nft_db
+.. automodule:: mas_db
   :members:
   :undoc-members:
 
 DB - SQL
 ~~~~~~~~
 
-.. automodule:: nft_db.db_sql
+.. automodule:: mas_db.db_sql
   :members:
   :undoc-members:
 
-NFT Blender - OPS (Blender Operators)
+MAS Blender - OPS (Blender Operators)
 -------------------------------------
 
-.. automodule:: nft_ops
+.. automodule:: mas_ops
   :members:
   :undoc-members:
 
 OPS - Asset
 ~~~~~~~~~~~
 
-.. automodule:: nft_ops.ops_asst
+.. automodule:: mas_ops.ops_asst
   :members:
   :undoc-members:
 
 OPS - Project
 ~~~~~~~~~~~~~
 
-.. automodule:: nft_ops.ops_proj
+.. automodule:: mas_ops.ops_proj
   :members:
   :undoc-members:
 
 OPS - Render
 ~~~~~~~~~~~~
 
-.. automodule:: nft_ops.ops_rndr
+.. automodule:: mas_ops.ops_rndr
   :members:
   :undoc-members:
 
-NFT Blender - QT/PySide
+MAS Blender - QT/PySide
 -----------------------
 
-.. automodule:: nft_qt
+.. automodule:: mas_qt
   :members:
   :undoc-members:
 
 QT - Operating System
 ~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: nft_qt.qt_os
+.. automodule:: mas_qt.qt_os
   :members:
   :undoc-members:
 
 QT - User Interface
 ~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: nft_qt.qt_ui
+.. automodule:: mas_qt.qt_ui
   :members:
   :undoc-members:

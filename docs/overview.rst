@@ -1,10 +1,10 @@
 Overview
 ========
 
-98% Tools for Blender...Not really just for NFTs
+Transmedia Workflow Tools for Blender
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-| A growing set of useful tools for Blender that utilizes the full scope of Python 3 beyond just what ships with Blender, by **Mas**.
+| A growing set of useful tools for Blender that utilizes the full scope of Python 3 beyond just what ships with Blender, by **[m a s]**.
 | This module conforms to the requirements of Python packaging, and can be installed **in Blender**, free of dependency issues & user complexity.
 
 | ``This package is not yet meant for mainstream usage and delivered *as-is*.``
@@ -21,4 +21,4 @@ External libraries include:
 
 Installation
 ============
-For installation instructions, please see the README file in the `NFT Blender repository on GitHub <https://github.com/Masangri/nft-blender#installation>`_.
+For installation instructions, please see the README file in the `MAS Blender repository on GitHub <https://github.com/themasmedia/mas-blender#installation>`_.

@@ -18,14 +18,14 @@ import sys
 
 # add sourcecode to path.
 src_root_path = pathlib.Path('../src/').resolve()
-for submod in ('nft_blender', 'nft_blender/nft_bpy', 'nft_blender/nft_db', 'nft_blender/nft_ops'):
+for submod in ('mas_blender', 'mas_blender/mas_bpy', 'mas_blender/mas_db', 'mas_blender/mas_ops'):
     sys.path.insert(0, src_root_path.joinpath(submod).as_posix())
 
 # -- Project information -----------------------------------------------------
 
-project = 'NFT Blender'
-copyright = '2022, masangri.eth'
-author = 'masangri.eth'
+project = 'MAS Blender'
+copyright = '2024, [m a s]'
+author = '[m a s]'
 
 # The full version, including alpha/beta/rc tags
 release = '0.0.1'

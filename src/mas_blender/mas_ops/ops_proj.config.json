@@ -1,0 +1,61 @@
+{
+  "databases": {
+    "SQLite": {
+          "name": "mas_blender",
+          "path": null
+    }
+  },
+  "pipelines": {
+    "Default Pipeline": {
+      "addons": {},
+      "assets": {
+        "CHAR": {
+          "published": {},
+          "versions": {}
+        },
+        "LGHT": {
+          "published": {},
+          "versions": {}
+        },
+        "PROP": {
+          "published": {},
+          "versions": {}
+        },
+        "SET": {
+          "published": {},
+          "versions": {}
+        }
+      },
+      "data": {
+        "addons": {
+          "mas_blender": {},
+          "rigify": {},
+          "ue_to_rigify": {}
+        },
+        "keying_sets": {},
+        "vertex_weights": {}
+      },
+      "edit": {},
+      "models": {},
+      "renders": {},
+      "scenes": {
+        "ANIM": {
+          "published": {},
+          "versions": {}
+        },
+        "LAYT": {
+          "published": {},
+          "versions": {}
+        },
+        "RNDR": {
+          "published": {},
+          "versions": {}
+        }
+      },
+      "textures": {
+        "HDRI": {},
+        "UV": {}
+      }
+    }
+  }
+}

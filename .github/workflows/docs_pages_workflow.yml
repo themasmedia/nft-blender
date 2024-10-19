@@ -21,7 +21,7 @@ jobs:
       run: |
         apt-get update
         apt-get install -y git pip
-        pip install git+https://github.com/Masangri/nft-blender.git@main#egg=nft-blender
+        pip install git+https://github.com/themasmedia/mas-blender.git@main#egg=mas-blender
         git clone --depth 1 "https://token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" .
       shell: bash
  

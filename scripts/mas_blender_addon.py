@@ -2,14 +2,14 @@
 
 """MAS Blender - Add-On
 
-Add-on Object can be accessed within Blender via nft_blender.nft_bpy.bpy_ctx.ctx_get_addon().
+Add-on Object can be accessed within Blender via mas_blender.mas_bpy.bpy_ctx.ctx_get_addon().
 """
 
 bl_info = {
     'author': '[m a s]',
     'blender': (4, 0, 0),
     'category': 'User Interface',
-    'description': 'A growing set of tools for Blender that utilize the full scope of Python 3',
+    'description': 'Transmedia Workflow Tools for Blender',
     'doc_url': 'https://themasmedia.github.io/mas-blender/',
     'location': 'MAS Blender (menu bar)',
     'name': 'MAS Blender',
@@ -20,7 +20,7 @@ import os
 
 import bpy
 
-from nft_blender.nft_ops import ops_asst, ops_io, ops_proj, ops_rndr
+from mas_blender.mas_ops import ops_asst, ops_io, ops_proj, ops_rndr
 
 
 import importlib
@@ -35,10 +35,10 @@ for module in (ops_asst, ops_io, ops_proj, ops_rndr):
 
 class MASOperatorProjectLaunchDialogUi(bpy.types.Operator):
     """
-    Operator for nft_ops.ops_proj.proj_launch_dialog_ui().
+    Operator for mas_ops.ops_proj.proj_launch_dialog_ui().
     """
     bl_idname = 'mas.proj_launch_dialog_ui'
-    bl_label = 'Launch NFT Project Manager'
+    bl_label = 'Launch MAS Blender Project Manager'
 
     def invoke(
         self,
@@ -55,7 +55,7 @@ class MASOperatorProjectLaunchDialogUi(bpy.types.Operator):
 
 class MASOperatorAssetSetMaterialData(bpy.types.Operator):
     """
-    Operator for nft_ops.ops_asst.asst_set_material_data().
+    Operator for mas_ops.ops_asst.asst_set_material_data().
     """
     bl_idname = 'mas.asst_set_material_data'
     bl_label = 'Set Material Data for Selected Meshes'
@@ -96,7 +96,7 @@ class MASOperatorIoLaunchExportDialogUi(bpy.types.Operator):
 
 class MASOperatorRenderBatchRender(bpy.types.Operator):
     """
-    Operator for nft_ops.ops_rndr.rndr_batch_render().
+    Operator for mas_ops.ops_rndr.rndr_batch_render().
     """
     bl_idname = 'mas.rndr_batch_render'
     bl_label = 'Select and Render Blender File(s) Locally'

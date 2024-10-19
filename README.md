@@ -1,5 +1,5 @@
 # **MAS Blender**
-## **Custom Workflow Tools for Blender**
+## **Transmedia Workflow Tools for Blender**
 A growing set of useful tools for Blender that utilizes the full scope of Python 3 beyond just what ships with Blender, by ***[m a s]***.<br/>
 This module conforms to the requirements of Python packaging, and can be installed **in Blender**, free of dependency issues & user complexity.<br/>
 ### External libraries include:
@@ -50,7 +50,7 @@ To view the latest documentation for using **MAS Blender**, please visit:<br/>
    - Set the value to the Windows path from the System Console window in step 3.5 above.<br/>
      ![README_4](./docs/gfx/README_4.png)
 5. Close Blender and relaunch.
-   - You will also be able to run `import nft_blender` directly to access the full `MAS Blender Add-On` module.
+   - You will also be able to run `import mas_blender` directly to access the full `MAS Blender Add-On` module.
 6. Install the `MAS Blender Add-On` and enable the custom menu:
    1. Open the Preferences window - in the main menu bar, go `Edit > Preferences...`.<br/>
    2. Switch to the `Add-On...` section (left panel) and click the `Install` button (top panel).<br/>

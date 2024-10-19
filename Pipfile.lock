@@ -207,7 +207,7 @@
             "index": "pypi",
             "version": "==3.3.0"
         },
-        "nft-blender": {
+        "mas-blender": {
             "editable": true,
             "path": "."
         },
