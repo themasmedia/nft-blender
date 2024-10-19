@@ -5,7 +5,7 @@ name = "pypi"
 
 [packages]
 mathutils = "*"
-nft-blender = {editable = true, path = "."}
+mas-blender = {editable = true, path = "."}
 pyside6 = "*"
 sqlalchemy = "*"
 requests = "*"

@@ -1,6 +1,6 @@
 #!$BLENDER_PATH/python/bin python
 
-"""NFT Blender - Installation
+"""MAS Blender - Installation
 
 """
 
@@ -19,11 +19,11 @@ __LOGGER__.setLevel(logging.INFO)
 
 
 MODULES = {
-    'nft_blender': {
+    'mas_blender': {
         'reinstall': True,
-        'specifier': 'git+https://github.com/Masangri/nft-blender.git@main#egg=nft-blender',
+        'specifier': 'git+https://github.com/themasmedia/mas-blender.git@main#egg=mas-blender',
     },
-    # Dependencies (installed automatically with `nft-blender` module):
+    # Dependencies (installed automatically with `mas-blender` module):
     'PySide6': {
         'reinstall': False,
         'specifier': 'PySide6',
@@ -41,10 +41,6 @@ MODULES = {
         'reinstall': False,
         'specifier': 'requests',
     },
-    # 'stable_diffusion': {
-    #     'reinstall': True,
-    #     'specifier': 'git+https://github.com/lstein/stable-diffusion.git@main#egg=stable-diffusion',
-    # },
 }
 
 
@@ -127,4 +123,4 @@ def uninstall_package(module_name: str) -> bool:
 
 if __name__ == '__main__':
 
-    install_package('nft_blender')
+    install_package('mas_blender')
