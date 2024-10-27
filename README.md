@@ -53,8 +53,8 @@ To view the latest documentation for using **MAS Blender**, please visit:<br/>
    - You will also be able to run `import mas_blender` directly to access the full `MAS Blender Add-On` module.
 6. Install the `MAS Blender Add-On` and enable the custom menu:
    1. Open the Preferences window - in the main menu bar, go `Edit > Preferences...`.<br/>
-   2. Switch to the `Add-On...` section (left panel) and click the `Install` button (top panel).<br/>
-   ![README_6_2](./docs/gfx/README_6_2.png)
+   2. Switch to the `Add-On...` section (left panel) and under the top-right drop-down menu (top panel), click the  `Install from Disk...` button.<br/>
+   ![README_6_2](./docs/gfx/README_6_2.png) ![README_6_3](./docs/gfx/README_6_3.png)
    3. Locate the `mas_blender_addon.py` script found in `scripts/` directory of the [MAS Blender repository](https://github.com/themasmedia/mas-blender).<br/>
    4. Enable the `MAS Blender Add-On` in the Preferences window. The `MAS Blender` custom menu will now be accessible via the main menu bar.<br/>
    ![README_6_4](./docs/gfx/README_6_4.png)
